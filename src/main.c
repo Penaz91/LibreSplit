@@ -765,6 +765,7 @@ static void open_activated(GSimpleAction* action,
     GList* windows;
     LSAppWindow* win;
     GtkWidget* dialog;
+    GtkFileFilter* filter;
     struct stat st = { 0 };
     gint res;
     if (parameter != NULL) {
@@ -782,6 +783,10 @@ static void open_activated(GSimpleAction* action,
         "_Cancel", GTK_RESPONSE_CANCEL,
         "_Open", GTK_RESPONSE_ACCEPT,
         NULL);
+    filter = gtk_file_filter_new();
+    gtk_file_filter_add_pattern(filter, "*.json");
+    gtk_file_filter_set_name(filter, "LibreSplit JSON Split Files");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
     if (json_string_value(get_setting_value("libresplit", "last_split_folder")) != NULL) {
         // Just use the last saved path
@@ -821,6 +826,7 @@ static void open_auto_splitter(GSimpleAction* action,
     GList* windows;
     LSAppWindow* win;
     GtkWidget* dialog;
+    GtkFileFilter* filter;
     struct stat st = { 0 };
     gint res;
     if (parameter != NULL) {
@@ -838,6 +844,10 @@ static void open_auto_splitter(GSimpleAction* action,
         "_Cancel", GTK_RESPONSE_CANCEL,
         "_Open", GTK_RESPONSE_ACCEPT,
         NULL);
+    filter = gtk_file_filter_new();
+    gtk_file_filter_add_pattern(filter, "*.lua");
+    gtk_file_filter_set_name(filter, "LibreSplit Lua Auto Splitters");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
     if (json_string_value(get_setting_value("libresplit", "last_auto_splitter_folder")) != NULL) {
         // Just use the last saved path
