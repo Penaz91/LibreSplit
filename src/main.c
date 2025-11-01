@@ -1,3 +1,4 @@
+#include <jansson.h>
 #include <linux/limits.h>
 #include <pwd.h>
 #include <stdbool.h>
@@ -782,11 +783,18 @@ static void open_activated(GSimpleAction* action,
         "_Open", GTK_RESPONSE_ACCEPT,
         NULL);
 
-    strcpy(splits_path, win->data_path);
-    strcat(splits_path, "/splits");
-    if (stat(splits_path, &st) == -1) {
-        mkdir(splits_path, 0700);
+    if (json_string_value(get_setting_value("libresplit", "last_split_folder")) != NULL) {
+        // Just use the last saved path
+        strcpy(splits_path, json_string_value(get_setting_value("libresplit", "last_split_folder")));
+    } else {
+        // We have no saved path, go to the default splits path and eventually create it
+        strcpy(splits_path, win->data_path);
+        strcat(splits_path, "/splits");
+        if (stat(splits_path, &st) == -1) {
+            mkdir(splits_path, 0700);
+        }
     }
+
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
         splits_path);
 
@@ -794,7 +802,10 @@ static void open_activated(GSimpleAction* action,
     if (res == GTK_RESPONSE_ACCEPT) {
         char* filename;
         GtkFileChooser* chooser = GTK_FILE_CHOOSER(dialog);
+        char last_folder[PATH_MAX];
         filename = gtk_file_chooser_get_filename(chooser);
+        strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
+        ls_update_setting("last_split_folder", json_string(last_folder));
         ls_app_window_open(win, filename);
         ls_update_setting("split_file", json_string(filename));
         g_free(filename);
