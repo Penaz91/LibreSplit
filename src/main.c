@@ -839,10 +839,15 @@ static void open_auto_splitter(GSimpleAction* action,
         "_Open", GTK_RESPONSE_ACCEPT,
         NULL);
 
-    strcpy(auto_splitters_path, win->data_path);
-    strcat(auto_splitters_path, "/auto-splitters");
-    if (stat(auto_splitters_path, &st) == -1) {
-        mkdir(auto_splitters_path, 0700);
+    if (json_string_value(get_setting_value("libresplit", "last_auto_splitter_folder")) != NULL) {
+        // Just use the last saved path
+        strcpy(auto_splitters_path, json_string_value(get_setting_value("libresplit", "last_auto_splitter_folder")));
+    } else {
+        strcpy(auto_splitters_path, win->data_path);
+        strcat(auto_splitters_path, "/auto-splitters");
+        if (stat(auto_splitters_path, &st) == -1) {
+            mkdir(auto_splitters_path, 0700);
+        }
     }
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
         auto_splitters_path);
@@ -851,6 +856,9 @@ static void open_auto_splitter(GSimpleAction* action,
     if (res == GTK_RESPONSE_ACCEPT) {
         GtkFileChooser* chooser = GTK_FILE_CHOOSER(dialog);
         char* filename = gtk_file_chooser_get_filename(chooser);
+        char last_folder[PATH_MAX];
+        strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
+        ls_update_setting("last_auto_splitter_folder", json_string(last_folder));
         strcpy(auto_splitter_file, filename);
         ls_update_setting("auto_splitter_file", json_string(filename));
 
