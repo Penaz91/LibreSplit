@@ -1,3 +1,4 @@
+#include "config.h"
 #include <linux/limits.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -8,6 +9,25 @@
 #include <jansson.h>
 
 #include "settings.h"
+
+void copy_default_config(const char* dest_path)
+{
+    FILE* src = fopen(DEFAULT_CONFIG_PATH, "r");
+    FILE* dest = fopen(dest_path, "w");
+
+    if (!src || !dest) {
+        perror("Failed to open file");
+        return;
+    }
+
+    char ch;
+    while ((ch = fgetc(src)) != EOF) {
+        fputc(ch, dest);
+    }
+
+    fclose(src);
+    fclose(dest);
+}
 
 void get_libresplit_folder_path(char* out_path)
 {
@@ -82,7 +102,8 @@ json_t* load_settings()
         }
         return root;
     } else {
-        printf("Failed to open settings file\n");
+        printf("Failed to open settings file, copying default one\n");
+        copy_default_config(settings_path);
         return NULL;
     }
 }

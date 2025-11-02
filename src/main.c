@@ -1068,7 +1068,7 @@ static void ls_app_activate(GApplication* app)
         char splits_path[PATH_MAX];
         strcpy(splits_path, json_string_value(get_setting_value("history", "split_file")));
         if (stat(splits_path, &st) == -1) {
-            printf("%s does not exist\n", splits_path);
+            printf("Split JSON %s does not exist\n", splits_path);
             open_activated(NULL, NULL, app);
         } else {
             ls_app_window_open(win, splits_path);
@@ -1081,7 +1081,7 @@ static void ls_app_activate(GApplication* app)
         char auto_splitters_path[PATH_MAX];
         strcpy(auto_splitters_path, json_string_value(get_setting_value("history", "auto_splitter_file")));
         if (stat(auto_splitters_path, &st) == -1) {
-            printf("%s does not exist\n", auto_splitters_path);
+            printf("Auto Splitter %s does not exist\n", auto_splitters_path);
         } else {
             strcpy(auto_splitter_file, auto_splitters_path);
         }
