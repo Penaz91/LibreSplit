@@ -769,7 +769,7 @@ static void open_activated(GSimpleAction* action,
     struct stat st = { 0 };
     gint res;
     // Load the last used split folder, if present
-    const char* last_split_folder = json_string_value(get_setting_value("libresplit", "last_split_folder"));
+    const char* last_split_folder = json_string_value(get_setting_value("history", "last_split_folder"));
     if (parameter != NULL) {
         app = parameter;
     }
@@ -812,7 +812,7 @@ static void open_activated(GSimpleAction* action,
         char last_folder[PATH_MAX];
         filename = gtk_file_chooser_get_filename(chooser);
         strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        ls_update_setting("libresplit", "last_split_folder", json_string(last_folder));
+        ls_update_setting("history", "last_split_folder", json_string(last_folder));
         ls_app_window_open(win, filename);
         ls_update_setting("libresplit", "split_file", json_string(filename));
         g_free(filename);
@@ -832,7 +832,7 @@ static void open_auto_splitter(GSimpleAction* action,
     struct stat st = { 0 };
     gint res;
     // Load the last used auto splitter folder, if present
-    const char* last_auto_splitter_folder = json_string_value(get_setting_value("libresplit", "last_auto_splitter_folder"));
+    const char* last_auto_splitter_folder = json_string_value(get_setting_value("history", "last_auto_splitter_folder"));
     if (parameter != NULL) {
         app = parameter;
     }
@@ -872,9 +872,9 @@ static void open_auto_splitter(GSimpleAction* action,
         char* filename = gtk_file_chooser_get_filename(chooser);
         char last_folder[PATH_MAX];
         strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        ls_update_setting("libresplit", "last_auto_splitter_folder", json_string(last_folder));
+        ls_update_setting("history", "last_auto_splitter_folder", json_string(last_folder));
         strcpy(auto_splitter_file, filename);
-        ls_update_setting("libresplit", "auto_splitter_file", json_string(filename));
+        ls_update_setting("history", "auto_splitter_file", json_string(filename));
 
         // Restart auto-splitter if it was running
         const bool was_asl_enabled = atomic_load(&auto_splitter_enabled);
@@ -1063,11 +1063,11 @@ static void ls_app_activate(GApplication* app)
     LSAppWindow* win;
     win = ls_app_window_new(LS_APP(app));
     gtk_window_present(GTK_WINDOW(win));
-    if (get_setting_value("libresplit", "split_file") != NULL) {
+    if (get_setting_value("history", "split_file") != NULL) {
         // Check if split file exists
         struct stat st = { 0 };
         char splits_path[PATH_MAX];
-        strcpy(splits_path, json_string_value(get_setting_value("libresplit", "split_file")));
+        strcpy(splits_path, json_string_value(get_setting_value("history", "split_file")));
         if (stat(splits_path, &st) == -1) {
             printf("%s does not exist\n", splits_path);
             open_activated(NULL, NULL, app);
@@ -1077,10 +1077,10 @@ static void ls_app_activate(GApplication* app)
     } else {
         open_activated(NULL, NULL, app);
     }
-    if (get_setting_value("libresplit", "auto_splitter_file") != NULL) {
+    if (get_setting_value("history", "auto_splitter_file") != NULL) {
         struct stat st = { 0 };
         char auto_splitters_path[PATH_MAX];
-        strcpy(auto_splitters_path, json_string_value(get_setting_value("libresplit", "auto_splitter_file")));
+        strcpy(auto_splitters_path, json_string_value(get_setting_value("history", "auto_splitter_file")));
         if (stat(auto_splitters_path, &st) == -1) {
             printf("%s does not exist\n", auto_splitters_path);
         } else {
