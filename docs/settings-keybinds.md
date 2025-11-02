@@ -19,12 +19,12 @@ Under the `libresplit` section, you will find the following settings:
 | Setting           | Type    | Description                        | Default        |
 | ----------------- | ------- | ---------------------------------- | -------------- |
 | `start_decorated` | Boolean | Start with window decorations      | `false`        |
-| `start_on-top`    | Boolean | Start with window as always on top | `true`         |
+| `start_on_top`    | Boolean | Start with window as always on top | `true`         |
 | `hide_cursor`     | Boolean | Hide cursor in window              | `false`        |
 | `global_hotkeys`  | Boolean | Enables global hotkeys             | `false`        |
 | `start_on_top`    | Boolean | Start with window as always on top | `false`        |
 | `theme`           | String  | Default theme name                 | `'standard'`   |
-| `theme-variant`   | String  | Default theme variant              | `''`           |
+| `theme_variant`   | String  | Default theme variant              | `''`           |
 
 ### Keybind settings
 
@@ -38,7 +38,7 @@ Under the `keybind` section, you will find the following key bindings:
 | `unsplit`                    | String | Unsplit keybind                             | Page_Up               |
 | `skip_split`                 | String | Skip split keybind                          | Page_Down             |
 | `toggle_decorations`         | String | Toggle window decorations keybind           | Control_R             |
-| `toggle_win-on-top`          | String | Toggle window "Always on top" state keybind | &lt;Control&gt;k      |
+| `toggle_win_on_top`          | String | Toggle window "Always on top" state keybind | &lt;Control&gt;k      |
 
 Keybind strings must be parsable by the [gtk_accelerator_parse](https://docs.gtk.org/gtk4/func.accelerator_parse.html).
 
