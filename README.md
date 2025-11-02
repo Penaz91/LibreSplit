@@ -1,7 +1,7 @@
 <p align="center">
 <img src="assets/libresplit.svg" width="100" height="100" align="top"/>
 </p>
-<h1 align="center"><a href="https://libresplit.loomeh.is-a.dev">LibreSplit</a></h1>
+<h1 align="center">LibreSplit</h1>
 
 <p align="center">
 <img src="https://img.shields.io/badge/Code-00599C?style=for-the-badge&logo=c&logoColor=white"</img>
@@ -29,8 +29,8 @@
 LibreSplit is a speedrun timer based on [urn](https://github.com/3snowp7im/urn) that adds support for Lua-based auto splitters that are easy to port from ASL.
 
 <p align="center">
-<img src="https://github.com/wins1ey/LibreSplit/assets/34382191/2adfdae5-9a21-4bdf-a4c4-f1d5962a0b63" width="350">
-<img src="https://github.com/wins1ey/LibreSplit/assets/34382191/4455f57a-3d34-4fa3-9dff-2b342b6c56da" width="350">
+<img src="https://github.com/LibreSplit/LibreSplit/assets/34382191/2adfdae5-9a21-4bdf-a4c4-f1d5962a0b63" width="350">
+<img src="https://github.com/LibreSplit/LibreSplit/assets/34382191/4455f57a-3d34-4fa3-9dff-2b342b6c56da" width="350">
 </p>
 
 ### If you are looking for the public repository of splits, auto splitters and themes. They are located [here](https://github.com/LibreSplit/LibreSplit-resources)
