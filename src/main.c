@@ -768,6 +768,8 @@ static void open_activated(GSimpleAction* action,
     GtkFileFilter* filter;
     struct stat st = { 0 };
     gint res;
+    // Load the last used split folder, if present
+    const char* last_split_folder = json_string_value(get_setting_value("libresplit", "last_split_folder"));
     if (parameter != NULL) {
         app = parameter;
     }
@@ -788,9 +790,9 @@ static void open_activated(GSimpleAction* action,
     gtk_file_filter_set_name(filter, "LibreSplit JSON Split Files");
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
-    if (json_string_value(get_setting_value("libresplit", "last_split_folder")) != NULL) {
+    if (last_split_folder != NULL) {
         // Just use the last saved path
-        strcpy(splits_path, json_string_value(get_setting_value("libresplit", "last_split_folder")));
+        strcpy(splits_path, last_split_folder);
     } else {
         // We have no saved path, go to the default splits path and eventually create it
         strcpy(splits_path, win->data_path);
@@ -829,6 +831,8 @@ static void open_auto_splitter(GSimpleAction* action,
     GtkFileFilter* filter;
     struct stat st = { 0 };
     gint res;
+    // Load the last used auto splitter folder, if present
+    const char* last_auto_splitter_folder = json_string_value(get_setting_value("libresplit", "last_auto_splitter_folder"));
     if (parameter != NULL) {
         app = parameter;
     }
@@ -849,9 +853,9 @@ static void open_auto_splitter(GSimpleAction* action,
     gtk_file_filter_set_name(filter, "LibreSplit Lua Auto Splitters");
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
-    if (json_string_value(get_setting_value("libresplit", "last_auto_splitter_folder")) != NULL) {
+    if (last_auto_splitter_folder != NULL) {
         // Just use the last saved path
-        strcpy(auto_splitters_path, json_string_value(get_setting_value("libresplit", "last_auto_splitter_folder")));
+        strcpy(auto_splitters_path, last_auto_splitter_folder);
     } else {
         strcpy(auto_splitters_path, win->data_path);
         strcat(auto_splitters_path, "/auto-splitters");
