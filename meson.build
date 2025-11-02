@@ -73,4 +73,4 @@ foreach size : [16, 22, 24, 32, 36, 48, 64, 72, 96, 128, 256, 512, 1024]
 endforeach
 
 gnome = import('gnome')
-gnome.post_install(glib_compile_schemas: false, gtk_update_icon_cache: true)
+gnome.post_install(update_desktop_database: true, gtk_update_icon_cache: true)
