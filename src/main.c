@@ -1,3 +1,4 @@
+#include <jansson.h>
 #include <linux/limits.h>
 #include <pwd.h>
 #include <stdbool.h>
@@ -764,8 +765,11 @@ static void open_activated(GSimpleAction* action,
     GList* windows;
     LSAppWindow* win;
     GtkWidget* dialog;
+    GtkFileFilter* filter;
     struct stat st = { 0 };
     gint res;
+    // Load the last used split folder, if present
+    const char* last_split_folder = json_string_value(get_setting_value("libresplit", "last_split_folder"));
     if (parameter != NULL) {
         app = parameter;
     }
@@ -781,12 +785,23 @@ static void open_activated(GSimpleAction* action,
         "_Cancel", GTK_RESPONSE_CANCEL,
         "_Open", GTK_RESPONSE_ACCEPT,
         NULL);
+    filter = gtk_file_filter_new();
+    gtk_file_filter_add_pattern(filter, "*.json");
+    gtk_file_filter_set_name(filter, "LibreSplit JSON Split Files");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
-    strcpy(splits_path, win->data_path);
-    strcat(splits_path, "/splits");
-    if (stat(splits_path, &st) == -1) {
-        mkdir(splits_path, 0700);
+    if (last_split_folder != NULL) {
+        // Just use the last saved path
+        strcpy(splits_path, last_split_folder);
+    } else {
+        // We have no saved path, go to the default splits path and eventually create it
+        strcpy(splits_path, win->data_path);
+        strcat(splits_path, "/splits");
+        if (stat(splits_path, &st) == -1) {
+            mkdir(splits_path, 0700);
+        }
     }
+
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
         splits_path);
 
@@ -794,7 +809,10 @@ static void open_activated(GSimpleAction* action,
     if (res == GTK_RESPONSE_ACCEPT) {
         char* filename;
         GtkFileChooser* chooser = GTK_FILE_CHOOSER(dialog);
+        char last_folder[PATH_MAX];
         filename = gtk_file_chooser_get_filename(chooser);
+        strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
+        ls_update_setting("last_split_folder", json_string(last_folder));
         ls_app_window_open(win, filename);
         ls_update_setting("split_file", json_string(filename));
         g_free(filename);
@@ -810,8 +828,11 @@ static void open_auto_splitter(GSimpleAction* action,
     GList* windows;
     LSAppWindow* win;
     GtkWidget* dialog;
+    GtkFileFilter* filter;
     struct stat st = { 0 };
     gint res;
+    // Load the last used auto splitter folder, if present
+    const char* last_auto_splitter_folder = json_string_value(get_setting_value("libresplit", "last_auto_splitter_folder"));
     if (parameter != NULL) {
         app = parameter;
     }
@@ -827,11 +848,20 @@ static void open_auto_splitter(GSimpleAction* action,
         "_Cancel", GTK_RESPONSE_CANCEL,
         "_Open", GTK_RESPONSE_ACCEPT,
         NULL);
+    filter = gtk_file_filter_new();
+    gtk_file_filter_add_pattern(filter, "*.lua");
+    gtk_file_filter_set_name(filter, "LibreSplit Lua Auto Splitters");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
-    strcpy(auto_splitters_path, win->data_path);
-    strcat(auto_splitters_path, "/auto-splitters");
-    if (stat(auto_splitters_path, &st) == -1) {
-        mkdir(auto_splitters_path, 0700);
+    if (last_auto_splitter_folder != NULL) {
+        // Just use the last saved path
+        strcpy(auto_splitters_path, last_auto_splitter_folder);
+    } else {
+        strcpy(auto_splitters_path, win->data_path);
+        strcat(auto_splitters_path, "/auto-splitters");
+        if (stat(auto_splitters_path, &st) == -1) {
+            mkdir(auto_splitters_path, 0700);
+        }
     }
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
         auto_splitters_path);
@@ -840,6 +870,9 @@ static void open_auto_splitter(GSimpleAction* action,
     if (res == GTK_RESPONSE_ACCEPT) {
         GtkFileChooser* chooser = GTK_FILE_CHOOSER(dialog);
         char* filename = gtk_file_chooser_get_filename(chooser);
+        char last_folder[PATH_MAX];
+        strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
+        ls_update_setting("last_auto_splitter_folder", json_string(last_folder));
         strcpy(auto_splitter_file, filename);
         ls_update_setting("auto_splitter_file", json_string(filename));
 
