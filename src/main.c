@@ -812,9 +812,9 @@ static void open_activated(GSimpleAction* action,
         char last_folder[PATH_MAX];
         filename = gtk_file_chooser_get_filename(chooser);
         strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        ls_update_setting("last_split_folder", json_string(last_folder));
+        ls_update_setting("libresplit", "last_split_folder", json_string(last_folder));
         ls_app_window_open(win, filename);
-        ls_update_setting("split_file", json_string(filename));
+        ls_update_setting("libresplit", "split_file", json_string(filename));
         g_free(filename);
     }
     gtk_widget_destroy(dialog);
@@ -872,9 +872,9 @@ static void open_auto_splitter(GSimpleAction* action,
         char* filename = gtk_file_chooser_get_filename(chooser);
         char last_folder[PATH_MAX];
         strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        ls_update_setting("last_auto_splitter_folder", json_string(last_folder));
+        ls_update_setting("libresplit", "last_auto_splitter_folder", json_string(last_folder));
         strcpy(auto_splitter_file, filename);
-        ls_update_setting("auto_splitter_file", json_string(filename));
+        ls_update_setting("libresplit", "auto_splitter_file", json_string(filename));
 
         // Restart auto-splitter if it was running
         const bool was_asl_enabled = atomic_load(&auto_splitter_enabled);
@@ -984,10 +984,10 @@ static void toggle_auto_splitter(GtkCheckMenuItem* menu_item, gpointer user_data
     gboolean active = gtk_check_menu_item_get_active(menu_item);
     if (active) {
         atomic_store(&auto_splitter_enabled, 1);
-        ls_update_setting("auto_splitter_enabled", json_true());
+        ls_update_setting("libresplit", "auto_splitter_enabled", json_true());
     } else {
         atomic_store(&auto_splitter_enabled, 0);
-        ls_update_setting("auto_splitter_enabled", json_false());
+        ls_update_setting("libresplit", "auto_splitter_enabled", json_false());
     }
 }
 

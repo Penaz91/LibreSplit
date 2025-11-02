@@ -23,7 +23,7 @@ void get_libresplit_folder_path(char* out_path)
     strcpy(out_path, base_dir);
 }
 
-void ls_update_setting(const char* setting, json_t* value)
+void ls_update_setting(const char* section, const char* setting, json_t* value)
 {
     char settings_path[PATH_MAX];
     get_libresplit_folder_path(settings_path);
@@ -46,10 +46,10 @@ void ls_update_setting(const char* setting, json_t* value)
     }
 
     // Update specific setting
-    json_t* ls_obj = json_object_get(root, "libresplit");
+    json_t* ls_obj = json_object_get(root, section);
     if (!ls_obj) {
         ls_obj = json_object();
-        json_object_set(root, "libresplit", ls_obj);
+        json_object_set(root, section, ls_obj);
     }
     json_object_set_new(ls_obj, setting, value);
 
