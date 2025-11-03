@@ -1,3 +1,7 @@
+/** \file auto-splitter.c
+ *
+ * Implementation of the auto splitter Lua Runtime
+ */
 #include <linux/limits.h>
 #include <pthread.h>
 #include <pwd.h>
@@ -54,8 +58,18 @@ static const char* disabled_functions[] = {
 
 extern game_process process;
 
+/**
+ * Creates a directory tree recursively.
+ *
+ * Works like the "mkdir -p" command on shell, creating
+ * a directory and all its parents if necessary.
+ *
+ * Taken from https://stackoverflow.com/a/2336245
+ *
+ * @param dir The path describing the resulting directory tree.
+ * @param permissions The attributes used to create the directories.
+ */
 // I have no idea how this works
-// https://stackoverflow.com/a/2336245
 static void mkdir_p(const char* dir, __mode_t permissions)
 {
     char tmp[256] = { 0 };
@@ -75,6 +89,12 @@ static void mkdir_p(const char* dir, __mode_t permissions)
     mkdir(tmp, permissions);
 }
 
+/**
+ * Checks and creates libresplit config directories.
+ *
+ * Performs a directory check, creating the libresplit
+ * config directory if necessary.
+ */
 void check_directories()
 {
     char libresplit_directory[PATH_MAX] = { 0 };
@@ -251,6 +271,14 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
     return true;
 }
 
+/**
+ * The startup() LASR function.
+ *
+ * Executes the code in the startup() function of the auto splitter,
+ * setting the internal parameters for the execution of the autosplitter.
+ *
+ * @param L The Lua State
+ */
 void startup(lua_State* L)
 {
     lua_getglobal(L, "startup");
@@ -276,16 +304,38 @@ void startup(lua_State* L)
     lua_pop(L, 1); // Remove 'useGameTime' from the stack
 }
 
+/**
+ * The state() LASR function.
+ *
+ * Executes the code in the state() function of the auto splitter.
+ *
+ * @param L The Lua State
+ */
 void state(lua_State* L)
 {
     call_va(L, "state", "");
 }
 
+/**
+ * The update() LASR function.
+ *
+ * Executes the code in the update() function of the auto splitter.
+ *
+ * @param L The Lua State
+ */
 void update(lua_State* L)
 {
     call_va(L, "update", "");
 }
 
+/**
+ * The start() LASR function.
+ *
+ * Executes the code in the start() function of the auto splitter
+ * and stores the whether the run has started.
+ *
+ * @param L The Lua State
+ */
 void start(lua_State* L)
 {
     bool ret;
@@ -298,6 +348,13 @@ void start(lua_State* L)
     lua_pop(L, 1); // Remove the return value from the stack
 }
 
+/**
+ * The split() LASR function.
+ *
+ * Executes the code in the split() function of the auto splitter.
+ *
+ * @param L The Lua State
+ */
 void split(lua_State* L)
 {
     bool ret;
@@ -307,6 +364,14 @@ void split(lua_State* L)
     lua_pop(L, 1); // Remove the return value from the stack
 }
 
+/**
+ * The is_loading() LASR function.
+ *
+ * Executes the code in the isLoading() function of the auto splitter,
+ * allowing for load time removal.
+ *
+ * @param L The Lua State
+ */
 void is_loading(lua_State* L)
 {
     bool loading;
@@ -319,6 +384,14 @@ void is_loading(lua_State* L)
     lua_pop(L, 1); // Remove the return value from the stack
 }
 
+/**
+ * The reset() LASR function.
+ *
+ * Executes the code in the reset() function of the auto splitter,
+ * resetting the internal state of the timer to a pre-start situation.
+ *
+ * @param L The Lua State
+ */
 void reset(lua_State* L)
 {
     bool shouldReset;
@@ -329,6 +402,14 @@ void reset(lua_State* L)
     lua_pop(L, 1); // Remove the return value from the stack
 }
 
+/**
+ * The gameTime() LASR function.
+ *
+ * Executes the code in the gameTime() function of the auto splitter,
+ * converting the game time found from the game's memory.
+ *
+ * @param L The Lua State
+ */
 void gameTime(lua_State* L)
 {
     int gameTime;
@@ -340,6 +421,9 @@ void gameTime(lua_State* L)
     lua_pop(L, 1); // Remove the return value from the stack
 }
 
+/**
+ * Loads the auto splitter Lua file and executes the auto splitter.
+ */
 void run_auto_splitter()
 {
     lua_State* L = luaL_newstate();
