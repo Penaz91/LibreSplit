@@ -3,6 +3,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -16,7 +17,14 @@ void copy_default_config(const char* dest_path)
     FILE* dest = fopen(dest_path, "w");
 
     if (!src || !dest) {
-        perror("Failed to open file");
+        perror("Failed to open source or destination config file for copying");
+        // Only one of the two files might have failed to open
+        if (src != NULL) {
+            fclose(src);
+        }
+        if (dest != NULL) {
+            fclose(dest);
+        }
         return;
     }
 
@@ -91,6 +99,13 @@ json_t* load_settings()
     get_libresplit_folder_path(settings_path);
     strcat(settings_path, "/settings.json");
 
+    struct stat st = { 0 };
+
+    if (stat(settings_path, &st) == -1) {
+        printf("Cannot find user settings file, copying default one\n");
+        copy_default_config(settings_path);
+    }
+
     FILE* file = fopen(settings_path, "r");
     if (file) {
         json_error_t error;
@@ -102,8 +117,7 @@ json_t* load_settings()
         }
         return root;
     } else {
-        printf("Failed to open settings file, copying default one\n");
-        copy_default_config(settings_path);
+        printf("Failed to open settings file\n");
         return NULL;
     }
 }
