@@ -93,7 +93,32 @@ void ls_update_setting(const char* section, const char* setting, json_t* value)
     json_decref(root);
 }
 
-json_t* load_settings()
+json_t* _load_from_json(const char* settings_path)
+{
+    FILE* file = fopen(settings_path, "r");
+    if (file) {
+        json_error_t error;
+        json_t* root = json_loadf(file, 0, &error);
+        fclose(file);
+        if (!root) {
+            printf("Failed to load settings from path %s: %s\n", settings_path, error.text);
+            return NULL;
+        }
+        return root;
+    } else {
+        printf("Failed to open settings file: %s\n", settings_path);
+        return NULL;
+    }
+}
+
+json_t* _load_default_settings()
+{
+    char settings_path[PATH_MAX];
+    strcpy(settings_path, DEFAULT_CONFIG_PATH);
+    return _load_from_json(settings_path);
+}
+
+json_t* _load_user_settings()
 {
     char settings_path[PATH_MAX];
     get_libresplit_folder_path(settings_path);
@@ -106,20 +131,33 @@ json_t* load_settings()
         copy_default_config(settings_path);
     }
 
-    FILE* file = fopen(settings_path, "r");
-    if (file) {
-        json_error_t error;
-        json_t* root = json_loadf(file, 0, &error);
-        fclose(file);
-        if (!root) {
-            printf("Failed to load settings: %s\n", error.text);
-            return NULL;
+    return _load_from_json(settings_path);
+}
+
+json_t* load_settings()
+{
+    json_t* settings = _load_default_settings();
+    json_t* user_settings = _load_user_settings();
+    if (settings != NULL && user_settings != NULL) {
+        // Overlay settings with user_settings, to allow
+        // for further updates down the line during development
+        int merged = json_object_update_recursive(settings, user_settings);
+        if (merged == 0) {
+            // Merge successful, return the updated settings
+            return settings;
         }
-        return root;
-    } else {
-        printf("Failed to open settings file\n");
-        return NULL;
+        printf("Failed to merge settings");
     }
+    // If the settings merge fails, prefer the user settings
+    if (user_settings != NULL) {
+        return user_settings;
+    }
+    // If user settings failed to load, return the defaults, if available
+    if (settings != NULL) {
+        return settings;
+    }
+    // If all else fails, return nothing
+    return NULL;
 }
 
 json_t* get_setting_value(const char* section, const char* setting)
