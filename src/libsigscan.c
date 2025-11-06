@@ -21,16 +21,16 @@
 #define _GNU_SOURCE /* Needed for process_vm_readv() in uio.h */
 #endif
 
+#include <ctype.h> /* isspace() */
+#include <dirent.h> /* readdir() */
 #include <errno.h>
+#include <regex.h> /* regcomp(), regexec(), etc. */
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>   /* fopen(), FILE* */
-#include <string.h>  /* strstr() */
-#include <stdlib.h>  /* strtoull() */
-#include <ctype.h>   /* isspace() */
-#include <dirent.h>  /* readdir() */
-#include <regex.h>   /* regcomp(), regexec(), etc. */
+#include <stdio.h> /* fopen(), FILE* */
+#include <stdlib.h> /* strtoull() */
+#include <string.h> /* strstr() */
 #include <sys/uio.h> /* process_vm_readv() */
 
 /* NOTE: Remember to change the path if you move the header */
@@ -58,7 +58,8 @@
 /*
  * Returns true if string `str' mathes regex pattern `pat'.
  */
-static bool does_regex_match(regex_t expr, const char* str) {
+static bool does_regex_match(regex_t expr, const char* str)
+{
     int code = regexec(&expr, str, 0, NULL, 0);
     if (code > REG_NOMATCH) {
         char err[100];
@@ -74,7 +75,8 @@ static bool does_regex_match(regex_t expr, const char* str) {
  * Read `sz' bytes from the address `src' of the process with `pid', into the
  * buffer `dst'. Returns `dst'.
  */
-static void* read_mem(pid_t pid, void* dst, uintptr_t src, size_t sz) {
+static void* read_mem(pid_t pid, void* dst, uintptr_t src, size_t sz)
+{
     if (pid == SIGSCAN_PID_INVALID) {
         ERR("read_mem: Got an invalid PID");
         return NULL;
@@ -87,10 +89,10 @@ static void* read_mem(pid_t pid, void* dst, uintptr_t src, size_t sz) {
     struct iovec local[1];
     struct iovec remote[1];
 
-    local[0].iov_base  = dst;
-    local[0].iov_len   = sz;
+    local[0].iov_base = dst;
+    local[0].iov_len = sz;
     remote[0].iov_base = (void*)src;
-    remote[0].iov_len  = sz;
+    remote[0].iov_len = sz;
 
     /*
      * NOTE: The fact that we need to define _GNU_SOURCE is a bit hacky. We
@@ -110,7 +112,8 @@ static void* read_mem(pid_t pid, void* dst, uintptr_t src, size_t sz) {
  *
  * Used for getting the bytes from IDA patterns.
  */
-static uint8_t hex2byte(const char* hex) {
+static uint8_t hex2byte(const char* hex)
+{
     int result = 0;
 
     /* Skip leading spaces, if any */
@@ -149,14 +152,15 @@ static uint8_t hex2byte(const char* hex) {
  * Code format: "\xFF\x00\x00\x89"
  * Mask format: "x??x"
  */
-static void ida2code(const char* ida, uint8_t** code_ptr, char** mask_ptr) {
+static void ida2code(const char* ida, uint8_t** code_ptr, char** mask_ptr)
+{
     /*
      * The `dst_sz' and `dst_i' variables will be used for both `code' and
      * `mask' arrays.
      */
     size_t dst_sz = 100;
-    *code_ptr     = (uint8_t*)malloc(dst_sz);
-    *mask_ptr     = (char*)malloc(dst_sz);
+    *code_ptr = (uint8_t*)malloc(dst_sz);
+    *mask_ptr = (char*)malloc(dst_sz);
     if (*code_ptr == NULL || *mask_ptr == NULL) {
         ERR("malloc() returned NULL");
         return;
@@ -206,7 +210,8 @@ static void ida2code(const char* ida, uint8_t** code_ptr, char** mask_ptr) {
 }
 
 /* Search for pattern `ida' from `start' to `end' inside the memory of `pid' */
-static void* do_scan(int pid, uintptr_t start, uintptr_t end, const char* ida) {
+static void* do_scan(int pid, uintptr_t start, uintptr_t end, const char* ida)
+{
     if (!start || !end) {
         ERR("do_scan() got invalid start or end pointers");
         return NULL;
@@ -223,15 +228,15 @@ static void* do_scan(int pid, uintptr_t start, uintptr_t end, const char* ida) {
      *   https://github.com/8dcc/scratch/blob/main/C/algorithms/buffered-search.c
      */
     size_t buf_sz = strlen(mask);
-    uint8_t* buf  = (uint8_t*)malloc(buf_sz);
+    uint8_t* buf = (uint8_t*)malloc(buf_sz);
     if (read_mem(pid, buf, start, buf_sz) == NULL)
         return NULL;
 
     uintptr_t chunk_start = start;
 
     /* The `pat_pos' variable will be used for accesing `pat' and `mask'. */
-    size_t pat_pos     = 0;
-    size_t buf_pos     = 0;
+    size_t pat_pos = 0;
+    size_t buf_pos = 0;
     size_t match_start = 0;
 
     while ((chunk_start + buf_pos) < end && mask[pat_pos] != '\0') {
@@ -268,8 +273,7 @@ static void* do_scan(int pid, uintptr_t start, uintptr_t end, const char* ida) {
      * If we reached end of the mask (i.e. pattern), return the match.
      * Otherwise, NULL.
      */
-    void* ret =
-      (mask[pat_pos] == '\0') ? (void*)(chunk_start + match_start) : NULL;
+    void* ret = (mask[pat_pos] == '\0') ? (void*)(chunk_start + match_start) : NULL;
 
     free(buf);
     free(mask);
@@ -281,7 +285,8 @@ static void* do_scan(int pid, uintptr_t start, uintptr_t end, const char* ida) {
 /*----------------------------------------------------------------------------*/
 /* Public functions */
 
-int sigscan_pidof(const char* process_name) {
+int sigscan_pidof(const char* process_name)
+{
     static char filename[50];
     static char cmdline[256];
 
@@ -324,7 +329,8 @@ int sigscan_pidof(const char* process_name) {
     return SIGSCAN_PID_INVALID;
 }
 
-SigscanModuleBounds* sigscan_get_module_bounds(int pid, const char* regex) {
+SigscanModuleBounds* sigscan_get_module_bounds(int pid, const char* regex)
+{
     static regex_t compiled_regex;
 
     /* Compile regex pattern once here */
@@ -348,7 +354,7 @@ SigscanModuleBounds* sigscan_get_module_bounds(int pid, const char* regex) {
 
     /* Allocate dummy structure in the stack. `dummy.next' will be returned. */
     SigscanModuleBounds dummy;
-    dummy.next               = NULL;
+    dummy.next = NULL;
     SigscanModuleBounds* cur = &dummy;
 
     /* Buffers used in the loop by fgets() and sscanf() */
@@ -364,9 +370,8 @@ SigscanModuleBounds* sigscan_get_module_bounds(int pid, const char* regex) {
          * depending on the arch.
          */
         long unsigned start_num = 0, end_num = 0, offset = 0;
-        const int fmt_match_num =
-          sscanf(line_buf, "%lx-%lx %4s %lx %*x:%*x %*d %200[^\n]\n",
-                 &start_num, &end_num, rwxp, &offset, pathname);
+        const int fmt_match_num = sscanf(line_buf, "%lx-%lx %4s %lx %*x:%*x %*d %200[^\n]\n",
+            &start_num, &end_num, rwxp, &offset, pathname);
 
         if (fmt_match_num < 4) {
             ERR("sscanf() didn't match the minimum fields (4) for "
@@ -377,7 +382,7 @@ SigscanModuleBounds* sigscan_get_module_bounds(int pid, const char* regex) {
         }
 
         void* start_addr = (void*)start_num;
-        void* end_addr   = (void*)end_num;
+        void* end_addr = (void*)end_num;
 
         /* Parse "rwxp". For now we only care about read permissions. */
         const bool is_readable = (rwxp[0] == 'r');
@@ -387,9 +392,7 @@ SigscanModuleBounds* sigscan_get_module_bounds(int pid, const char* regex) {
          * '\0' or '['. Then, either we don't want to filter by module name
          * (regex is NULL) or we checked the regex and it matches.
          */
-        const bool name_matches =
-          fmt_match_num == 5 && pathname[0] != '\0' && pathname[0] != '[' &&
-          (regex == NULL || does_regex_match(compiled_regex, pathname));
+        const bool name_matches = fmt_match_num == 5 && pathname[0] != '\0' && pathname[0] != '[' && (regex == NULL || does_regex_match(compiled_regex, pathname));
 
         /* We can read it, and it's the module we are looking for. */
         if (is_readable && name_matches) {
@@ -404,14 +407,13 @@ SigscanModuleBounds* sigscan_get_module_bounds(int pid, const char* regex) {
                  * There was a gap between the end of the last block and the
                  * start of this one, allocate new struct.
                  */
-                cur->next =
-                  (SigscanModuleBounds*)malloc(sizeof(SigscanModuleBounds));
+                cur->next = (SigscanModuleBounds*)malloc(sizeof(SigscanModuleBounds));
                 cur = cur->next;
 
                 /* Save the addresses from this line of the maps file. */
                 cur->start = start_addr;
-                cur->end   = end_addr;
-                cur->next  = NULL;
+                cur->end = end_addr;
+                cur->next = NULL;
             }
         }
     }
@@ -425,7 +427,8 @@ done:
     return dummy.next;
 }
 
-void sigscan_free_module_bounds(SigscanModuleBounds* bounds) {
+void sigscan_free_module_bounds(SigscanModuleBounds* bounds)
+{
     SigscanModuleBounds* cur = bounds;
     while (cur != NULL) {
         SigscanModuleBounds* next = cur->next;
@@ -434,7 +437,8 @@ void sigscan_free_module_bounds(SigscanModuleBounds* bounds) {
     }
 }
 
-void* sigscan_pid_module(int pid, const char* regex, const char* ida_pattern) {
+void* sigscan_pid_module(int pid, const char* regex, const char* ida_pattern)
+{
     if (pid == SIGSCAN_PID_INVALID)
         return NULL;
 
@@ -454,8 +458,7 @@ void* sigscan_pid_module(int pid, const char* regex, const char* ida_pattern) {
     /* Iterate them, and scan each one until we find a match. */
     void* ret = NULL;
     for (SigscanModuleBounds* cur = bounds; cur != NULL; cur = cur->next) {
-        void* cur_result =
-          do_scan(pid, (uintptr_t)cur->start, (uintptr_t)cur->end, ida_pattern);
+        void* cur_result = do_scan(pid, (uintptr_t)cur->start, (uintptr_t)cur->end, ida_pattern);
 
         if (cur_result != NULL) {
             ret = cur_result;

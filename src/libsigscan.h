@@ -24,7 +24,7 @@
 
 enum ESigscanPidType {
     SIGSCAN_PID_INVALID = -2, /* Invalid PID, should be ignored */
-    SIGSCAN_PID_SELF    = -1, /* We want to search in our own modules */
+    SIGSCAN_PID_SELF = -1, /* We want to search in our own modules */
 };
 
 /*
@@ -80,7 +80,8 @@ void* sigscan_pid_module(int pid, const char* regex, const char* ida_pattern);
 /*
  * Search for `ida_pattern' in all the loaded modules of `pid'.
  */
-static inline void* sigscan_pid(int pid, const char* ida_pattern) {
+static inline void* sigscan_pid(int pid, const char* ida_pattern)
+{
     return sigscan_pid_module(pid, NULL, ida_pattern);
 }
 
@@ -88,14 +89,16 @@ static inline void* sigscan_pid(int pid, const char* ida_pattern) {
  * Search for `ida_pattern' in all the modules loaded by the current process,
  * whose name matches `regex'.
  */
-static inline void* sigscan_module(const char* regex, const char* ida_pattern) {
+static inline void* sigscan_module(const char* regex, const char* ida_pattern)
+{
     return sigscan_pid_module(SIGSCAN_PID_SELF, regex, ida_pattern);
 }
 
 /*
  * Search for `ida_pattern' in all the modules loaded by the current process.
  */
-static inline void* sigscan(const char* ida_pattern) {
+static inline void* sigscan(const char* ida_pattern)
+{
     return sigscan_pid_module(SIGSCAN_PID_SELF, NULL, ida_pattern);
 }
 

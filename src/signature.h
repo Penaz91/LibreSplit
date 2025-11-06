@@ -3,7 +3,6 @@
 
 #include <luajit.h>
 
-
 int perform_sig_scan(lua_State* L);
 
 #endif // !__SIGNATURE_H__
