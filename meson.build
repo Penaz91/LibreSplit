@@ -26,6 +26,8 @@ executable(
         'src/process.c',
         'src/settings.c',
         'src/timer.c',
+        'src/libsigscan.c',
+        'src/signature.c',
         'src/component/best-sum.c',
         'src/component/clock.c',
         'src/component/components.c',
@@ -47,7 +49,7 @@ executable(
 
 message('prefix: ' + get_option('prefix')) # /usr/local by default
 message('datadir: ' + get_option('datadir')) # share by default
-message('buildtype: ' + get_option('buildtype')) 
+message('buildtype: ' + get_option('buildtype'))
 
 install_data(
     'assets/libresplit.desktop',
