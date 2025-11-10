@@ -113,9 +113,7 @@ json_t* _load_from_json(const char* settings_path)
 
 json_t* _load_default_settings()
 {
-    char settings_path[PATH_MAX];
-    strcpy(settings_path, DEFAULT_CONFIG_PATH);
-    return _load_from_json(settings_path);
+    return _load_from_json(DEFAULT_CONFIG_PATH);
 }
 
 json_t* _load_user_settings()
@@ -138,25 +136,23 @@ json_t* load_settings()
 {
     json_t* settings = _load_default_settings();
     json_t* user_settings = _load_user_settings();
-    if (settings != NULL && user_settings != NULL) {
-        // Overlay settings with user_settings, to allow
-        // for further updates down the line during development
-        int merged = json_object_update_recursive(settings, user_settings);
-        if (merged == 0) {
-            // Merge successful, return the updated settings
-            return settings;
-        }
-        printf("Failed to merge settings");
+    // If there are no user settings, load only the defaults
+    if (user_settings == NULL) {
+        return settings ? settings : NULL;
     }
-    // If the settings merge fails, prefer the user settings
-    if (user_settings != NULL) {
-        return user_settings;
+    // If, for some reason, the defaults cannot be loaded, load the user settings only
+    if (settings == NULL) {
+        return user_settings ? user_settings : NULL;
     }
-    // If user settings failed to load, return the defaults, if available
-    if (settings != NULL) {
+    // If both can be loaded, overlay settings with user_settings, to allow
+    // for further updates down the line during development
+    int merged = json_object_update_recursive(settings, user_settings);
+    if (merged == 0) {
+        // Merge successful, return the updated settings
         return settings;
     }
-    // If all else fails, return nothing
+    printf("Failed to merge settings");
+    // If the merge fails, return nothing
     return NULL;
 }
 
