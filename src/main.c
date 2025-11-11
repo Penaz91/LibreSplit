@@ -569,26 +569,25 @@ static void ls_app_window_init(LSAppWindow* win)
     get_libresplit_folder_path(win->data_path);
 
     // load settings
-    GSettings* settings = g_settings_new("com.github.wins1ey.libresplit");
-    win->hide_cursor = g_settings_get_boolean(settings, "hide-cursor");
-    win->global_hotkeys = g_settings_get_boolean(settings, "global-hotkeys");
+    win->hide_cursor = json_boolean_value(get_setting_value("libresplit", "hide_cursor"));
+    win->global_hotkeys = json_boolean_value(get_setting_value("libresplit", "global_hotkeys"));
     win->keybind_start_split = parse_keybind(
-        g_settings_get_string(settings, "keybind-start-split"));
+        json_string_value(get_setting_value("keybinds", "start_split")));
     win->keybind_stop_reset = parse_keybind(
-        g_settings_get_string(settings, "keybind-stop-reset"));
+        json_string_value(get_setting_value("keybinds", "stop_reset")));
     win->keybind_cancel = parse_keybind(
-        g_settings_get_string(settings, "keybind-cancel"));
+        json_string_value(get_setting_value("keybinds", "cancel")));
     win->keybind_unsplit = parse_keybind(
-        g_settings_get_string(settings, "keybind-unsplit"));
+        json_string_value(get_setting_value("keybinds", "unsplit")));
     win->keybind_skip_split = parse_keybind(
-        g_settings_get_string(settings, "keybind-skip-split"));
+        json_string_value(get_setting_value("keybinds", "skip_split")));
     win->keybind_toggle_decorations = parse_keybind(
-        g_settings_get_string(settings, "keybind-toggle-decorations"));
-    win->decorated = g_settings_get_boolean(settings, "start-decorated");
+        json_string_value(get_setting_value("keybinds", "toggle_decorations")));
+    win->decorated = json_boolean_value(get_setting_value("libresplit", "start_decorated"));
     gtk_window_set_decorated(GTK_WINDOW(win), win->decorated);
     win->keybind_toggle_win_on_top = parse_keybind(
-        g_settings_get_string(settings, "keybind-toggle-win-on-top"));
-    win->win_on_top = g_settings_get_boolean(settings, "start-on-top");
+        json_string_value(get_setting_value("keybinds", "toggle_win_on_top")));
+    win->win_on_top = json_boolean_value(get_setting_value("libresplit", "start_on_top"));
     gtk_window_set_keep_above(GTK_WINDOW(win), win->win_on_top);
 
     // Load CSS defaults
@@ -604,8 +603,8 @@ static void ls_app_window_init(LSAppWindow* win)
     g_object_unref(provider);
 
     // Load theme
-    theme = g_settings_get_string(settings, "theme");
-    theme_variant = g_settings_get_string(settings, "theme-variant");
+    theme = json_string_value(get_setting_value("libresplit", "theme"));
+    theme_variant = json_string_value(get_setting_value("keybinds", "toggle_win_on_top"));
     if (ls_app_window_find_theme(win, theme, theme_variant, str)) {
         provider = gtk_css_provider_new();
         screen = gdk_display_get_default_screen(win->display);
@@ -633,31 +632,31 @@ static void ls_app_window_init(LSAppWindow* win)
     if (win->global_hotkeys && !getenv("WAYLAND_DISPLAY")) {
         keybinder_init();
         keybinder_bind(
-            g_settings_get_string(settings, "keybind-start-split"),
+            json_string_value(get_setting_value("keybinds", "start_split")),
             (KeybinderHandler)keybind_start_split,
             win);
         keybinder_bind(
-            g_settings_get_string(settings, "keybind-stop-reset"),
+            json_string_value(get_setting_value("keybinds", "stop_reset")),
             (KeybinderHandler)keybind_stop_reset,
             win);
         keybinder_bind(
-            g_settings_get_string(settings, "keybind-cancel"),
+            json_string_value(get_setting_value("keybinds", "cancel")),
             (KeybinderHandler)keybind_cancel,
             win);
         keybinder_bind(
-            g_settings_get_string(settings, "keybind-unsplit"),
+            json_string_value(get_setting_value("keybinds", "unsplit")),
             (KeybinderHandler)keybind_unsplit,
             win);
         keybinder_bind(
-            g_settings_get_string(settings, "keybind-skip-split"),
+            json_string_value(get_setting_value("keybinds", "skip_split")),
             (KeybinderHandler)keybind_skip,
             win);
         keybinder_bind(
-            g_settings_get_string(settings, "keybind-toggle-decorations"),
+            json_string_value(get_setting_value("keybinds", "toggle_decorations")),
             (KeybinderHandler)keybind_toggle_decorations,
             win);
         keybinder_bind(
-            g_settings_get_string(settings, "keybind-toggle-win-on-top"),
+            json_string_value(get_setting_value("keybinds", "toggle_win_on_top")),
             (KeybinderHandler)keybind_toggle_win_on_top,
             win);
     } else {
@@ -769,7 +768,7 @@ static void open_activated(GSimpleAction* action,
     struct stat st = { 0 };
     gint res;
     // Load the last used split folder, if present
-    const char* last_split_folder = json_string_value(get_setting_value("libresplit", "last_split_folder"));
+    const char* last_split_folder = json_string_value(get_setting_value("history", "last_split_folder"));
     if (parameter != NULL) {
         app = parameter;
     }
@@ -812,9 +811,9 @@ static void open_activated(GSimpleAction* action,
         char last_folder[PATH_MAX];
         filename = gtk_file_chooser_get_filename(chooser);
         strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        ls_update_setting("last_split_folder", json_string(last_folder));
+        ls_update_setting("history", "last_split_folder", json_string(last_folder));
         ls_app_window_open(win, filename);
-        ls_update_setting("split_file", json_string(filename));
+        ls_update_setting("history", "split_file", json_string(filename));
         g_free(filename);
     }
     gtk_widget_destroy(dialog);
@@ -832,7 +831,7 @@ static void open_auto_splitter(GSimpleAction* action,
     struct stat st = { 0 };
     gint res;
     // Load the last used auto splitter folder, if present
-    const char* last_auto_splitter_folder = json_string_value(get_setting_value("libresplit", "last_auto_splitter_folder"));
+    const char* last_auto_splitter_folder = json_string_value(get_setting_value("history", "last_auto_splitter_folder"));
     if (parameter != NULL) {
         app = parameter;
     }
@@ -872,9 +871,9 @@ static void open_auto_splitter(GSimpleAction* action,
         char* filename = gtk_file_chooser_get_filename(chooser);
         char last_folder[PATH_MAX];
         strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        ls_update_setting("last_auto_splitter_folder", json_string(last_folder));
+        ls_update_setting("history", "last_auto_splitter_folder", json_string(last_folder));
         strcpy(auto_splitter_file, filename);
-        ls_update_setting("auto_splitter_file", json_string(filename));
+        ls_update_setting("history", "auto_splitter_file", json_string(filename));
 
         // Restart auto-splitter if it was running
         const bool was_asl_enabled = atomic_load(&auto_splitter_enabled);
@@ -984,10 +983,10 @@ static void toggle_auto_splitter(GtkCheckMenuItem* menu_item, gpointer user_data
     gboolean active = gtk_check_menu_item_get_active(menu_item);
     if (active) {
         atomic_store(&auto_splitter_enabled, 1);
-        ls_update_setting("auto_splitter_enabled", json_true());
+        ls_update_setting("libresplit", "auto_splitter_enabled", json_true());
     } else {
         atomic_store(&auto_splitter_enabled, 0);
-        ls_update_setting("auto_splitter_enabled", json_false());
+        ls_update_setting("libresplit", "auto_splitter_enabled", json_false());
     }
 }
 
@@ -1063,13 +1062,13 @@ static void ls_app_activate(GApplication* app)
     LSAppWindow* win;
     win = ls_app_window_new(LS_APP(app));
     gtk_window_present(GTK_WINDOW(win));
-    if (get_setting_value("libresplit", "split_file") != NULL) {
+    if (get_setting_value("history", "split_file") != NULL) {
         // Check if split file exists
         struct stat st = { 0 };
         char splits_path[PATH_MAX];
-        strcpy(splits_path, json_string_value(get_setting_value("libresplit", "split_file")));
+        strcpy(splits_path, json_string_value(get_setting_value("history", "split_file")));
         if (stat(splits_path, &st) == -1) {
-            printf("%s does not exist\n", splits_path);
+            printf("Split JSON %s does not exist\n", splits_path);
             open_activated(NULL, NULL, app);
         } else {
             ls_app_window_open(win, splits_path);
@@ -1077,12 +1076,12 @@ static void ls_app_activate(GApplication* app)
     } else {
         open_activated(NULL, NULL, app);
     }
-    if (get_setting_value("libresplit", "auto_splitter_file") != NULL) {
+    if (get_setting_value("history", "auto_splitter_file") != NULL) {
         struct stat st = { 0 };
         char auto_splitters_path[PATH_MAX];
-        strcpy(auto_splitters_path, json_string_value(get_setting_value("libresplit", "auto_splitter_file")));
+        strcpy(auto_splitters_path, json_string_value(get_setting_value("history", "auto_splitter_file")));
         if (stat(auto_splitters_path, &st) == -1) {
-            printf("%s does not exist\n", auto_splitters_path);
+            printf("Auto Splitter %s does not exist\n", auto_splitters_path);
         } else {
             strcpy(auto_splitter_file, auto_splitters_path);
         }
