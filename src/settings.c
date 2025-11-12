@@ -1,3 +1,7 @@
+/** \file settings.c
+ *
+ * Implementation of the settings management
+ */
 #include "config.h"
 #include <linux/limits.h>
 #include <pwd.h>
@@ -11,6 +15,12 @@
 
 #include "settings.h"
 
+/**
+ * Copies the default JSON configuration file from DEFAULT_CONFIG_PATH
+ * to another destination.
+ *
+ * @param dest_path The destination path to copy the config to.
+ */
 void copy_default_config(const char* dest_path)
 {
     FILE* src = fopen(DEFAULT_CONFIG_PATH, "r");
@@ -37,6 +47,11 @@ void copy_default_config(const char* dest_path)
     fclose(dest);
 }
 
+/**
+ * Copies the user's livesplit configuration path in a given string.
+ *
+ * @param out_path The string to copy the configuration path into.
+ */
 void get_libresplit_folder_path(char* out_path)
 {
     struct passwd* pw = getpwuid(getuid());
@@ -51,6 +66,13 @@ void get_libresplit_folder_path(char* out_path)
     strcpy(out_path, base_dir);
 }
 
+/**
+ * Updates a setting, given section, key and new value. Automatically saves the user settings file.
+ *
+ * @param section The section name (usually "livesplit", "history" or "keybinds")
+ * @param setting The setting name
+ * @param value The new value to assign to the setting.
+ */
 void ls_update_setting(const char* section, const char* setting, json_t* value)
 {
     char settings_path[PATH_MAX];
@@ -93,6 +115,12 @@ void ls_update_setting(const char* section, const char* setting, json_t* value)
     json_decref(root);
 }
 
+/**
+ * Generic function that loads a json settings file into memory.
+ *
+ * @param settings_path The path to load the JSON file from.
+ * @return The jansson JSON object containing the settings, or NULL if an error occurs.
+ */
 json_t* _load_from_json(const char* settings_path)
 {
     FILE* file = fopen(settings_path, "r");
@@ -111,11 +139,24 @@ json_t* _load_from_json(const char* settings_path)
     }
 }
 
+/**
+ * Function added for readability.
+ *
+ * Loads the default settings from the default configuration path.
+ *
+ * @return The jansson JSON object containing the default settings, or NULL if an error occurs.
+ */
 json_t* _load_default_settings()
 {
     return _load_from_json(DEFAULT_CONFIG_PATH);
 }
 
+/**
+ * Loads the user settings from LibreSplit's user config path.
+ * If no file is available, the default settings will be copied into the user's config path.
+ *
+ * @return The jansson JSON object containing the user settings, or NULL if an error occurs.
+ */
 json_t* _load_user_settings()
 {
     char settings_path[PATH_MAX];
@@ -132,6 +173,11 @@ json_t* _load_user_settings()
     return _load_from_json(settings_path);
 }
 
+/**
+ * Loads LibreSplit's settings, eventually overlaying the user's settings on top of the default settings, allowing for seamless addition of new sections/keys/values.
+ *
+ * @return The jansson JSON object containing the settings, or NULL if an unrecoverable error occurs.
+ */
 json_t* load_settings()
 {
     json_t* settings = _load_default_settings();
@@ -156,6 +202,14 @@ json_t* load_settings()
     return NULL;
 }
 
+/**
+ * Loads a setting value from the settings file.
+ *
+ * @param section The section to get the setting from (usually "libresplit", "history" or "keybinds").
+ * @param setting The key used search the setting.
+ *
+ * @return The jansson JSON object containing the setting value, or NULL if an error occurs or the setting is not found.
+ */
 json_t* get_setting_value(const char* section, const char* setting)
 {
     json_t* root = load_settings();
