@@ -68,3 +68,17 @@ If a split has a `title` key, its UI element receives a class name derived from 
 Specifically, the title is lowercase and all non-alphanumeric characters are replaced with hyphens, and the result is concatenated with `split-title-`.
 
 For instance, if your split is titled "First split", it can be styled by targeting the CSS class `.split-title-first-split`.
+
+## FAQ
+
+### How do I hide a section of LibreSplit?
+
+GTK does not have a built-in way of hiding pieces of the interface, but you can hide most items by setting the font-size to zero. For instance:
+
+```css
+.segment-pb, .segment-best{
+    font-size: 0;
+}
+```
+
+Will hide the PB and Best sections.
