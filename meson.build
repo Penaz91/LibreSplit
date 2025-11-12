@@ -16,6 +16,15 @@ luajit = dependency('luajit')
 x11 = dependency('x11')
 jansson = dependency('jansson')
 
+
+configure_file(
+  input: 'src/config.h.in',
+  output: 'config.h',
+  configuration: {
+    'DEFAULT_CONFIG_PATH': get_option('prefix') / get_option('datadir') / meson.project_name() / 'default_settings.json'
+  }
+)
+
 executable(
     'libresplit',
     [
@@ -47,15 +56,15 @@ executable(
 
 message('prefix: ' + get_option('prefix')) # /usr/local by default
 message('datadir: ' + get_option('datadir')) # share by default
-message('buildtype: ' + get_option('buildtype')) 
+message('buildtype: ' + get_option('buildtype'))
 
 install_data(
     'assets/libresplit.desktop',
     install_dir: get_option('prefix') / get_option('datadir') / 'applications',
 )
 install_data(
-    'assets/com.github.wins1ey.libresplit.gschema.xml',
-    install_dir: get_option('prefix') / get_option('datadir') / 'glib-2.0/schemas',
+    'assets/default_settings.json',
+    install_dir: get_option('prefix') / get_option('datadir') / meson.project_name(),
 )
 install_data(
     'README.md',
@@ -77,4 +86,5 @@ foreach size : [16, 22, 24, 32, 36, 48, 64, 72, 96, 128, 256, 512, 1024]
 endforeach
 
 gnome = import('gnome')
-gnome.post_install(glib_compile_schemas: true, gtk_update_icon_cache: true)
+#gnome.post_install(update_desktop_database: true, gtk_update_icon_cache: true)
+gnome.post_install(gtk_update_icon_cache: true)
