@@ -68,3 +68,37 @@ If a split has a `title` key, its UI element receives a class name derived from 
 Specifically, the title is lowercase and all non-alphanumeric characters are replaced with hyphens, and the result is concatenated with `split-title-`.
 
 For instance, if your split is titled "First split", it can be styled by targeting the CSS class `.split-title-first-split`.
+
+## FAQ
+
+### How do I hide a section of LibreSplit?
+
+GTK does not have a built-in way of hiding pieces of the interface, but you can hide most items by setting the font-size to zero. For instance:
+
+```css
+.segment-pb, .segment-best{
+    font-size: 0;
+}
+```
+
+Will hide the PB and Best sections.
+
+### Is there anything to help me develop themes out there?
+
+In fact, there is!
+
+If you run LibreSplit from a terminal like this:
+
+```sh
+GTK_DEBUG=interactive libresplit
+```
+
+LiveSplit will be started together with another window: the interactive GTK debugger. Like the one you see below:
+
+![The GTK Debug window](./images/gtk_debugger.png)
+
+Make sure that both LibreSplit and this window are visible, because when you click on one row in the GTK debugger (`Objects` tab), the corresponding section in LiveSplit will flash 3 times, letting you know what you selected.
+
+Once you found what you want to edit, take a note of its `style class` (See [Creating your own theme](#creating-your-own-theme) for a list) and head to the `CSS` tab: there you can edit in real time LiveSplit's aspect. These edits are temporary, but they can help you developing your own CSS theme.
+
+Once you're done developing your theme, feel free to share it with the community!
