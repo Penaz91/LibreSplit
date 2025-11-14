@@ -11,10 +11,10 @@
  * \struct game_process The game process read by the Auto Splitter
  */
 struct game_process {
-    const char* name;  /*!< The name of the process */
-    int pid;  /*!< The PID of the process */
-    uintptr_t base_address;  /*!< The detected base address of the process */
-    uintptr_t dll_address;  /*!< The detected base address of the last requested module */
+    const char* name; /*!< The name of the process */
+    int pid; /*!< The PID of the process */
+    uintptr_t base_address; /*!< The detected base address of the process */
+    uintptr_t dll_address; /*!< The detected base address of the last requested module */
 };
 typedef struct game_process game_process;
 
