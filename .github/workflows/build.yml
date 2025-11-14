@@ -20,7 +20,7 @@ jobs:
                   sudo update-alternatives --set gcc /usr/bin/gcc-15
 
             - name: "Configure"
-              run: meson setup build -Dbuildtype=release
+              run: meson setup build -Dbuildtype=release -Dprefix=/usr
 
             - name: "Build"
               run: meson compile -C build
@@ -46,3 +46,70 @@ jobs:
               with:
                   name: LibreSplit-${{ env.build_number }}-${{ env.git_short_sha }}
                   path: release/
+
+    appimage:
+        runs-on: ubuntu-24.04
+        name: Build AppImage
+        needs: tests
+        steps:
+            - name: "Checkout"
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: "Download build artifacts"
+              uses: actions/download-artifact@v4
+              with:
+                  pattern: LibreSplit-*
+                  merge-multiple: true
+
+            - name: "Install AppImage dependencies"
+              run: |
+                  sudo apt -y update
+                  sudo apt -y install desktop-file-utils libluajit-5.1-dev
+
+            - name: Set Build number
+              shell: bash
+              run: echo "build_number=$(git rev-list HEAD --count)" >> $GITHUB_ENV
+
+            - name: Compute git short sha
+              shell: bash
+              run: echo "git_short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+            - name: "Setup AppDir structure"
+              run: |
+                  mkdir -p AppDir/usr/bin
+                  mkdir -p AppDir/usr/share/applications
+                  mkdir -p AppDir/usr/share/libresplit
+                  mkdir -p AppDir/usr/share/pixmaps
+                  mkdir -p AppDir/usr/share/doc/libresplit
+                  mkdir -p AppDir/usr/share/licenses/libresplit
+
+                  cp libresplit AppDir/usr/bin/
+                  chmod +x AppDir/usr/bin/libresplit
+
+                  cp assets/default_settings.json AppDir/usr/share/libresplit/
+                  cp assets/libresplit.desktop AppDir/usr/share/applications/
+
+                  cp assets/icons/libresplit-256.png AppDir/usr/share/pixmaps/libresplit.png
+
+                  cp LICENSE AppDir/usr/share/licenses/libresplit/
+
+                  # Create AppImage-compatible desktop entry at root
+                  cp assets/libresplit.desktop AppDir/
+                  cp assets/icons/libresplit-256.png AppDir/libresplit.png
+
+            - name: "Download linuxdeploy"
+              run: |
+                  wget -O linuxdeploy-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy/releases/latest/download/linuxdeploy-x86_64.AppImage
+                  chmod +x linuxdeploy-x86_64.AppImage
+
+            - name: "Create AppImage"
+              run: |
+                  ./linuxdeploy-x86_64.AppImage --appdir AppDir --output appimage
+
+            - name: "Upload AppImage"
+              uses: actions/upload-artifact@v4
+              with:
+                  path: LibreSplit-x86_64.AppImage
+                  name: LibreSplit-${{ env.build_number }}-${{ env.git_short_sha }}-x86_64.AppImage
