@@ -16,13 +16,12 @@ luajit = dependency('luajit')
 x11 = dependency('x11')
 jansson = dependency('jansson')
 
-
 configure_file(
-  input: 'src/config.h.in',
-  output: 'config.h',
-  configuration: {
-    'DEFAULT_CONFIG_PATH': get_option('prefix') / get_option('datadir') / meson.project_name() / 'default_settings.json'
-  }
+    input: 'src/config.h.in',
+    output: 'config.h',
+    configuration: {
+        'DEFAULT_CONFIG_PATH': get_option('prefix') / get_option('datadir') / meson.project_name() / 'default_settings.json',
+    },
 )
 
 executable(
