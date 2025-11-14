@@ -1,3 +1,7 @@
+/** \file memory.c
+ *
+ * Implementation of the memory reading functions
+ */
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -16,6 +20,12 @@ bool memory_error;
 extern game_process process;
 gboolean display_non_capable_mem_read_dialog(void* data);
 
+/**
+ * Reads an address from memory and interprets it as value_type, creating the relative
+ * read_memory_<value_type> function
+ *
+ * @param value_type The output type interpretation
+ */
 #define READ_MEMORY_FUNCTION(value_type)                                                         \
     value_type read_memory_##value_type(uint64_t mem_address, int32_t* err)                      \
     {                                                                                            \
@@ -53,6 +63,15 @@ READ_MEMORY_FUNCTION(float)
 READ_MEMORY_FUNCTION(double)
 READ_MEMORY_FUNCTION(bool)
 
+/**
+ * Reads an address from memory and interprets it as a string.
+ *
+ * @param mem_address The memory address to read from.
+ * @param buffer_size The size of the buffer to allocate.
+ * @param err A pointer to an error flag to write to.
+ *
+ * @return The string read from memory.
+ */
 char* read_memory_string(uint64_t mem_address, int buffer_size, int32_t* err)
 {
     char* buffer = (char*)malloc(buffer_size);
@@ -82,11 +101,13 @@ char* read_memory_string(uint64_t mem_address, int buffer_size, int32_t* err)
     return buffer;
 }
 
-/*
-    Prints the according error to stdout
-    True if the error was printed
-    False if the error is unknown
-*/
+/**
+ * Prints a memory error to stdout.
+ *
+ * @param err The error code to print.
+ *
+ * @return True if the error was printed, false if the error is unknown.
+ */
 bool handle_memory_error(uint32_t err)
 {
     static bool shownDialog = false;
@@ -118,6 +139,11 @@ bool handle_memory_error(uint32_t err)
     return true;
 }
 
+/**
+ * Reads a memory address given by the Lua Auto Splitter.
+ *
+ * @param L The Lua state.
+ */
 int read_address(lua_State* L)
 {
     memory_error = false;
