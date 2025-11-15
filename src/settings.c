@@ -11,9 +11,25 @@
 
 #include "settings.h"
 
+/**
+ * Gets the default config path, considering APPDIR if set.
+ *
+ * @param out_path A buffer to store the resulting path, which may be prepended with APPDIR if set for AppImages
+ */
+void get_default_config_path(char* out_path)
+{
+    out_path[0] = '\0';
+    if (getenv("APPDIR")) {
+        strcat(out_path, getenv("APPDIR"));
+    }
+    strcat(out_path, DEFAULT_CONFIG_PATH);
+}
+
 void copy_default_config(const char* dest_path)
 {
-    FILE* src = fopen(DEFAULT_CONFIG_PATH, "r");
+    char default_config_path[PATH_MAX];
+    get_default_config_path(default_config_path);
+    FILE* src = fopen(default_config_path, "r");
     FILE* dest = fopen(dest_path, "w");
 
     if (!src || !dest) {
@@ -113,7 +129,10 @@ json_t* _load_from_json(const char* settings_path)
 
 json_t* _load_default_settings()
 {
-    return _load_from_json(DEFAULT_CONFIG_PATH);
+
+    char default_config_path[PATH_MAX];
+    get_default_config_path(default_config_path);
+    return _load_from_json(default_config_path);
 }
 
 json_t* _load_user_settings()
