@@ -604,7 +604,7 @@ static void ls_app_window_init(LSAppWindow* win)
 
     // Load theme
     theme = json_string_value(get_setting_value("libresplit", "theme"));
-    theme_variant = json_string_value(get_setting_value("keybinds", "toggle_win_on_top"));
+    theme_variant = json_string_value(get_setting_value("libresplit", "theme_variant"));
     if (ls_app_window_find_theme(win, theme, theme_variant, str)) {
         provider = gtk_css_provider_new();
         screen = gdk_display_get_default_screen(win->display);
