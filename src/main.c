@@ -40,10 +40,13 @@ static const unsigned char css_data[] = {
 
 static const size_t css_data_len = sizeof(css_data);
 
+/**
+ * \struct Keybind A GTK Key bind
+ */
 typedef struct
 {
-    guint key;
-    GdkModifierType mods;
+    guint key; /*!< The key value */
+    GdkModifierType mods; /*!< The modifiers used (shift, ctrl, ...) */
 } Keybind;
 
 struct _LSAppWindow {
@@ -75,6 +78,14 @@ struct _LSAppWindowClass {
 
 G_DEFINE_TYPE(LSAppWindow, ls_app_window, GTK_TYPE_APPLICATION_WINDOW);
 
+/**
+ * Parses a string representing a Keybind definition
+ * into a Keybind structure.
+ *
+ * @param accelerator The string representation of the keybind.
+ *
+ * @return A Keybind struct corresponding to the requested keybind.
+ */
 static Keybind parse_keybind(const gchar* accelerator)
 {
     Keybind kb;
@@ -82,11 +93,25 @@ static Keybind parse_keybind(const gchar* accelerator)
     return kb;
 }
 
+/**
+ * Matches a Gdk key press event with a Keybind.
+ *
+ * @param kb The keybind to compare against.
+ * @param key The Gdk event key that needs to be compared.
+ *
+ * @return Zero if the keybinds don't match, a non-zero value otherwise.
+ */
 static int keybind_match(Keybind kb, GdkEventKey key)
 {
     return key.keyval == kb.key && kb.mods == (key.state & gtk_accelerator_get_default_mod_mask());
 }
 
+/**
+ * Closes LibreSplit.
+ *
+ * @param widget The pointer to the LibreSplit window, as a widget.
+ * @param data Usually NULL.
+ */
 static void ls_app_window_destroy(GtkWidget* widget, gpointer data)
 {
     LSAppWindow* win = (LSAppWindow*)widget;
@@ -194,6 +219,16 @@ static gboolean ls_app_window_step(gpointer data)
     return TRUE;
 }
 
+/**
+ * Finds a theme, given its name and variant.
+ *
+ * @param win The LibreSplit Window.
+ * @param theme_name The name of the theme to load.
+ * @param theme_variant The name of the variant to load (can be empty).
+ * @param str Pointer to a string onto which the theme path will be copied.
+ *
+ * @return 1 if the load is successful, 0 otherwise.
+ */
 static int ls_app_window_find_theme(const LSAppWindow* win,
     const char* theme_name,
     const char* theme_variant,
