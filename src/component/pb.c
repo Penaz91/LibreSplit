@@ -51,16 +51,14 @@ static GtkWidget* pb_widget(LSComponent* self)
 }
 
 static void pb_show_game(LSComponent* self_,
-    ls_game* game, ls_timer* timer)
+    const ls_game* game, const ls_timer* timer)
 {
     LSPb* self = (LSPb*)self_;
     char str[256];
     if (game->split_count && game->split_times[game->split_count - 1]) {
-        if (game->split_times[game->split_count - 1]) {
-            ls_time_string(
-                str, game->split_times[game->split_count - 1]);
-            gtk_label_set_text(GTK_LABEL(self->personal_best), str);
-        }
+        ls_time_string(
+            str, game->split_times[game->split_count - 1]);
+        gtk_label_set_text(GTK_LABEL(self->personal_best), str);
     }
 }
 
@@ -70,8 +68,8 @@ static void pb_clear_game(LSComponent* self_)
     gtk_label_set_text(GTK_LABEL(self->personal_best), "");
 }
 
-static void pb_draw(LSComponent* self_, ls_game* game,
-    ls_timer* timer)
+static void pb_draw(LSComponent* self_, const ls_game* game,
+    const ls_timer* timer)
 {
     LSPb* self = (LSPb*)self_;
     char str[256];

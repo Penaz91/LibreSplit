@@ -18,6 +18,8 @@ struct ls_game {
     long long world_record;
     long long start_delay;
     char** split_titles;
+    char** split_icon_paths; // null if no icons
+    bool contains_icons;
     int split_count;
     long long* split_times;
     long long* segment_times;
@@ -30,12 +32,12 @@ struct ls_timer {
     int started;
     int running;
     int loading;
+    int curr_split;
     long long now;
     long long start_time;
     long long time;
     long long sum_of_bests;
     long long world_record;
-    int curr_split;
     long long* split_times;
     long long* split_deltas;
     long long* segment_times;
@@ -57,7 +59,7 @@ void ls_time_string(char* string, long long time);
 
 void ls_time_millis_string(char* seconds, char* millis, long long time);
 
-void ls_split_string(char* string, long long time);
+void ls_split_string(char* string, long long time, int compact);
 
 void ls_delta_string(char* string, long long time);
 
@@ -65,15 +67,15 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg);
 
 void ls_game_update_splits(ls_game* game, const ls_timer* timer);
 
-void ls_game_update_bests(ls_game* game, const ls_timer* timer);
+void ls_game_update_bests(const ls_game* game, const ls_timer* timer);
 
 int ls_game_save(const ls_game* game);
 
-void ls_game_release(ls_game* game);
+void ls_game_release(const ls_game* game);
 
 int ls_timer_create(ls_timer** timer_ptr, ls_game* game);
 
-void ls_timer_release(ls_timer* timer);
+void ls_timer_release(const ls_timer* timer);
 
 int ls_timer_start(ls_timer* timer);
 

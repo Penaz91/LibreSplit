@@ -1,5 +1,9 @@
 #include "timer.h"
+#include "auto-splitter.h"
 #include <jansson.h>
+#include <limits.h>
+#include <stdatomic.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,13 +27,32 @@ long long ls_time_value(const char* string)
     if (!string || !strlen(string)) {
         return 0;
     }
-    sscanf(string, "%[^.]%lf", seconds_part, &subseconds_part);
-    string = seconds_part;
-    if (string[0] == '-') {
-        sign = -1;
-        ++string;
+
+    // Split at the decimal point manually
+    char* dot_pos = strchr(string, '.');
+    if (dot_pos) {
+        strncpy(seconds_part, string, dot_pos - string);
+        seconds_part[dot_pos - string] = '\0';
+
+        // Manually parse the fractional part to avoid locale issues
+        char* frac_part = dot_pos + 1;
+        subseconds_part = 0.0;
+        double multiplier = 0.1;
+
+        for (char* p = frac_part; *p && *p >= '0' && *p <= '9'; p++) {
+            subseconds_part += (*p - '0') * multiplier;
+            multiplier *= 0.1;
+        }
+    } else {
+        strcpy(seconds_part, string);
+        subseconds_part = 0.0;
     }
-    switch (sscanf(string, "%d:%d:%d", &hours, &minutes, &seconds)) {
+
+    if (seconds_part[0] == '-') {
+        sign = -1;
+        memmove(seconds_part, seconds_part + 1, strlen(seconds_part));
+    }
+    switch (sscanf(seconds_part, "%d:%d:%d", &hours, &minutes, &seconds)) {
         case 2:
             seconds = minutes;
             minutes = hours;
@@ -41,7 +64,8 @@ long long ls_time_value(const char* string)
             hours = 0;
             break;
     }
-    return sign * ((hours * 60 * 60 + minutes * 60 + seconds) * 1000000LL + (int)(subseconds_part * 1000000.));
+
+    return sign * ((hours * 60 * 60 + minutes * 60 + seconds) * 1000000LL + (long long)(subseconds_part * 1000000.));
 }
 
 static void ls_time_string_format(char* string,
@@ -54,6 +78,13 @@ static void ls_time_string_format(char* string,
     int hours, minutes, seconds;
     char dot_subsecs[256];
     const char* sign = "";
+
+    // Check time is not 0 or maxed out, otherwise -
+    if (time == LLONG_MAX) {
+        sprintf(string, "-");
+        return;
+    }
+
     if (time < 0) {
         time = -time;
         sign = "-";
@@ -73,18 +104,18 @@ static void ls_time_string_format(char* string,
         dot_subsecs[0] = '\0';
     }
     if (hours) {
-        if (!compact) {
+        if (compact) {
+            sprintf(string, "%s%d:%02d:%02d", sign, hours, minutes, seconds);
+        } else {
             sprintf(string, "%s%d:%02d:%02d%s",
                 sign, hours, minutes, seconds, dot_subsecs);
-        } else {
-            sprintf(string, "%s%d:%02d", sign, hours, minutes);
         }
     } else if (minutes) {
-        if (!compact) {
+        if (compact) {
+            sprintf(string, "%s%d:%02d", sign, minutes, seconds);
+        } else {
             sprintf(string, "%s%d:%02d%s",
                 sign, minutes, seconds, dot_subsecs);
-        } else {
-            sprintf(string, "%s%d:%02d", sign, minutes, seconds);
         }
     } else {
         sprintf(string, "%s%d%s", sign, seconds, dot_subsecs);
@@ -107,9 +138,9 @@ void ls_time_millis_string(char* seconds, char* millis, long long time)
     ls_time_string_format(seconds, millis, time, 0, 0, 0);
 }
 
-void ls_split_string(char* string, long long time)
+void ls_split_string(char* string, long long time, int compact)
 {
-    ls_time_string_format(string, NULL, time, 0, 0, 1);
+    ls_time_string_format(string, NULL, time, 0, 0, compact);
 }
 
 void ls_delta_string(char* string, long long time)
@@ -117,7 +148,7 @@ void ls_delta_string(char* string, long long time)
     ls_time_string_format(string, NULL, time, 0, 1, 1);
 }
 
-void ls_game_release(ls_game* game)
+void ls_game_release(const ls_game* game)
 {
     int i;
     if (game->path) {
@@ -136,6 +167,7 @@ void ls_game_release(ls_game* game)
         for (i = 0; i < game->split_count; ++i) {
             if (game->split_titles[i]) {
                 free(game->split_titles[i]);
+                free(game->split_icon_paths[i]);
             }
         }
         free(game->split_titles);
@@ -260,6 +292,11 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
             error = 1;
             goto game_create_done;
         }
+        game->split_icon_paths = calloc(game->split_count, sizeof(char*));
+        if (!game->split_icon_paths) {
+            error = 1;
+            goto game_create_done;
+        }
         game->segment_times = calloc(game->split_count,
             sizeof(long long));
         if (!game->segment_times) {
@@ -278,6 +315,7 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
             error = 1;
             goto game_create_done;
         }
+        game->contains_icons = false;
         // copy splits
         for (i = 0; i < game->split_count; ++i) {
             json_t* split;
@@ -292,15 +330,35 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
                     goto game_create_done;
                 }
             }
+
+            split_ref = json_object_get(split, "icon");
+            if (split_ref) {
+                game->split_icon_paths[i] = strdup(json_string_value(split_ref));
+                if (!game->split_icon_paths[i]) {
+                    error = 1;
+                    goto game_create_done;
+                }
+                game->contains_icons = true;
+            }
+
             split_ref = json_object_get(split, "time");
             if (split_ref) {
                 game->split_times[i] = ls_time_value(
                     json_string_value(split_ref));
             }
+
+            // Check whether the split time is 0, if it is set it to max value
+            if (game->split_times[i] == 0) {
+                game->split_times[i] = LLONG_MAX;
+            }
             if (i && game->split_times[i] && game->split_times[i - 1]) {
                 game->segment_times[i] = game->split_times[i] - game->split_times[i - 1];
             } else if (!i && game->split_times[0]) {
                 game->segment_times[0] = game->split_times[0];
+            }
+
+            if (game->best_splits[i] == 0) {
+                game->best_splits[i] = LLONG_MAX;
             }
             split_ref = json_object_get(split, "best_time");
             if (split_ref) {
@@ -308,6 +366,10 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
                     json_string_value(split_ref));
             } else if (game->split_times[i]) {
                 game->best_splits[i] = game->split_times[i];
+            }
+
+            if (game->best_segments[i] == 0) {
+                game->best_segments[i] = LLONG_MAX;
             }
             split_ref = json_object_get(split, "best_segment");
             if (split_ref) {
@@ -357,7 +419,7 @@ void ls_game_update_splits(ls_game* game,
     }
 }
 
-void ls_game_update_bests(ls_game* game,
+void ls_game_update_bests(const ls_game* game,
     const ls_timer* timer)
 {
     if (timer->curr_split) {
@@ -396,14 +458,22 @@ int ls_game_save(const ls_game* game)
     }
     for (i = 0; i < game->split_count; ++i) {
         json_t* split = json_object();
-        json_object_set_new(split, "title",
-            json_string(game->split_titles[i]));
-        ls_time_string_serialized(str, game->split_times[i]);
-        json_object_set_new(split, "time", json_string(str));
-        ls_time_string_serialized(str, game->best_splits[i]);
-        json_object_set_new(split, "best_time", json_string(str));
-        ls_time_string_serialized(str, game->best_segments[i]);
-        json_object_set_new(split, "best_segment", json_string(str));
+        json_object_set_new(split, "title", json_string(game->split_titles[i]));
+        json_object_set_new(split, "icon", json_string(game->split_icon_paths[i]));
+
+        // Only save the split if it's above 0. Otherwise it's impossible to beat 0
+        if (game->split_times[i] > 0 && game->split_times[i] < LLONG_MAX) {
+            ls_time_string_serialized(str, game->split_times[i]);
+            json_object_set_new(split, "time", json_string(str));
+        }
+        if (game->best_splits[i] > 0 && game->best_splits[i] < LLONG_MAX) {
+            ls_time_string_serialized(str, game->best_splits[i]);
+            json_object_set_new(split, "best_time", json_string(str));
+        }
+        if (game->best_segments[i] > 0 && game->best_segments[i] < LLONG_MAX) {
+            ls_time_string_serialized(str, game->best_segments[i]);
+            json_object_set_new(split, "best_segment", json_string(str));
+        }
         json_array_append_new(splits, split);
     }
     json_object_set_new(json, "splits", splits);
@@ -420,15 +490,18 @@ int ls_game_save(const ls_game* game)
     if (game->height) {
         json_object_set_new(json, "height", json_integer(game->height));
     }
-    if (!json_dump_file(json, game->path,
-            JSON_PRESERVE_ORDER | JSON_INDENT(2))) {
+    const int json_dump_result = json_dump_file(json, game->path, JSON_PRESERVE_ORDER | JSON_INDENT(2));
+    if (json_dump_result) {
+        printf("Error dumping JSON:\n%s\n", json_dumps(json, JSON_PRESERVE_ORDER | JSON_INDENT(2)));
+        printf("Error: '%d'\n", json_dump_result);
+        printf("Path: %s\n", game->path);
         error = 1;
     }
     json_decref(json);
     return error;
 }
 
-void ls_timer_release(ls_timer* timer)
+void ls_timer_release(const ls_timer* timer)
 {
     if (timer->split_times) {
         free(timer->split_times);
@@ -472,9 +545,10 @@ static void reset_timer(ls_timer* timer)
     memset(timer->split_info, 0, size);
     timer->sum_of_bests = 0;
     for (i = 0; i < timer->game->split_count; ++i) {
-        if (timer->best_segments[i]) {
+        // Check no segments are erroring with LLONG_MAX
+        if (timer->best_segments[i] && timer->best_segments[i] < LLONG_MAX) {
             timer->sum_of_bests += timer->best_segments[i];
-        } else if (timer->game->best_segments[i]) {
+        } else if (timer->game->best_segments[i] && timer->game->best_segments[i] < LLONG_MAX) {
             timer->sum_of_bests += timer->game->best_segments[i];
         } else {
             timer->sum_of_bests = 0;
@@ -557,8 +631,8 @@ void ls_timer_step(ls_timer* timer, long long now)
         timer->time += delta; // Accumulate the elapsed time
         if (timer->curr_split < timer->game->split_count) {
             timer->split_times[timer->curr_split] = timer->time;
-            // calc delta
-            if (timer->game->split_times[timer->curr_split]) {
+            // calc delta and check it's not an error of LLONG_MAX
+            if (timer->game->split_times[timer->curr_split] && timer->game->split_times[timer->curr_split] < LLONG_MAX) {
                 timer->split_deltas[timer->curr_split] = timer->split_times[timer->curr_split]
                     - timer->game->split_times[timer->curr_split];
             }
@@ -574,7 +648,8 @@ void ls_timer_step(ls_timer* timer, long long now)
                 if (timer->curr_split) {
                     timer->segment_times[timer->curr_split] -= timer->split_times[timer->curr_split - 1];
                 }
-                if (timer->game->segment_times[timer->curr_split]) {
+                // For previous segment in footer
+                if (timer->game->segment_times[timer->curr_split] && timer->game->segment_times[timer->curr_split] < LLONG_MAX) {
                     timer->segment_deltas[timer->curr_split] = timer->segment_times[timer->curr_split]
                         - timer->game->segment_times[timer->curr_split];
                 }
@@ -615,7 +690,7 @@ int ls_timer_start(ls_timer* timer)
 
 int ls_timer_split(ls_timer* timer)
 {
-    if (timer->running && timer->time > 0) {
+    if (timer->time > 0) {
         if (timer->curr_split < timer->game->split_count) {
             int i;
             // check for best split and segment
@@ -636,21 +711,24 @@ int ls_timer_split(ls_timer* timer)
             // update sum of bests
             timer->sum_of_bests = 0;
             for (i = 0; i < timer->game->split_count; ++i) {
-                if (timer->best_segments[i]) {
+                // Check if any best segment is missing/LLONG_MAX
+                if (timer->best_segments[i] && timer->best_segments[i] < LLONG_MAX) {
                     timer->sum_of_bests += timer->best_segments[i];
-                } else if (timer->game->best_segments[i]) {
+                } else if (timer->game->best_segments[i] && timer->game->best_segments[i] < LLONG_MAX) {
                     timer->sum_of_bests += timer->game->best_segments[i];
                 } else {
                     timer->sum_of_bests = 0;
                     break;
                 }
             }
+
             ++timer->curr_split;
             // stop timer if last split
             if (timer->curr_split == timer->game->split_count) {
                 // Increment finished_count
                 ++*timer->finished_count;
                 ls_timer_stop(timer);
+                atomic_store(&run_finished, true);
                 ls_game_update_splits((ls_game*)timer->game, timer);
             }
             return timer->curr_split;
@@ -661,7 +739,11 @@ int ls_timer_split(ls_timer* timer)
 
 int ls_timer_skip(ls_timer* timer)
 {
-    if (timer->running && timer->time > 0) {
+    if (timer->time > 0) {
+        if (timer->curr_split + 1 == timer->game->split_count) {
+            // This is the last split, do a normal split instead of skipping
+            return ls_timer_split(timer);
+        }
         if (timer->curr_split < timer->game->split_count) {
             timer->split_times[timer->curr_split] = 0;
             timer->split_deltas[timer->curr_split] = 0;
@@ -697,6 +779,7 @@ int ls_timer_unsplit(ls_timer* timer)
 void ls_timer_stop(ls_timer* timer)
 {
     timer->running = 0;
+    atomic_store(&run_started, false);
 }
 
 int ls_timer_reset(ls_timer* timer)
