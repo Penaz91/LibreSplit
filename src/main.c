@@ -791,6 +791,14 @@ struct _LSAppClass {
 
 G_DEFINE_TYPE(LSApp, ls_app, GTK_TYPE_APPLICATION);
 
+/**
+ * Shows the "Open JSON Split File" dialog eventually using
+ * the last known split folder. Also saves a new "last used split folder".
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void open_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -854,6 +862,15 @@ static void open_activated(GSimpleAction* action,
     gtk_widget_destroy(dialog);
 }
 
+/**
+ * Shows the "Open Lua Auto Splitter" dialog eventually using
+ * the last known auto splitter folder. Also saves a new
+ * "last used auto splitter folder".
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void open_auto_splitter(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -926,6 +943,13 @@ static void open_auto_splitter(GSimpleAction* action,
     gtk_widget_destroy(dialog);
 }
 
+/**
+ * Saves the splits in the JSON Split file.
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void save_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -952,6 +976,13 @@ static void save_activated(GSimpleAction* action,
     }
 }
 
+/**
+ * Reloads LibreSplit.
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void reload_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -976,6 +1007,13 @@ static void reload_activated(GSimpleAction* action,
     }
 }
 
+/**
+ * Closes the current split file, emptying the LibreSplit window.
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void close_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -1006,6 +1044,13 @@ static void close_activated(GSimpleAction* action,
     gtk_widget_set_size_request(GTK_WIDGET(win), -1, -1);
 }
 
+/**
+ * Exits LibreSplit.
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void quit_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -1013,6 +1058,12 @@ static void quit_activated(GSimpleAction* action,
     exit(0);
 }
 
+/**
+ * Callback to toggle the Auto Splitter on and off.
+ *
+ * @param menu_item Pointer to the menu item that triggered this callback.
+ * @param user_data Usually NULL
+ */
 static void toggle_auto_splitter(GtkCheckMenuItem* menu_item, gpointer user_data)
 {
     gboolean active = gtk_check_menu_item_get_active(menu_item);
@@ -1025,6 +1076,12 @@ static void toggle_auto_splitter(GtkCheckMenuItem* menu_item, gpointer user_data
     }
 }
 
+/**
+ * Callback to toggle the EWMH "Always on top" hint.
+ *
+ * @param menu_item Pointer to the menu item that triggered this callback.
+ * @param app Usually NULL
+ */
 static void menu_toggle_win_on_top(GtkCheckMenuItem* menu_item,
     gpointer app)
 {
@@ -1041,7 +1098,15 @@ static void menu_toggle_win_on_top(GtkCheckMenuItem* menu_item,
     win->win_on_top = active;
 }
 
-// Create the context menu
+/**
+ * Creates the Context Menu.
+ *
+ * @param widget The widget that was right clicked. Not used here.
+ * @param event The click event, containing which button was used to click.
+ * @param app Pointer to the LibreSplit application.
+ *
+ * @return True if the click was done with the RMB (and a context menu was shown), False otherwise.
+ */
 static gboolean button_right_click(GtkWidget* widget, GdkEventButton* event, gpointer app)
 {
     if (event->button == GDK_BUTTON_SECONDARY) {
@@ -1092,6 +1157,12 @@ static gboolean button_right_click(GtkWidget* widget, GdkEventButton* event, gpo
     return FALSE;
 }
 
+/**
+ * Starts LibreSplit, loading the last splits and auto splitter.
+ * Eventually opens some dialogs if there are no last splits or auto-splitters.
+ *
+ * @param app Pointer to the LibreSplit application.
+ */
 static void ls_app_activate(GApplication* app)
 {
     LSAppWindow* win;
@@ -1170,6 +1241,11 @@ static void ls_app_class_init(LSAppClass* class)
     G_APPLICATION_CLASS(class)->open = ls_app_open;
 }
 
+/**
+ * LibreSplit's auto splitter thread.
+ *
+ * @param arg Unused.
+ */
 static void* ls_auto_splitter(void* arg)
 {
     while (1) {
@@ -1185,6 +1261,13 @@ static void* ls_auto_splitter(void* arg)
     return NULL;
 }
 
+/**
+ * Opens the default browser on the LibreSplit troubleshooting documentation.
+ *
+ * @param dialog The dialog that triggered this callback.
+ * @param response_id Unused.
+ * @param user_data Unused.
+ */
 static void dialog_response_cb(GtkWidget* dialog, gint response_id, gpointer user_data)
 {
     if (response_id == GTK_RESPONSE_OK) {
@@ -1193,6 +1276,13 @@ static void dialog_response_cb(GtkWidget* dialog, gint response_id, gpointer use
     gtk_widget_destroy(dialog);
 }
 
+/**
+ * Shows a message dialog in case of a memory read error.
+ *
+ * @param data Unused.
+ *
+ * @return False, to remove the function from the queue.
+ */
 gboolean display_non_capable_mem_read_dialog(gpointer data)
 {
     atomic_store(&auto_splitter_enabled, 0);
