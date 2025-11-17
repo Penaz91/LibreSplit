@@ -7,9 +7,14 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+/**
+ * \struct MemoryRegion
+ *
+ * Defines a process's memory region
+ */
 typedef struct {
-    uintptr_t start;
-    uintptr_t end;
+    uintptr_t start; /*!< The start address of the memory region */
+    uintptr_t end; /*!< The end address of the memory region */
 } MemoryRegion;
 
 MemoryRegion* get_memory_regions(pid_t pid, int* count);

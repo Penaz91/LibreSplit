@@ -34,6 +34,14 @@ void log_error(const char* format, ...)
     va_end(args);
 }
 
+/**
+ * Gets all the memory regions of a certain PID
+ *
+ * @param pid The ID of the process to get the memory regions of
+ * @param count A pointer to a counter onto where to store the number of regions
+ *
+ * @return A dinamically allocated array of MemoryRegion that have been found
+ */
 MemoryRegion* get_memory_regions(pid_t pid, int* count)
 {
     char maps_path[256];
@@ -76,6 +84,15 @@ MemoryRegion* get_memory_regions(pid_t pid, int* count)
     return regions;
 }
 
+/**
+ * Matches a pattern with an array of bytes.
+ *
+ * @param data The data to compare the pattern against.
+ * @param pattern The pattern to test for.
+ * @param pattern_size The length of the pattern.
+ *
+ * @return True if the pattern matches the data, false otherwise
+ */
 bool match_pattern(const uint8_t* data, const uint16_t* pattern, size_t pattern_size)
 {
     for (size_t i = 0; i < pattern_size; ++i) {
@@ -88,6 +105,15 @@ bool match_pattern(const uint8_t* data, const uint16_t* pattern, size_t pattern_
     return true;
 }
 
+/**
+ * Converts an IDA-like signature into a pattern to be used in LibreSplit.
+ * Supports the '??' string to ignore certain bytes in the comparison.
+ *
+ * @param signature A string containing the signature to convert.
+ * @param pattern_size A pointer onto where to save the size of the pattern.
+ *
+ * @return A pattern to be used with the LibreSplit signature scan functions.
+ */
 uint16_t* convert_signature(const char* signature, size_t* pattern_size)
 {
     char* signature_copy = strdup(signature);
@@ -139,6 +165,19 @@ bool validate_process_memory(pid_t pid, uintptr_t address, void* buffer, size_t 
     return nread == (ssize_t)size;
 }
 
+/**
+ * Performs the Lua Auto Splitter sig_scan function, pushing onto the Lua stack the result.
+ *
+ * If a pattern is found, it will be offset by the process base_address, allowing the result to
+ * be used directly in readAddress, without any module definition.
+ *
+ * Using readAddress with a module name and an address coming from sig_scan is not supported and
+ * may result in out-of-process reads or other unforeseen consequences.
+ *
+ * @param L The lua state.
+ *
+ * @return Always 1
+ */
 int perform_sig_scan(lua_State* L)
 {
     if (lua_gettop(L) != 2) {
