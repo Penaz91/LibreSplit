@@ -11,7 +11,7 @@
         * This means you can run external functions outside of the ones LibreSplit executes.
     * Support for the entire Lua language, including the importing of libraries for tasks such as performance monitoring.
 
-# How to make LibreSplit auto splitters 
+# How to make LibreSplit auto splitters
 
 * It's somewhat easy if you know what you are doing or are porting an already existing one.
 
@@ -365,7 +365,6 @@ Returns:
 * Until the address is found, sig_scan returns a 0.
 * Signature scanning is an expensive action. So, once an address has been found, it's recommended to reassign the sig_scan variable with the result of the sig_scan function to stop the scanning.
 
-
 Mini example script with the game SPRAWL:
 ```lua
 process('Sprawl-Win64-Shipping.exe')
@@ -380,14 +379,14 @@ function state()
         print("Signature scan did not find the address.")
     else
         -- Read an integer value from the found address
-        local readValue = readAddress('int', 'Sprawl-Win64-Shipping.exe', featuretest)
+        local readValue = readAddress('int', featuretest)
         print("Feature test address: ", featuretest)
         print("Read value: ", readValue)
     end
 end
 ```
 
-
+**Attention:** The sig_scan function will return an address that is automatically offset with the process base address, so it is ready to use with the readAddress function **without a module name**. Using readAddress with a module name is not supported and using a module name might result in wrong reads or out-of-process reads.
 
 ## getPID
 * Returns the current PID
@@ -400,7 +399,7 @@ end
     * `2`: Enabled for the current cycle and the next one
     * `3`: Enabled for the current cycle and the 2 next ones
     * You get the idea
-  
+
 ### Performance
 * Every uncached map finding takes around 1ms (depends a lot on your ram and cpu)
 * Every cached map finding takes around 100us
@@ -414,7 +413,7 @@ function startup()
     mapsCacheCycles = 1;
 end
 
--- Assume all this readAddresses are different, 
+-- Assume all this readAddresses are different,
 -- Instead of taking near 10ms it will instead take 1-2ms, because only this cycle is cached and the first readAddress is a cache miss, if the mapsCacheCycles were higher than 1 then a cycle could take less than half a millisecond
 function state()
     current.isLoading = readAddress("bool", "UnityPlayer.dll", 0x019B4878, 0xD0, 0x8, 0x60, 0xA0, 0x18, 0xA0);
