@@ -200,7 +200,12 @@ int perform_sig_scan(lua_State* L)
 
         for (size_t j = 0; j <= region_size - pattern_length; ++j) {
             if (match_pattern(buffer + j, pattern, pattern_length)) {
-                uintptr_t result = region.start + j + offset;
+                // The resulting address is the start of the region
+                // plus the index of the first byte that matches
+                // plus the user-set offset, minus the process's base_address
+                // or a subsequent memory read will read the wrong address or
+                // go out of memory (due to commit 2b4417f offsetting memory reads)
+                uintptr_t result = (region.start + j + offset) - process.base_address;
 
                 char full_hex_str[32]; // Increased buffer size for safety
                 if (snprintf(full_hex_str, sizeof(full_hex_str), "0x%" PRIxPTR, result) < 0) {
