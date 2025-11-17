@@ -118,7 +118,7 @@ bool handle_memory_error(uint32_t err)
             printf("EFAULT: Invalid memory space/address\n");
             break;
         case EINVAL:
-            printf("EINVAL: An error ocurred while reading memory\n");
+            printf("EINVAL: An error occurred while reading memory\n");
             break;
         case ENOMEM:
             printf("ENOMEM: Please get more memory\n");
