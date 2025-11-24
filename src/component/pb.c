@@ -9,7 +9,7 @@
  */
 typedef struct _LSPb {
     LSComponent base; /*!< The base struct that is extended */
-    GtkWidget* container; /*!< The container for the sum of bests */
+    GtkWidget* container; /*!< The container for the PB */
     GtkWidget* personal_best; /*< The actual personal best label */
 } LSPb;
 extern LSComponentOps ls_pb_operations;
@@ -63,7 +63,7 @@ static void pb_delete(LSComponent* self)
 /**
  * Returns the Personal Best GTK widget.
  *
- * @param self The Personal Best component itself.
+ * @param self The personal best component itself.
  * @return The container as a GTK Widget.
  */
 static GtkWidget* pb_widget(LSComponent* self)
@@ -74,7 +74,7 @@ static GtkWidget* pb_widget(LSComponent* self)
 /**
  * Function to execute when ls_app_window_show_game is executed.
  *
- * @param self_ The best time component itself.
+ * @param self_ The personal best component itself.
  * @param game The game struct instance.
  * @param timer The timer instance.
  */

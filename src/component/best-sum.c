@@ -74,7 +74,7 @@ static GtkWidget* best_sum_widget(LSComponent* self)
 /**
  * Function to execute when ls_app_window_show_game is executed.
  *
- * @param self_ The best time component itself.
+ * @param self_ The best sum component itself.
  * @param game The game struct instance.
  * @param timer The timer instance.
  */

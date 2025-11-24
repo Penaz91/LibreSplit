@@ -9,7 +9,7 @@
  */
 typedef struct _LSPrevSegment {
     LSComponent base; /*!< The base struct that is extended */
-    GtkWidget* container; /*!< The container for the sum of bests */
+    GtkWidget* container; /*!< The container for the previous segment */
     GtkWidget* previous_segment_label; /*!< Label containing the previous segment text (or live segment in some cases) */
     GtkWidget* previous_segment; /*!< Label containing the time */
 } LSPrevSegment;
@@ -77,7 +77,7 @@ static GtkWidget* prev_segment_widget(LSComponent* self)
 /**
  * Function to execute when ls_app_window_show_game is executed.
  *
- * @param self_ The best time component itself.
+ * @param self_ The prev-segment component itself.
  * @param game The game struct instance.
  * @param timer The timer instance.
  */
@@ -93,7 +93,7 @@ static void prev_segment_show_game(LSComponent* self_,
 /**
  * Function to execute when ls_app_window_clear_game is executed.
  *
- * @param self_ The best time component itself.
+ * @param self_ The prev-segment component itself.
  */
 static void prev_segment_clear_game(LSComponent* self_)
 {
