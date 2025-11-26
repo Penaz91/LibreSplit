@@ -194,7 +194,7 @@ int perform_sig_scan(lua_State* L)
 
     pid_t p_pid = process.pid;
     const char* signature = lua_tostring(L, 1);
-    int offset = lua_tointeger(L, 2);
+    intptr_t offset = lua_tointeger(L, 2);
 
     // Validate signature string
     if (strlen(signature) == 0) {
