@@ -194,7 +194,7 @@ int perform_sig_scan(lua_State* L)
 
     pid_t p_pid = process.pid;
     const char* signature = lua_tostring(L, 1);
-    int offset = lua_tointeger(L, 2);
+    size_t offset = lua_tointeger(L, 2);
 
     // Validate signature string
     if (strlen(signature) == 0) {
@@ -244,7 +244,9 @@ int perform_sig_scan(lua_State* L)
                 // plus the user-set offset, minus the process's base_address
                 // or a subsequent memory read will read the wrong address or
                 // go out of memory (due to commit 2b4417f offsetting memory reads)
-                uintptr_t result = (region.start + j + offset) - process.base_address;
+                // So this result might be negative if the main module happens to be after
+                // the found signature. This should be corrected by readAddress.
+                intptr_t result = (region.start + j + offset) - process.base_address;
 
                 char full_hex_str[32]; // Increased buffer size for safety
                 if (snprintf(full_hex_str, sizeof(full_hex_str), "0x%" PRIxPTR, result) < 0) {
