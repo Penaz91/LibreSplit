@@ -9,6 +9,7 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
+#include "lua.h"
 #include "memory.h"
 #include "process.h"
 
@@ -248,21 +249,11 @@ int perform_sig_scan(lua_State* L)
                 // the found signature. This should be corrected by readAddress.
                 intptr_t result = (region.start + j + offset) - process.base_address;
 
-                char full_hex_str[32]; // Increased buffer size for safety
-                if (snprintf(full_hex_str, sizeof(full_hex_str), "0x%" PRIxPTR, result) < 0) {
-                    free(buffer);
-                    free(pattern);
-                    free(regions);
-                    log_error("Failed to convert result to string");
-                    lua_pushnil(L);
-                    return 1;
-                }
-
                 free(buffer);
                 free(pattern);
                 free(regions);
 
-                lua_pushstring(L, full_hex_str);
+                lua_pushnumber(L, result);
                 return 1;
             }
         }
