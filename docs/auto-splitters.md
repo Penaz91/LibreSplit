@@ -361,8 +361,9 @@ Returns:
 `"0x14123ce19"`
 
 ### Notes
+* sig_scan may require LibreSplit to have advanced memory-reading permissions, check the [troubleshooting guide](./troubleshooting.md) to see how to enable it. If such permissions are not given, LibreSplit may not be able to find some signatures.
 * Lua automatically handles the conversion of hexadecimal strings to numbers (as long as the '0x' prefix is present) so parsing/casting it manually is not required.
-* Until the address is found, sig_scan returns a 0.
+* Until the address is found, sig_scan returns a `nil` value.
 * Signature scanning is an expensive action. So, once an address has been found, it's recommended to reassign the sig_scan variable with the result of the sig_scan function to stop the scanning.
 
 Mini example script with the game SPRAWL:
