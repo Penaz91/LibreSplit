@@ -122,12 +122,20 @@ bool handle_memory_error(uint32_t err)
 int get_base_address(lua_State* L)
 {
     uintptr_t address;
+    if (lua_gettop(L) == 0) {
+        // No arguments passed, search for process base address
+        address = find_base_address(NULL);
+        lua_pushnumber(L, address);
+        return 1;
+    }
     if (lua_isnil(L, 1)) {
+        // First argument is nil, search for process base address
         address = find_base_address(NULL);
         lua_pushnumber(L, address);
         return 1;
     }
     if (lua_isstring(L, 1)) {
+        // Module name passed, search for its base address
         const char* module_name = lua_tostring(L, 1);
         address = find_base_address(module_name);
         lua_pushnumber(L, address);
