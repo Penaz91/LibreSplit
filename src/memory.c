@@ -9,6 +9,7 @@
 #include <luajit.h>
 
 #include "glib.h"
+#include "lua.h"
 #include "memory.h"
 #include "process.h"
 
@@ -125,6 +126,13 @@ int read_address(lua_State* L)
     const char* value_type = lua_tostring(L, 1);
     int i;
 
+    if (lua_isnil(L, 2)) {
+        // The address is NULL, this will bring a segfault if left alone
+        printf("The address argument cannot be nil. Check your auto splitter code.\n");
+        lua_pushnil(L);
+        return 1;
+    }
+
     if (lua_isnumber(L, 2)) {
         address = process.base_address + lua_tointeger(L, 2);
         i = 3;
@@ -226,7 +234,7 @@ int read_address(lua_State* L)
     }
 
     if (memory_error) {
-        lua_pushinteger(L, -1);
+        lua_pushnil(L);
         handle_memory_error(error);
     }
 
