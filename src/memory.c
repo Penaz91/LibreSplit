@@ -142,14 +142,14 @@ int get_base_address(lua_State* L)
         return 1;
     }
     printf("Cannot search for base address: module name must be a string or nil (for main module)");
-    return 1;
+    return 0;
 }
 
 int size_of(lua_State* L)
 {
     if (!lua_isstring(L, 1)) {
         printf("The first argument must be a string defining the type to size");
-        return 1;
+        return 0;
     }
     const char* type_to_size = lua_tostring(L, 1);
     int size_of_type = 0;
@@ -179,23 +179,23 @@ int size_of(lua_State* L)
         int buffer_size = atoi(type_to_size + 6);
         if (buffer_size < 2) {
             printf("Invalid string size, please read documentation");
-            exit(1);
+            return 0;
         }
         size_of_type = sizeof(char) * buffer_size;
     } else if (strstr(type_to_size, "byte")) {
         int array_size = atoi(type_to_size + 4);
         if (array_size < 1) {
             printf("Invalid byte array size, please read documentation");
-            exit(1);
+            return 0;
         }
         size_of_type = sizeof(uint8_t) * array_size;
-    }
-    if (size_of_type == 0) {
+    } else {
+        // Error handling
         printf("Cannot find size of type %s", type_to_size);
         lua_pushnil(L);
-    } else {
-        lua_pushinteger(L, size_of_type);
+        return 1;
     }
+    lua_pushinteger(L, size_of_type);
     return 1;
 }
 
