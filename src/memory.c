@@ -9,6 +9,7 @@
 #include <luajit.h>
 
 #include "glib.h"
+#include "lua.h"
 #include "memory.h"
 #include "process.h"
 
@@ -116,6 +117,24 @@ bool handle_memory_error(uint32_t err)
             break;
     }
     return true;
+}
+
+int get_base_address(lua_State* L)
+{
+    uintptr_t address;
+    if (lua_isnil(L, 1)) {
+        address = find_base_address(NULL);
+        lua_pushnumber(L, address);
+        return 1;
+    }
+    if (lua_isstring(L, 1)) {
+        const char* module_name = lua_tostring(L, 1);
+        address = find_base_address(module_name);
+        lua_pushnumber(L, address);
+        return 1;
+    }
+    printf("Cannot search for base address: module name must be a string or nil (for main module)");
+    return 1;
 }
 
 int read_address(lua_State* L)

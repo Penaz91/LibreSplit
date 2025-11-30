@@ -9,4 +9,6 @@ ssize_t process_vm_readv(int pid, struct iovec* mem_local, int liovcnt, struct i
 
 int read_address(lua_State* L);
 
+int get_base_address(lua_State* L);
+
 #endif /* __MEMORY_H__ */

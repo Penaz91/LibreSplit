@@ -13,6 +13,7 @@
 #include <lualib.h>
 
 #include "auto-splitter.h"
+#include "lua.h"
 #include "memory.h"
 #include "process.h"
 #include "settings.h"
@@ -348,6 +349,8 @@ void run_auto_splitter()
     disable_functions(L, disabled_functions);
     lua_pushcfunction(L, find_process_id);
     lua_setglobal(L, "process");
+    lua_pushcfunction(L, get_base_address);
+    lua_setglobal(L, "getBaseAddress");
     lua_pushcfunction(L, read_address);
     lua_setglobal(L, "readAddress");
     lua_pushcfunction(L, perform_sig_scan);
