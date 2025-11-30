@@ -352,9 +352,9 @@ void run_auto_splitter()
     lua_pushcfunction(L, get_base_address);
     lua_setglobal(L, "getBaseAddress");
     lua_pushcfunction(L, read_address);
-    lua_setglobal(L, "sizeOf");
-    lua_pushcfunction(L, size_of);
     lua_setglobal(L, "readAddress");
+    lua_pushcfunction(L, size_of);
+    lua_setglobal(L, "sizeOf");
     lua_pushcfunction(L, perform_sig_scan);
     lua_setglobal(L, "sig_scan");
     lua_pushcfunction(L, getPid);
