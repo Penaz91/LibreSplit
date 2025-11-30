@@ -394,6 +394,7 @@ end
 
 # Experimental stuff
 ## `mapsCacheCycles`
+
 * When a readAddress that uses a memory map the biggest bottleneck is reading every line of `/proc/pid/maps` and checking if that line is the corresponding module. This option allows you to set for how many cycles the cache of that file should be used. The cache is global so it gets reset every x number of cycles.
     * `0`: Disabled completely
     * `1` (default): Enabled for the current cycle
@@ -430,3 +431,33 @@ function state()
 end
 
 ```
+
+## `getBaseAddress`
+Returns the base address of a given Module. If called without arguments, or with the only accepted argument as `nil`, it will return the base address of the main module.
+
+This can be useful for manual pointer manipulation, if required by the auto splitter.
+
+Usage:
+
+```
+-- This gets the base address of the main process
+local main_process_base_address = getbaseaddress()
+-- This also gets the base address of the main process
+local main_process_base_address = getbaseaddress(nil)
+-- This gets the base address of another module
+local module_base_address = getbaseaddress("UnityPlayer.dll")
+```
+
+## `sizeOf`
+Returns the size of a given type. Uses the same type names as [readAddress](#readAddress) and will automatically size arrays and strings according to their length too.
+
+```
+-- Get the size of a 32 bit integer
+local int_size = sizeOf("int")
+-- Get the size of a 20-character string
+local str_size = sizeOf("string20")
+-- Get the size of a 25-byte array
+local array_size = sizeOf("byte25")
+```
+
+**Warning:** As it is now, `sizeOf` returns the size in bytes. This may not be what is needed to properly work with pointers and may see some changes in the future for better integration with the rest of the Auto-Splitter Runtime.
