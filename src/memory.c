@@ -119,6 +119,14 @@ bool handle_memory_error(uint32_t err)
     return true;
 }
 
+/**
+ * The Lua "getBaseAddress" Auto Splitter function.
+ *
+ * Takes an optional module name and returns its base address.
+ * If the argument passed is absent or nil, defaults to the main module.
+ *
+ * @param L The Lua State
+ */
 int get_base_address(lua_State* L)
 {
     uintptr_t address;
@@ -145,6 +153,13 @@ int get_base_address(lua_State* L)
     return 0;
 }
 
+/**
+ * The "sizeOf" Lua AutoSplitter Runtime function
+ *
+ * Takes the type and returns the size it occupies, in bytes.
+ *
+ * @param L The Lua State
+ */
 int size_of(lua_State* L)
 {
     if (!lua_isstring(L, 1)) {
