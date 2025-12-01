@@ -32,7 +32,7 @@ typedef struct _LSAppWindowClass LSAppWindowClass;
 
 #define WINDOW_PAD (8)
 
-atomic_bool exit_requested = 0;
+atomic_bool exit_requested = 0; /*!< Set to 1 when LibreSplit is exiting */
 
 static const unsigned char css_data[] = {
 #embed "main.css"
@@ -41,7 +41,7 @@ static const unsigned char css_data[] = {
 static const size_t css_data_len = sizeof(css_data);
 
 /**
- * \struct Keybind A GTK Key bind
+ * @brief Keybind A GTK Key bind
  */
 typedef struct
 {
@@ -49,11 +49,14 @@ typedef struct
     GdkModifierType mods; /*!< The modifiers used (shift, ctrl, ...) */
 } Keybind;
 
+/**
+ * @brief The main LibreSplit application window
+ */
 struct _LSAppWindow {
-    GtkApplicationWindow parent;
-    char data_path[PATH_MAX];
-    gboolean decorated;
-    gboolean win_on_top;
+    GtkApplicationWindow parent; /*!< The proper GTK base application*/
+    char data_path[PATH_MAX]; /*!< The path to the libresplit user config directory */
+    gboolean decorated; /*!< Defines whether LibreSplit is currently showing window decorations */
+    gboolean win_on_top; /*!< Defines whether LibreSplit is currently "always-on-top" */
     ls_game* game;
     ls_timer* timer;
     GdkDisplay* display;
@@ -61,15 +64,15 @@ struct _LSAppWindow {
     GList* components;
     GtkWidget* footer;
     GtkCssProvider* style;
-    gboolean hide_cursor;
-    gboolean global_hotkeys;
-    Keybind keybind_start_split;
-    Keybind keybind_stop_reset;
-    Keybind keybind_cancel;
-    Keybind keybind_unsplit;
-    Keybind keybind_skip_split;
-    Keybind keybind_toggle_decorations;
-    Keybind keybind_toggle_win_on_top;
+    gboolean hide_cursor; /*!< Defines whether the cursor should be hidden when on top of LibreSplit */
+    gboolean global_hotkeys; /*!< Defines whether global hotkeys are currently enabled */
+    Keybind keybind_start_split; /*!< The "start or split" global keybind */
+    Keybind keybind_stop_reset; /*!< The "stop or reset timer" global keybind */
+    Keybind keybind_cancel; /*!< The "cancel" global keybind */
+    Keybind keybind_unsplit; /*!< The "undo split" global keybind */
+    Keybind keybind_skip_split; /*!< The "skip split" global keybind */
+    Keybind keybind_toggle_decorations; /*!< The "toggle decorations" global keybind */
+    Keybind keybind_toggle_win_on_top; /*!< The "always-on-top" global keybind */
 };
 
 struct _LSAppWindowClass {
@@ -137,6 +140,11 @@ static void save_game(ls_game* game)
     g_thread_new("save_game", save_game_thread, game);
 }
 
+/**
+ * Clears the current game and reset all the components.
+ *
+ * @param win The LibreSplit app window
+ */
 static void ls_app_window_clear_game(LSAppWindow* win)
 {
     GdkScreen* screen;

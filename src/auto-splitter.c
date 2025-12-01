@@ -26,8 +26,17 @@ int refresh_rate = 60;
 bool use_game_time = false;
 atomic_bool update_game_time = false;
 atomic_llong game_time_value = 0;
-int maps_cache_cycles = 1; // 0=off, 1=current cycle, +1=multiple cycles
-int maps_cache_cycles_value = 1; // same as `maps_cache_cycles` but this one represents the current value that changes on each cycle rather than the reference from the script
+/**
+ * Defines the behaviour of the map cache.
+ *
+ * 0=off, 1=current cycle, +1=multiple cycles
+ */
+int maps_cache_cycles = 1;
+/**
+ * Same as `maps_cache_cycles` but this one represents the current value
+ * that changes on each cycle rather than the reference from the script
+ */
+int maps_cache_cycles_value = 1;
 atomic_bool auto_splitter_enabled = true;
 atomic_bool auto_splitter_running = false;
 atomic_bool call_start = false;
