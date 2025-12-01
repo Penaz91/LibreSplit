@@ -177,6 +177,11 @@ static void timer_stop(LSAppWindow* win);
 static void timer_split(LSAppWindow* win, bool updateComponents);
 static void timer_reset(LSAppWindow* win);
 
+/**
+ * Updates the internal state of the LibreSplit Window.
+ *
+ * @param data Pointer to the LibreSplit Window.
+ */
 static gboolean ls_app_window_step(gpointer data)
 {
     LSAppWindow* win = data;
@@ -267,6 +272,12 @@ static int ls_app_window_find_theme(const LSAppWindow* win,
     return 1;
 }
 
+/**
+ * Prepares the LibreSplit window to be shown, using the data
+ * from the loaded split file.
+ *
+ * @param win The LibreSplit window.
+ */
 static void ls_app_window_show_game(LSAppWindow* win)
 {
     GdkScreen* screen;
@@ -736,7 +747,9 @@ static void ls_app_window_init(LSAppWindow* win)
     gtk_container_add(GTK_CONTAINER(win->box), win->footer);
     gtk_widget_show(win->footer);
 
+    // Update the internal state every millisecond
     g_timeout_add(1, ls_app_window_step, win);
+    // Draw the window at 30 FPS
     g_timeout_add((int)(1000 / 30.), ls_app_window_draw, win);
 }
 
