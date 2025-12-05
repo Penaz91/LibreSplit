@@ -125,10 +125,10 @@ void safe_pushinteger(lua_State* L, long long value)
     if (sizeof(lua_Integer) == 8) {
         // lua_Integer is a 64 bit number
         if (value > LONG_MAX) {
-            printf("Value %d too large (in the positives) for the Lua stack!");
+            printf("Value %lld too large (in the positives) for the Lua stack!", value);
             lua_pushnil(L);
         } else if (value < LONG_MIN) {
-            printf("Value %d too large (in the negatives) for the Lua stack!");
+            printf("Value %lld too large (in the negatives) for the Lua stack!", value);
             lua_pushnil(L);
         } else {
             lua_pushinteger(L, (lua_Integer)value);
@@ -136,10 +136,10 @@ void safe_pushinteger(lua_State* L, long long value)
     } else if (sizeof(lua_Integer) == 4) {
         // lua_Integer is a 32 bit number
         if (value > INT_MAX) {
-            printf("Value %d too large (in the positives) for the Lua stack!");
+            printf("Value %lld too large (in the positives) for the Lua stack!", value);
             lua_pushnil(L);
         } else if (value < INT_MIN) {
-            printf("Value %d too large (in the negatives) for the Lua stack!");
+            printf("Value %lld too large (in the negatives) for the Lua stack!", value);
             lua_pushnil(L);
         } else {
             lua_pushinteger(L, (lua_Integer)value);
