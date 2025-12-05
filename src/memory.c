@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -9,6 +10,7 @@
 #include <luajit.h>
 
 #include "glib.h"
+#include "lua.h"
 #include "memory.h"
 #include "process.h"
 
@@ -118,6 +120,34 @@ bool handle_memory_error(uint32_t err)
     return true;
 }
 
+void safe_pushinteger(lua_State* L, long long value)
+{
+    if (sizeof(lua_Integer) == 8) {
+        // lua_Integer is a 64 bit number
+        if (value > LONG_MAX) {
+            printf("Value %d too large (in the positives) for the Lua stack!");
+            lua_pushnil(L);
+        } else if (value < LONG_MIN) {
+            printf("Value %d too large (in the negatives) for the Lua stack!");
+            lua_pushnil(L);
+        } else {
+            lua_pushinteger(L, (lua_Integer)value);
+        }
+    } else if (sizeof(lua_Integer) == 4) {
+        // lua_Integer is a 32 bit number
+        if (value > INT_MAX) {
+            printf("Value %d too large (in the positives) for the Lua stack!");
+            lua_pushnil(L);
+        } else if (value < INT_MIN) {
+            printf("Value %d too large (in the negatives) for the Lua stack!");
+            lua_pushnil(L);
+        } else {
+            lua_pushinteger(L, (lua_Integer)value);
+        }
+    }
+    return;
+}
+
 int read_address(lua_State* L)
 {
     memory_error = false;
@@ -154,28 +184,28 @@ int read_address(lua_State* L)
 
     if (strcmp(value_type, "sbyte") == 0) {
         int8_t value = read_memory_int8_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        safe_pushinteger(L, value);
     } else if (strcmp(value_type, "byte") == 0) {
         uint8_t value = read_memory_uint8_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        safe_pushinteger(L, value);
     } else if (strcmp(value_type, "short") == 0) {
         short value = read_memory_int16_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        safe_pushinteger(L, value);
     } else if (strcmp(value_type, "ushort") == 0) {
         unsigned short value = read_memory_uint16_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        safe_pushinteger(L, value);
     } else if (strcmp(value_type, "int") == 0) {
         int value = read_memory_int32_t(address, &error);
-        lua_pushinteger(L, value);
+        safe_pushinteger(L, value);
     } else if (strcmp(value_type, "uint") == 0) {
         unsigned int value = read_memory_uint32_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        safe_pushinteger(L, value);
     } else if (strcmp(value_type, "long") == 0) {
         long value = read_memory_int64_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        safe_pushinteger(L, value);
     } else if (strcmp(value_type, "ulong") == 0) {
         unsigned long value = read_memory_uint64_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        safe_pushinteger(L, value);
     } else if (strcmp(value_type, "float") == 0) {
         float value = read_memory_float(address, &error);
         lua_pushnumber(L, (double)value);
