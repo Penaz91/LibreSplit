@@ -128,16 +128,25 @@ uint64_t get_module_size(const char* module)
  */
 int lua_get_module_size(lua_State* L)
 {
+    if (lua_gettop(L) == 0) {
+        // Called without argument
+        uint64_t size = get_module_size(NULL);
+        lua_pushinteger(L, (lua_Integer)size);
+        return 1;
+    }
     if (lua_isnil(L, 1)) {
+        // Called with "nil" as argument
         uint64_t size = get_module_size(NULL);
         lua_pushinteger(L, (lua_Integer)size);
         return 1;
     }
     if (!lua_isstring(L, 1)) {
+        // Called with invalid non-string parameter
         printf("Module name must be a string or nil (for the main module)");
         lua_pushnil(L);
         return 1;
     }
+    // Called with a module name (string)
     const char* module_name = lua_tostring(L, 1);
     uint64_t size = get_module_size(module_name);
     lua_pushinteger(L, (lua_Integer)size);
