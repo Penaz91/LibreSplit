@@ -27,5 +27,6 @@ int process_exists();
 int find_process_id(lua_State* L);
 int getPid(lua_State* L);
 bool parseMapsLine(const char* line, ProcessMap* map);
+int lua_get_module_size(lua_State* L);
 
 #endif /* __PROCESS_H__ */
