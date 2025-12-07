@@ -1,6 +1,7 @@
 #include <linux/limits.h>
 #include <signal.h>
 #include <stdatomic.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -147,7 +148,8 @@ int process_exists()
 
 bool parseMapsLine(const char* line, ProcessMap* map)
 {
-    size_t end;
+    uintptr_t end;
+    uint64_t size;
     char mode[8];
     unsigned long offset;
     unsigned int major_id, minor_id, node_id;
@@ -159,5 +161,8 @@ bool parseMapsLine(const char* line, ProcessMap* map)
     if (!sscanf_res)
         return false;
 
+    // Calculate the map size
+    size = end - map->start;
+    map->size = size;
     return true;
 }
