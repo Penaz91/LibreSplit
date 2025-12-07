@@ -142,7 +142,7 @@ int lua_get_module_size(lua_State* L)
     }
     if (!lua_isstring(L, 1)) {
         // Called with invalid non-string parameter
-        printf("Module name must be a string or nil (for the main module)");
+        printf("[getModuleSize] Module name must be a string or nil (for the main module)");
         lua_pushnil(L);
         return 1;
     }
