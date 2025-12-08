@@ -21,6 +21,7 @@ configure_file(
     output: 'config.h',
     configuration: {
         'DEFAULT_CONFIG_PATH': get_option('prefix') / get_option('datadir') / meson.project_name() / 'default_settings.json',
+        'LUA_MODULES_PATH': get_option('prefix') / get_option('datadir') / meson.project_name() / 'lua',
     },
 )
 
@@ -83,6 +84,11 @@ foreach size : [16, 22, 24, 32, 36, 48, 64, 72, 96, 128, 256, 512, 1024]
         install_mode: 'rw-r--r--',
     )
 endforeach
+
+install_subdir(
+    'src/lua',
+    install_dir: get_option('prefix') / get_option('datadir') / meson.project_name(),
+)
 
 gnome = import('gnome')
 #gnome.post_install(update_desktop_database: true, gtk_update_icon_cache: true)

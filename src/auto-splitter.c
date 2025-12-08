@@ -13,6 +13,8 @@
 #include <lualib.h>
 
 #include "auto-splitter.h"
+#include "config.h"
+#include "lua.h"
 #include "memory.h"
 #include "process.h"
 #include "settings.h"
@@ -48,6 +50,7 @@ static const char* disabled_functions[] = {
     "rawget",
     "rawset",
     "module",
+    "package",
     "require",
     "newproxy",
 };
@@ -118,6 +121,7 @@ static const luaL_Reg lj_lib_load[] = {
     { LUA_MATHLIBNAME, luaopen_math },
     { LUA_BITLIBNAME, luaopen_bit },
     { LUA_JITLIBNAME, luaopen_jit },
+    { LUA_LOADLIBNAME, luaopen_package },
     { NULL, NULL }
 };
 
@@ -340,10 +344,47 @@ void gameTime(lua_State* L)
     lua_pop(L, 1); // Remove the return value from the stack
 }
 
+static void prepend_utils_path(lua_State* L)
+{
+    lua_getglobal(L, "package");
+    if (!lua_istable(L, -1)) {
+        luaL_error(L, "'package' global is not a table");
+        return;
+    }
+    lua_getfield(L, -1, "path");
+    const char* original_path = lua_tostring(L, -1);
+    if (original_path == NULL) {
+        original_path = "";
+    }
+    lua_pushfstring(L, "%s/?.lua;%s/?/init.lua;%s", LUA_ADDITIONAL_MODULES_PATH, LUA_ADDITIONAL_MODULES_PATH, original_path);
+    lua_setfield(L, -3, "path");
+    lua_pop(L, 2);
+}
+
+static void load_lua_file(lua_State* L, const char* filename)
+{
+    if (luaL_loadfile(L, filename) != LUA_OK || lua_pcall(L, 0, 1, 0) != LUA_OK) {
+        const char* msg = lua_tostring(L, -1);
+        luaL_error(L, "failed to load %s: %s", filename, msg);
+    }
+}
+
+void preload_utils_as_global(lua_State* L)
+{
+    char path[1024];
+    snprintf(path, sizeof(path), "%s/utils.lua", LUA_ADDITIONAL_MODULES_PATH);
+
+    load_lua_file(L, path);
+
+    lua_setglobal(L, "utils");
+}
+
 void run_auto_splitter()
 {
     lua_State* L = luaL_newstate();
     luaL_openlibs(L);
+    prepend_utils_path(L);
+    preload_utils_as_global(L);
     disable_functions(L, disabled_functions);
     lua_pushcfunction(L, find_process_id);
     lua_setglobal(L, "process");
