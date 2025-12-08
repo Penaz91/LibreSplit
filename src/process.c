@@ -113,7 +113,7 @@ int find_process_id(lua_State* L)
         sort = "first";
     } else {
         if (strcmp(sort, "first") != 0 && strcmp(sort, "last") != 0) {
-            printf("Invalid sort argument '%s'. Use 'first' or 'last'. Falling back to first\n", sort);
+            printf("[process] Invalid sort argument '%s'. Use 'first' or 'last'. Falling back to first\n", sort);
             sort = "first";
         }
     }
