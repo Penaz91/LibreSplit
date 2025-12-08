@@ -84,7 +84,7 @@ uint64_t get_module_size(const char* module)
     // Check the cache
     for (int32_t i = 0; i < p_maps_cache_size; i++) {
         const char* name = p_maps_cache[i].name;
-        if (strstr(name, module_to_grep) == NULL) {
+        if (strstr(name, module_to_grep) != NULL) {
             return p_maps_cache[i].size;
         }
     }
