@@ -4,11 +4,7 @@ LibreSplit can be customized using themes, which are made of CSS stylesheets.
 
 ## Changing the theme
 
-You can set the global theme by changing the `theme` value using `gsettings`.
-
-```sh
-gsettings set com.github.wins1ey.libresplit theme <theme-name>
-```
+You can set the global theme by changing the `theme` value in your `settings.json` configuration file, usually you'll find it in `~/.config/libresplit/`.
 
 Also each split JSON file can apply their own themes by specifying a `theme` key in the main object, see [the split files documentation](split-files.md) for more information.
 
