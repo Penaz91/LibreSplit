@@ -54,7 +54,7 @@ uintptr_t find_base_address(const char* module)
 
     for (int32_t i = 0; i < p_maps_cache_size; i++) {
         const char* name = p_maps_cache[i].name;
-        if (strstr(name, module_to_grep) == NULL) {
+        if (strstr(name, module_to_grep) != NULL) {
             return p_maps_cache[i].start;
         }
     }
@@ -132,7 +132,7 @@ int find_process_id(lua_State* L)
         sort = "first";
     } else {
         if (strcmp(sort, "first") != 0 && strcmp(sort, "last") != 0) {
-            printf("Invalid sort argument '%s'. Use 'first' or 'last'. Falling back to first\n", sort);
+            printf("[process] Invalid sort argument '%s'. Use 'first' or 'last'. Falling back to first\n", sort);
             sort = "first";
         }
     }

@@ -192,15 +192,17 @@ For more information, check the [Themes documentation](docs/themes.md).
 
 - **How do I change the default keybinds?**
 
-    You can change the keybinds using the `gsettings` command.
+    You can change the keybinds by editing your `settings.json` file (usually inside the `~/.config/libresplit` folder).
 
     See [Settings and Keybinds](docs/settings-keybinds.md) for some examples and more information.
 
 - **How do I make the keybinds global?**
 
-    You can set the `global-hotkeys` property as `true` using `gsettings`. See [Settings and Keybinds](docs/settings-keybinds.md).
+    You can set the `global_hotkeys` property as `true` by editing your `settings.json` file.
 
-    Wayland users experienced crashes when enabled `global-hotkeys`, so this settings is ignored for Wayland desktops. We are working towards a way to bring global hotkeys to everyone.
+    Wayland users experienced crashes when enabled `global_hotkeys`, so this settings is ignored for Wayland desktops.
+
+    See [Settings and Keybinds](docs/settings-keybinds.md) for more information and workarounds for Wayland.
 
 - **Can I modify LibreSplit's appearance?**
 
