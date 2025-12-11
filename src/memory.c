@@ -96,16 +96,16 @@ bool handle_memory_error(uint32_t err)
         return false;
     switch (err) {
         case EFAULT:
-            printf("EFAULT: Invalid memory space/address\n");
+            printf("[readAddress] EFAULT: Invalid memory space/address\n");
             break;
         case EINVAL:
-            printf("EINVAL: An error ocurred while reading memory\n");
+            printf("[readAddress] EINVAL: An error ocurred while reading memory\n");
             break;
         case ENOMEM:
-            printf("ENOMEM: Please get more memory\n");
+            printf("[readAddress] ENOMEM: Please get more memory\n");
             break;
         case EPERM:
-            printf("EPERM: Permission denied\n");
+            printf("[readAddress] EPERM: Permission denied\n");
 
             if (!shownDialog) {
                 shownDialog = true;
@@ -114,7 +114,7 @@ bool handle_memory_error(uint32_t err)
 
             break;
         case ESRCH:
-            printf("ESRCH: No process with specified PID exists\n");
+            printf("[readAddress] ESRCH: No process with specified PID exists\n");
             break;
     }
     return true;
@@ -154,6 +154,13 @@ int read_address(lua_State* L)
     uint64_t address;
     const char* value_type = lua_tostring(L, 1);
     int i;
+
+    if (lua_isnil(L, 2)) {
+        // The address is NULL, this will bring a segfault if left alone
+        printf("[readAddress] The address argument cannot be nil. Check your auto splitter code.\n");
+        lua_pushnil(L);
+        return 1;
+    }
 
     if (lua_isnumber(L, 2)) {
         address = process.base_address + lua_tointeger(L, 2);
@@ -218,7 +225,7 @@ int read_address(lua_State* L)
     } else if (strstr(value_type, "string") != NULL) {
         int buffer_size = atoi(value_type + 6);
         if (buffer_size < 2) {
-            printf("Invalid string size, please read documentation");
+            printf("[readAddress] Invalid string size, please read documentation");
             exit(1);
         }
         char* value = read_memory_string(address, buffer_size, &error);
@@ -227,7 +234,7 @@ int read_address(lua_State* L)
     } else if (strstr(value_type, "byte")) {
         int array_size = atoi(value_type + 4);
         if (array_size < 1) {
-            printf("Invalid byte array size, please read documentation");
+            printf("[readAddress] Invalid byte array size, please read documentation");
             exit(1);
         }
         uint8_t* results = malloc(array_size * sizeof(uint8_t));
@@ -251,12 +258,12 @@ int read_address(lua_State* L)
         }
         free(results);
     } else {
-        printf("Invalid value type: %s\n", value_type);
+        printf("[readAddress] Invalid value type: %s\n", value_type);
         exit(1);
     }
 
     if (memory_error) {
-        lua_pushinteger(L, -1);
+        lua_pushnil(L);
         handle_memory_error(error);
     }
 
