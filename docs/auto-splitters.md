@@ -461,3 +461,13 @@ local array_size = sizeOf("byte25")
 ```
 
 **Warning:** As it is now, `sizeOf` returns the size in bytes. This may not be what is needed to properly work with pointers and may see some changes in the future for better integration with the rest of the Auto-Splitter Runtime.
+
+## getModuleSize
+
+Given a certain module name (or nothing/nil), returns the size of the module.
+
+```lua
+local main_module_size = getModuleSize();
+local main_module_size_2 = getModuleSize(nil);
+local other_module_size = getModuleSize("other_module");
+```

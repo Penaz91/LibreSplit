@@ -359,6 +359,8 @@ void run_auto_splitter()
     lua_setglobal(L, "sig_scan");
     lua_pushcfunction(L, getPid);
     lua_setglobal(L, "getPID");
+    lua_pushcfunction(L, lua_get_module_size);
+    lua_setglobal(L, "getModuleSize");
 
     char current_file[PATH_MAX];
     strcpy(current_file, auto_splitter_file);
