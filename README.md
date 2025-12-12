@@ -76,7 +76,7 @@ Install the required dependencies:
 
     ```sh
     sudo apt update
-    sudo apt install build-essential libgtk3-dev libjansson-dev meson luajit
+    sudo apt install build-essential libgtk-3-dev libjansson-dev meson libluajit-5.1-dev cmake
     ```
 
 - Arch-based systems
