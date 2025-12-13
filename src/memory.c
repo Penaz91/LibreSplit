@@ -251,28 +251,28 @@ int read_address(lua_State* L)
 
     if (strcmp(value_type, "sbyte") == 0) {
         int8_t value = read_memory_int8_t(address, &error);
-        lua_pushinteger(L, (lua_Integer)value);
+        lua_pushinteger(L, (int)value);
     } else if (strcmp(value_type, "byte") == 0) {
         uint8_t value = read_memory_uint8_t(address, &error);
-        lua_pushinteger(L, (lua_Integer)value);
+        lua_pushinteger(L, (int)value);
     } else if (strcmp(value_type, "short") == 0) {
         short value = read_memory_int16_t(address, &error);
-        lua_pushinteger(L, (lua_Integer)value);
+        lua_pushinteger(L, (int)value);
     } else if (strcmp(value_type, "ushort") == 0) {
         unsigned short value = read_memory_uint16_t(address, &error);
-        lua_pushinteger(L, (lua_Integer)value);
+        lua_pushinteger(L, (int)value);
     } else if (strcmp(value_type, "int") == 0) {
         int value = read_memory_int32_t(address, &error);
         lua_pushinteger(L, value);
     } else if (strcmp(value_type, "uint") == 0) {
         unsigned int value = read_memory_uint32_t(address, &error);
-        lua_pushinteger(L, (lua_Integer)value);
+        lua_pushinteger(L, (int)value);
     } else if (strcmp(value_type, "long") == 0) {
         long value = read_memory_int64_t(address, &error);
-        lua_pushinteger(L, (lua_Integer)value);
+        lua_pushinteger(L, (int)value);
     } else if (strcmp(value_type, "ulong") == 0) {
         unsigned long value = read_memory_uint64_t(address, &error);
-        lua_pushinteger(L, (lua_Integer)value);
+        lua_pushinteger(L, (int)value);
     } else if (strcmp(value_type, "float") == 0) {
         float value = read_memory_float(address, &error);
         lua_pushnumber(L, (double)value);
