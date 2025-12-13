@@ -143,7 +143,8 @@ uint16_t* convert_signature(const char* signature, size_t* pattern_size)
             pattern = temp;
         }
 
-        if (strcmp(token, "??") == 0) {
+        if (strstr(token, "?") != NULL) {
+            // Treats a half-byte mask as a full-byte mask (0? => ?? or ?F=> ??)
             pattern[size] = 0xFF00; // Set the upper byte to 1 to indicate ignoring this byte
         } else {
             pattern[size] = strtol(token, NULL, 16);
