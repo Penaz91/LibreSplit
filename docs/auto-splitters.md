@@ -353,7 +353,7 @@ end
 
 ## sig_scan
 
-`sig_scan` performs a signature/pattern scan using the provided IDA-style byte array and an optional integer offset, It returns a numeric representation of the found address.
+`sig_scan` performs a signature/pattern scan using the provided IDA-style byte array and an integer offset, It returns a numeric representation of the found address.
 
 Example:
 
