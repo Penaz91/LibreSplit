@@ -352,33 +352,45 @@ end
         * Cheat Engine is a tool that allows you to easily find Addresses and Pointer Paths for those Addresses, so you don't need to debug the game to figure out the structure of the memory.
 
 ## sig_scan
-sig_scan performs a signature/pattern scan on the provided IDA-style byte array and optional integer offset and returns a string representation of the found address
+
+`sig_scan` performs a signature/pattern scan using the provided IDA-style byte array and an optional integer offset, It returns a numeric representation of the found address.
 
 Example:
+
 `signature = sig_scan("89 5C 24 ?? 89 44 24 ?? 74 ?? 48 8D 15", 4)`
 
 Returns:
-`"0x14123ce19"`
+
+`5387832857`
+
+(Which is the decimal representation of the address `0x14123ce19`)
 
 ### Notes
-* sig_scan may require LibreSplit to have advanced memory-reading permissions, check the [troubleshooting guide](./troubleshooting.md) to see how to enable it. If such permissions are not given, LibreSplit may not be able to find some signatures.
-* Lua automatically handles the conversion of hexadecimal strings to numbers (as long as the '0x' prefix is present) so parsing/casting it manually is not required.
-* Until the address is found, sig_scan returns a `nil` value.
-* Signature scanning is an expensive action. So, once an address has been found, it's recommended to reassign the sig_scan variable with the result of the sig_scan function to stop the scanning.
+
+* `sig_scan` may require LibreSplit to have advanced memory-reading permissions, check the [troubleshooting guide](./troubleshooting.md) to see how to enable it. If such permissions are not given, LibreSplit may not be able to find some signatures.
+* Lua automatically handles the conversion of hexadecimal strings to numbers, so parsing/casting it manually is not required. You can use the result of `sig_scan` directly into `readAddress`.
+* Until the address is found, `sig_scan` returns a `nil` value.
+* Signature scanning is an expensive action. So in most cases, we recommend avoiding scanning for a signature all the time, but using a variable as a "guard", this way as soon as `sig_scan` returns a valid value, the auto splitter will skip the expensive signature scanning.
 
 Mini example script with the game SPRAWL:
 ```lua
 process('Sprawl-Win64-Shipping.exe')
 
-local featuretest = 0
+local featuretest = nil
 
 function state()
-    -- Perform the signature scan to find the initial address
-    featuretest = sig_scan("89 5C 24 ?? 89 44 24 ?? 74 ?? 48 8D 15", 4)
-
-    if featuretest == 0 then
+    -- If our "guard variable" is nil, we didn't find an address yet...
+    -- If our "guard variable" is not nil, we already found the memory address in a previous loop,
+    -- so we skip further signature scanning
+    if featuretest == nil then
+        -- so we perform the signature scan to find the initial address
+        featuretest = sig_scan("89 5C 24 ?? 89 44 24 ?? 74 ?? 48 8D 15", 4)
+        -- Print a message to warn the user
         print("Signature scan did not find the address.")
-    else
+    end
+    -- When sig_scan returns a valid value, our guard variable will not be nil anymore,
+    -- so we can continue with the rest of the auto splitter code
+    if featuretest ~= nil then
         -- Read an integer value from the found address
         local readValue = readAddress('int', featuretest)
         print("Feature test address: ", featuretest)
@@ -387,7 +399,7 @@ function state()
 end
 ```
 
-**Attention:** The sig_scan function will return an address that is automatically offset with the process base address, so it is ready to use with the readAddress function **without a module name**. Using readAddress with a module name is not supported and using a module name might result in wrong reads or out-of-process reads.
+**Attention:** The `sig_scan` function will return an address that is automatically offset with the process base address, so it is ready to use with the `readAddress` function **without a module name**. Using `readAddress` with a module name is not supported and using a module name might result in wrong or out-of-process reads.
 
 ## getPID
 * Returns the current PID
@@ -395,7 +407,7 @@ end
 # Experimental stuff
 ## `mapsCacheCycles`
 
-* When a readAddress that uses a memory map the biggest bottleneck is reading every line of `/proc/pid/maps` and checking if that line is the corresponding module. This option allows you to set for how many cycles the cache of that file should be used. The cache is global so it gets reset every x number of cycles.
+* When a `readAddress` that uses a memory map the biggest bottleneck is reading every line of `/proc/pid/maps` and checking if that line is the corresponding module. This option allows you to set for how many cycles the cache of that file should be used. The cache is global so it gets reset every x number of cycles.
     * `0`: Disabled completely
     * `1` (default): Enabled for the current cycle
     * `2`: Enabled for the current cycle and the next one
@@ -403,10 +415,10 @@ end
     * You get the idea
 
 ### Performance
-* Every uncached map finding takes around 1ms (depends a lot on your ram and cpu)
+* Every uncached map finding takes around 1ms (depends a lot on your RAM and CPU)
 * Every cached map finding takes around 100us
 
-* Mainly useful for lots of readAddresses and the game has uncapped game state update rate, where literally every millisecond matters
+* Mainly useful for lots of `readAddress`-es and the game has an uncapped game state update rate, where literally every millisecond matters
 
 ### Example
 ```lua
