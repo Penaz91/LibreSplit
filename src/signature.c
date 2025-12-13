@@ -41,9 +41,9 @@ void log_error(const char* format, ...)
  * @param pid The ID of the process to get the memory regions of
  * @param count A pointer to a counter onto where to store the number of regions
  *
- * @return A dinamically allocated array of MemoryRegion that have been found
+ * @return A dinamically allocated array of ProcessMap that have been found
  */
-MemoryRegion* get_memory_regions(pid_t pid, int* count)
+ProcessMap* get_memory_regions(pid_t pid, int* count)
 {
     char maps_path[256];
     if (snprintf(maps_path, sizeof(maps_path), "/proc/%d/maps", pid) < 0) {
@@ -55,7 +55,7 @@ MemoryRegion* get_memory_regions(pid_t pid, int* count)
         HANDLE_ERROR("Failed to open maps file");
     }
 
-    MemoryRegion* regions = NULL;
+    ProcessMap* regions = NULL;
     int capacity = 0;
     *count = 0;
 
@@ -63,7 +63,7 @@ MemoryRegion* get_memory_regions(pid_t pid, int* count)
     while (fgets(line, sizeof(line), maps_file)) {
         if (*count >= capacity) {
             capacity = capacity == 0 ? 10 : capacity * 2;
-            MemoryRegion* temp = realloc(regions, capacity * sizeof(MemoryRegion));
+            ProcessMap* temp = realloc(regions, capacity * sizeof(ProcessMap));
             if (!temp) {
                 free(regions);
                 fclose(maps_file);
@@ -214,7 +214,7 @@ int perform_sig_scan(lua_State* L)
     }
 
     int regions_count = 0;
-    MemoryRegion* regions = get_memory_regions(p_pid, &regions_count);
+    ProcessMap* regions = get_memory_regions(p_pid, &regions_count);
     if (!regions) {
         free(pattern);
         log_error("Failed to get memory regions");
@@ -223,7 +223,7 @@ int perform_sig_scan(lua_State* L)
     }
 
     for (int i = 0; i < regions_count; i++) {
-        MemoryRegion region = regions[i];
+        ProcessMap region = regions[i];
         ssize_t region_size = region.end - region.start;
         uint8_t* buffer = malloc(region_size);
         if (!buffer) {
