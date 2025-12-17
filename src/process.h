@@ -19,7 +19,9 @@ struct game_process {
 typedef struct game_process game_process;
 
 typedef struct ProcessMap {
-    uint64_t start;
+    uintptr_t start;
+    uintptr_t end;
+    uintptr_t size;
     char name[PATH_MAX];
 } ProcessMap;
 extern uint32_t p_maps_cache_size;
@@ -29,5 +31,6 @@ int process_exists();
 int find_process_id(lua_State* L);
 int getPid(lua_State* L);
 bool parseMapsLine(const char* line, ProcessMap* map);
+int lua_get_module_size(lua_State* L);
 
 #endif /* __PROCESS_H__ */

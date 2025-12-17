@@ -141,6 +141,95 @@ bool handle_memory_error(uint32_t err)
 }
 
 /**
+ * The Lua "getBaseAddress" Auto Splitter function.
+ *
+ * Takes an optional module name and returns its base address.
+ * If the argument passed is absent or nil, defaults to the main module.
+ *
+ * @param L The Lua State
+ */
+int get_base_address(lua_State* L)
+{
+    uintptr_t address;
+    if (lua_gettop(L) == 0 || lua_isnil(L, 1)) {
+        // No arguments passed or first argument is nil, search for process base address
+        address = find_base_address(NULL);
+        lua_pushnumber(L, address);
+        return 1;
+    }
+    if (lua_isstring(L, 1)) {
+        // Module name passed, search for its base address
+        const char* module_name = lua_tostring(L, 1);
+        address = find_base_address(module_name);
+        lua_pushnumber(L, address);
+        return 1;
+    }
+    printf("Cannot search for base address: module name must be a string or nil (for main module)");
+    return 0;
+}
+
+/**
+ * The "sizeOf" Lua AutoSplitter Runtime function
+ *
+ * Takes the type and returns the size it occupies, in bytes.
+ *
+ * @param L The Lua State
+ */
+int size_of(lua_State* L)
+{
+    if (!lua_isstring(L, 1)) {
+        printf("The first argument must be a string defining the type to size");
+        return 0;
+    }
+    const char* type_to_size = lua_tostring(L, 1);
+    int size_of_type = 0;
+    if (strcmp(type_to_size, "sbyte") == 0) {
+        size_of_type = sizeof(int8_t);
+    } else if (strcmp(type_to_size, "byte") == 0) {
+        size_of_type = sizeof(uint8_t);
+    } else if (strcmp(type_to_size, "short") == 0) {
+        size_of_type = sizeof(int16_t);
+    } else if (strcmp(type_to_size, "ushort") == 0) {
+        size_of_type = sizeof(uint16_t);
+    } else if (strcmp(type_to_size, "int") == 0) {
+        size_of_type = sizeof(int32_t);
+    } else if (strcmp(type_to_size, "uint") == 0) {
+        size_of_type = sizeof(uint32_t);
+    } else if (strcmp(type_to_size, "long") == 0) {
+        size_of_type = sizeof(int64_t);
+    } else if (strcmp(type_to_size, "ulong") == 0) {
+        size_of_type = sizeof(uint64_t);
+    } else if (strcmp(type_to_size, "float") == 0) {
+        size_of_type = sizeof(float);
+    } else if (strcmp(type_to_size, "double") == 0) {
+        size_of_type = sizeof(double);
+    } else if (strcmp(type_to_size, "bool") == 0) {
+        size_of_type = sizeof(bool);
+    } else if (strstr(type_to_size, "string") != NULL) {
+        int buffer_size = atoi(type_to_size + 6);
+        if (buffer_size < 2) {
+            printf("Invalid string size, please read documentation");
+            return 0;
+        }
+        size_of_type = sizeof(char) * buffer_size;
+    } else if (strstr(type_to_size, "byte")) {
+        int array_size = atoi(type_to_size + 4);
+        if (array_size < 1) {
+            printf("Invalid byte array size, please read documentation");
+            return 0;
+        }
+        size_of_type = sizeof(uint8_t) * array_size;
+    } else {
+        // Error handling
+        printf("Cannot find size of type %s", type_to_size);
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushinteger(L, size_of_type);
+    return 1;
+}
+
+/**
  * Reads a memory address given by the Lua Auto Splitter.
  *
  * @param L The Lua state.
@@ -188,31 +277,33 @@ int read_address(lua_State* L)
 
     if (strcmp(value_type, "sbyte") == 0) {
         int8_t value = read_memory_int8_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        lua_pushinteger(L, value);
     } else if (strcmp(value_type, "byte") == 0) {
         uint8_t value = read_memory_uint8_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        lua_pushinteger(L, value);
     } else if (strcmp(value_type, "short") == 0) {
-        short value = read_memory_int16_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        int16_t value = read_memory_int16_t(address, &error);
+        lua_pushinteger(L, value);
     } else if (strcmp(value_type, "ushort") == 0) {
-        unsigned short value = read_memory_uint16_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        uint16_t value = read_memory_uint16_t(address, &error);
+        lua_pushinteger(L, value);
     } else if (strcmp(value_type, "int") == 0) {
-        int value = read_memory_int32_t(address, &error);
+        int32_t value = read_memory_int32_t(address, &error);
         lua_pushinteger(L, value);
     } else if (strcmp(value_type, "uint") == 0) {
-        unsigned int value = read_memory_uint32_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        uint32_t value = read_memory_uint32_t(address, &error);
+        lua_pushinteger(L, value);
     } else if (strcmp(value_type, "long") == 0) {
-        long value = read_memory_int64_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        // TODO: Fix 64 bit numbers, luajit 5.1 doesnt support 64 bit numbers natively
+        int64_t value = read_memory_int64_t(address, &error);
+        lua_pushinteger(L, value);
     } else if (strcmp(value_type, "ulong") == 0) {
-        unsigned long value = read_memory_uint64_t(address, &error);
-        lua_pushinteger(L, (int)value);
+        // TODO: Fix 64 bit numbers, luajit 5.1 doesnt support 64 bit numbers natively
+        uint64_t value = read_memory_uint64_t(address, &error);
+        lua_pushinteger(L, value);
     } else if (strcmp(value_type, "float") == 0) {
         float value = read_memory_float(address, &error);
-        lua_pushnumber(L, (double)value);
+        lua_pushnumber(L, value);
     } else if (strcmp(value_type, "double") == 0) {
         double value = read_memory_double(address, &error);
         lua_pushnumber(L, value);
@@ -249,7 +340,7 @@ int read_address(lua_State* L)
             lua_createtable(L, array_size, 0);
             for (int j = 0; j < array_size; j++) {
                 uint8_t value = results[j];
-                lua_pushinteger(L, (int)value);
+                lua_pushinteger(L, value);
                 lua_rawseti(L, -2, j + 1);
             }
         }

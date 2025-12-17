@@ -28,11 +28,14 @@ executable(
     'libresplit',
     [
         'src/main.c',
+        'src/shared.c',
+        'src/server.c',
         'src/auto-splitter.c',
         'src/bind.c',
         'src/memory.c',
         'src/process.c',
         'src/settings.c',
+        'src/signature.c',
         'src/timer.c',
         'src/component/best-sum.c',
         'src/component/clock.c',
@@ -50,6 +53,13 @@ executable(
         '-DDATADIR="' + get_option('datadir') + '"',
         '-Werror',
     ],
+    install: true,
+)
+
+executable(
+    'libresplit-ctl',
+    'src/ctl.c',
+    'src/shared.c',
     install: true,
 )
 
