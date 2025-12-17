@@ -17,7 +17,8 @@ typedef struct game_process game_process;
 
 typedef struct ProcessMap {
     uintptr_t start;
-    uint64_t size;
+    uintptr_t end;
+    uintptr_t size;
     char name[PATH_MAX];
 } ProcessMap;
 extern uint32_t p_maps_cache_size;

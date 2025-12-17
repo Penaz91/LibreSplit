@@ -35,6 +35,7 @@ executable(
         'src/memory.c',
         'src/process.c',
         'src/settings.c',
+        'src/signature.c',
         'src/timer.c',
         'src/component/best-sum.c',
         'src/component/clock.c',
