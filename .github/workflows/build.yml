@@ -38,6 +38,7 @@ jobs:
                   mkdir release
                   cp -r assets release/
                   cp -r build/libresplit release/
+                  cp -r build/libresplit-ctl release/
                   cp README.md release/
                   cp LICENSE release/
 
@@ -86,7 +87,9 @@ jobs:
                   mkdir -p AppDir/usr/share/licenses/libresplit
 
                   cp libresplit AppDir/usr/bin/
+                  cp libresplit-ctl AppDir/usr/bin/
                   chmod +x AppDir/usr/bin/libresplit
+                  chmod +x AppDir/usr/bin/libresplit-ctl
 
                   cp assets/default_settings.json AppDir/usr/share/libresplit/
                   cp assets/libresplit.desktop AppDir/usr/share/applications/
@@ -97,6 +100,9 @@ jobs:
 
                   # Create AppImage-compatible desktop entry at root
                   cp assets/libresplit.desktop AppDir/
+                  sed -i 's/^Exec=.*/Exec=AppRun/' AppDir/libresplit.desktop
+                  cp assets/appimage.sh AppDir/AppRun
+                  chmod +x AppDir/AppRun
                   cp assets/icons/libresplit-256.png AppDir/libresplit.png
 
             - name: "Download linuxdeploy"
@@ -106,7 +112,7 @@ jobs:
 
             - name: "Create AppImage"
               run: |
-                  ./linuxdeploy-x86_64.AppImage --appdir AppDir --output appimage
+                  ./linuxdeploy-x86_64.AppImage --appdir AppDir --desktop-file AppDir/libresplit.desktop --icon-file AppDir/libresplit.png --output appimage
 
             - name: "Upload AppImage"
               uses: actions/upload-artifact@v4

@@ -13,7 +13,9 @@
 #include "auto-splitter.h"
 #include "bind.h"
 #include "component/components.h"
+#include "server.h"
 #include "settings.h"
+#include "shared.h"
 #include "timer.h"
 
 #define LS_APP_TYPE (ls_app_get_type())
@@ -507,6 +509,53 @@ static void keybind_toggle_decorations(const char* str, LSAppWindow* win)
 static void keybind_toggle_win_on_top(const char* str, LSAppWindow* win)
 {
     toggle_win_on_top(win);
+}
+
+// Global application instance for CTL command handling
+static LSApp* g_app = NULL;
+
+// Function to handle CTL commands from the server thread
+void handle_ctl_command(CTLCommand command)
+{
+    GList* windows;
+    LSAppWindow* win;
+
+    if (!g_app) {
+        printf("No application instance available to handle command\n");
+        return;
+    }
+
+    windows = gtk_application_get_windows(GTK_APPLICATION(g_app));
+    if (windows) {
+        win = LS_APP_WINDOW(windows->data);
+    } else {
+        printf("No window available to handle command\n");
+        return;
+    }
+
+    switch (command) {
+        case CTL_CMD_START_SPLIT:
+            timer_start_split(win);
+            break;
+        case CTL_CMD_STOP_RESET:
+            timer_stop_reset(win);
+            break;
+        case CTL_CMD_CANCEL:
+            timer_cancel_run(win);
+            break;
+        case CTL_CMD_UNSPLIT:
+            timer_unsplit(win);
+            break;
+        case CTL_CMD_SKIP:
+            timer_skip(win);
+            break;
+        case CTL_CMD_EXIT:
+            exit(0);
+            break;
+        default:
+            printf("Unknown CTL command: %d\n", command);
+            break;
+    }
 }
 
 static gboolean ls_app_window_keypress(GtkWidget* widget,
@@ -1193,10 +1242,17 @@ int main(int argc, char* argv[])
 {
     check_directories();
 
-    pthread_t t1;
+    g_app = ls_app_new();
+    pthread_t t1; // Auto-splitter thread
     pthread_create(&t1, NULL, &ls_auto_splitter, NULL);
-    g_application_run(G_APPLICATION(ls_app_new()), argc, argv);
+
+    pthread_t t2; // Control server thread
+    pthread_create(&t2, NULL, &ls_ctl_server, NULL);
+
+    g_application_run(G_APPLICATION(g_app), argc, argv);
+
     pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
 
     return 0;
 }
