@@ -4,5 +4,6 @@
 #include "lua.h"
 
 int shallow_copy_tbl(lua_State* L);
+int print_tbl(lua_State* L);
 
 #endif /* ifndef __UTILS_H__ */

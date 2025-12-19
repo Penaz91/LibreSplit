@@ -364,6 +364,8 @@ void run_auto_splitter()
     lua_setglobal(L, "getModuleSize");
     lua_pushcfunction(L, shallow_copy_tbl);
     lua_setglobal(L, "shallow_copy_tbl");
+    lua_pushcfunction(L, print_tbl);
+    lua_setglobal(L, "print_tbl");
 
     char current_file[PATH_MAX];
     strcpy(current_file, auto_splitter_file);
