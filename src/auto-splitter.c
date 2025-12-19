@@ -14,6 +14,7 @@
 
 #include "auto-splitter.h"
 #include "lua.h"
+#include "lua_utils.h"
 #include "memory.h"
 #include "process.h"
 #include "settings.h"
@@ -361,6 +362,8 @@ void run_auto_splitter()
     lua_setglobal(L, "getPID");
     lua_pushcfunction(L, lua_get_module_size);
     lua_setglobal(L, "getModuleSize");
+    lua_pushcfunction(L, shallow_copy_tbl);
+    lua_setglobal(L, "shallow_copy_tbl");
 
     char current_file[PATH_MAX];
     strcpy(current_file, auto_splitter_file);
