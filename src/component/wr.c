@@ -22,6 +22,7 @@ LSComponent* ls_component_wr_new()
 
     self->container = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     add_class(self->container, "footer"); /* hack */
+    add_class(self->container, "world-record-container");
     gtk_widget_show(self->container);
 
     self->world_record_label = gtk_label_new(WORLD_RECORD);

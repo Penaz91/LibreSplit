@@ -16,54 +16,62 @@ Also each split JSON file can apply their own themes by specifying a `theme` key
 
 See the [GtkCssProvider documentation](https://docs.gtk.org/gtk3/css-properties.html) for a list of supported CSS properties. Note that you can also modify the default font-family.
 
-| LibreSplit CSS classes        | Explanation Where needed                        |
-| ----------------------------- | ----------------------------------------------- |
-| `.window`                     |                                                 |
-| `.header`                     |                                                 |
-| `.title`                      |                                                 |
-| `.attempt-count`              |                                                 |
-| `.time`                       |                                                 |
-| `.delta`                      |                                                 |
-| `.time`                       |                                                 |
-| `.timer`                      |                                                 |
-| `.timer-seconds`              |                                                 |
-| `.timer-millis`               |                                                 |
-| `.delay`                      | Timer not running/in negative time              |
-| `.splits`                     | Container of the splits                         |
-| `.split`                      | The splits themselves                           |
-| `.current-split`              |                                                 |
-| `.split-title`                |                                                 |
-| `.split-icon`                 |                                                 |
-| `.split-time`                 |                                                 |
-| `.split-delta`                | Comparison time in the split                    |
-| `.split-last`                 | The last split, if its not yet scrolled down to |
-| `.done`                       |                                                 |
-| `.behind`                     | Behind the PB but gaining time                  |
-| `.losing`                     | Ahead of PB but losing time                     |
-| `.behind.losing`              | (class combination) Behind PB and losing time   |
-| `.best-segment`               |                                                 |
-| `.best-split`                 |                                                 |
-| `.footer`                     |                                                 |
-| `.prev-segment-label`         |                                                 |
-| `.prev-segment`               |                                                 |
-| `.segment`                    |                                                 |
-| `.segment-best`               |                                                 |
-| `.segment-pb`                 |                                                 |
-| `.segment-seconds`            |                                                 |
-| `.segment-millis`             |                                                 |
-| `.sum-of-bests-label`         |                                                 |
-| `.sum-of-bests`               |                                                 |
-| `.split-icon`                 |                                                 |
-| `.personal-best-label`        |                                                 |
-| `.personal-best`              |                                                 |
-| `.world-record-label`         |                                                 |
-| `.world-record`               |                                                 |
+| LibreSplit CSS classes        | Explanation Where needed                                  |
+| ----------------------------- | -----------------------------------------------           |
+| `.window`                     | The entire LibreSplit window                              |
+| `.header`                     | The header, containing title and attempt counters         |
+| `.title`                      |                                                           |
+| `.attempt-count`              |                                                           |
+| `.time`                       |                                                           |
+| `.delta`                      |                                                           |
+| `.time`                       |                                                           |
+| `.timer`                      |                                                           |
+| `.timer-container`            | Container for both the detailed and normal timer          |
+| `.detailed-timer`             | Container for the `segment-pb` and `segment-best` classes |
+| `.timer-seconds`              |                                                           |
+| `.timer-millis`               |                                                           |
+| `.delay`                      | Timer not running/in negative time                        |
+| `.splits`                     | Container of the splits                                   |
+| `.split`                      | The splits themselves                                     |
+| `.current-split`              |                                                           |
+| `.split-title`                |                                                           |
+| `.split-icon`                 |                                                           |
+| `.split-time`                 |                                                           |
+| `.split-delta`                | Comparison time in the split                              |
+| `.split-last`                 | The last split, if its not yet scrolled down to           |
+| `.done`                       |                                                           |
+| `.behind`                     | Behind the PB but gaining time                            |
+| `.losing`                     | Ahead of PB but losing time                               |
+| `.behind.losing`              | (class combination) Behind PB and losing time             |
+| `.best-segment`               |                                                           |
+| `.best-split`                 |                                                           |
+| `.footer`                     | A generic footer                                          |
+| `.sum-of-bests-container`     | The container for the "sum of bests" label and timer      |
+| `.personal-best-container`    | The container for the "personal best" label and timer     |
+| `.prev-segment-container`     | The container for the "previous segment" label and timer  |
+| `.world-record-container`     | The container for the "world record" label and timer      |
+| `.prev-segment-label`         |                                                           |
+| `.prev-segment`               |                                                           |
+| `.segment`                    |                                                           |
+| `.segment-best`               |                                                           |
+| `.segment-pb`                 |                                                           |
+| `.segment-seconds`            |                                                           |
+| `.segment-millis`             |                                                           |
+| `.sum-of-bests-label`         |                                                           |
+| `.sum-of-bests`               |                                                           |
+| `.split-icon`                 |                                                           |
+| `.personal-best-label`        |                                                           |
+| `.personal-best`              |                                                           |
+| `.world-record-label`         |                                                           |
+| `.world-record`               |                                                           |
 
 If a split has a `title` key, its UI element receives a class name derived from its title.
 
 Specifically, the title is lowercase and all non-alphanumeric characters are replaced with hyphens, and the result is concatenated with `split-title-`.
 
 For instance, if your split is titled "First split", it can be styled by targeting the CSS class `.split-title-first-split`.
+
+A more complex example: if your split is named "Space Station (Part 1)", the CSS class will be `.split-title-space-station--part-1-` (because the parentheses will become hyphens).
 
 ## FAQ
 
