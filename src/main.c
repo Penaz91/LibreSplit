@@ -735,6 +735,8 @@ static void ls_app_window_init(LSAppWindow* win)
         }
     }
 
+    // NOTE: This always creates an empty footer, no matter how many
+    //  ^ "footers" are available, which may give issues with theming
     win->footer = gtk_grid_new();
     add_class(win->footer, "footer");
     gtk_widget_set_margin_start(win->footer, WINDOW_PAD);

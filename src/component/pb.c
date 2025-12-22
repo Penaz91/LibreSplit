@@ -22,6 +22,7 @@ LSComponent* ls_component_pb_new()
 
     self->container = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     add_class(self->container, "footer"); /* hack */
+    add_class(self->container, "personal-best-container");
     gtk_widget_show(self->container);
 
     label = gtk_label_new(PERSONAL_BEST);

@@ -28,10 +28,12 @@ LSComponent* ls_component_detailed_timer_new()
     //
     self->detailed_timer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_show(self->detailed_timer);
+    add_class(self->detailed_timer, "timer-container");
 
     self->detailed_info = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_box_pack_start(GTK_BOX(self->detailed_timer), self->detailed_info, FALSE, FALSE, 0);
     gtk_widget_show(self->detailed_info);
+    add_class(self->detailed_info, "detailed-timer");
 
     self->segment_best = gtk_label_new(NULL);
     add_class(self->segment_best, "segment-best");
