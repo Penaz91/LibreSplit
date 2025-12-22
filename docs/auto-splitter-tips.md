@@ -4,7 +4,7 @@ Here are some tips that may make coding your auto splitters easier.
 
 ## Linux versions are different
 
-If you're thinking of porting an ASL auto splitter 1-to-1 to the Linux version of the same game, you might run into issues.
+If you're thinking of porting an ASL auto splitter 1-to-1 to the **Linux version of the same game**, you might run into issues.
 
 Here are some tips that might avoid you some headaches:
 
