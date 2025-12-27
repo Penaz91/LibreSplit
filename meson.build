@@ -37,6 +37,7 @@ executable(
         'src/settings.c',
         'src/signature.c',
         'src/timer.c',
+        'src/lua_utils.c',
         'src/component/best-sum.c',
         'src/component/clock.c',
         'src/component/components.c',
