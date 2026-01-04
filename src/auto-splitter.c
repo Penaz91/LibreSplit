@@ -124,6 +124,11 @@ static const luaL_Reg lj_lib_load[] = {
     { NULL, NULL }
 };
 
+/**
+ * Additional functions for the Lua Auto Split Runtime
+ *
+ * Must be NULL-terminated.
+ */
 static const lasr_function luac_functions[] = {
     { "process", find_process_id },
     { "getBaseAddress", get_base_address },
@@ -143,6 +148,12 @@ static const lasr_function luac_functions[] = {
     { NULL, NULL }
 };
 
+/**
+ * Registers the Lua Auto Split Runtime functions.
+ *
+ * @param L The lua Stack
+ * @param functions The array of name/function pairs to register.
+ */
 void push_lasr_functions(lua_State* L, const lasr_function* functions)
 {
     for (int i = 0; functions[i].function_name != NULL; i++) {
@@ -151,8 +162,7 @@ void push_lasr_functions(lua_State* L, const lasr_function* functions)
     }
 }
 
-LUALIB_API void
-luaL_openlibs(lua_State* L)
+LUALIB_API void luaL_openlibs(lua_State* L)
 {
     const luaL_Reg* lib;
     for (lib = lj_lib_load; lib->func; lib++) {
