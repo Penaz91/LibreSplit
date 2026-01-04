@@ -1,8 +1,17 @@
 #ifndef __AUTO_SPLITTER_H__
 #define __AUTO_SPLITTER_H__
 
+#include "lua.h"
 #include <linux/limits.h>
 #include <stdatomic.h>
+
+/**
+ * Defines a Lua Auto Splitter Runtime Function.
+ */
+struct lasr_func_struct {
+    char* function_name; /*!< The name of the function in Lua */
+    lua_CFunction function_ptr; /*!< C Function to be executed */
+} typedef lasr_function;
 
 extern atomic_bool auto_splitter_enabled;
 extern atomic_bool auto_splitter_running;
