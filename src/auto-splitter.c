@@ -153,6 +153,12 @@ static const luaL_Reg lj_lib_load[] = {
     { NULL, NULL }
 };
 
+/**
+ * Override of the standard openlibs functions to open only a subset
+ * of libraries in the Lua Runtime.
+ *
+ * @param L The lua Stack
+ */
 LUALIB_API void luaL_openlibs(lua_State* L)
 {
     const luaL_Reg* lib;
@@ -163,6 +169,12 @@ LUALIB_API void luaL_openlibs(lua_State* L)
     }
 }
 
+/**
+ * Disables possibly dangerous functions in the Lua Runtime.
+ *
+ * @param L The Lua Stack
+ * @param functions An array of strings, defining the functions to disable.
+ */
 void disable_functions(lua_State* L, const char** functions)
 {
     for (int i = 0; functions[i] != NULL; i++) {
@@ -171,7 +183,7 @@ void disable_functions(lua_State* L, const char** functions)
     }
 }
 
-/*
+/**
     Generic function to call lua functions
     Signatures are something like `disb>s`
     1. d = double
@@ -181,6 +193,7 @@ void disable_functions(lua_State* L, const char** functions)
     5. > = return separator
 
     Example: `call_va("functionName", "dd>d", x, y, &z);`
+    Calls "functionName" with two doubles as parameters (x and y), returning a double in z
 */
 bool call_va(lua_State* L, const char* func, const char* sig, ...)
 {
