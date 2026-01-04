@@ -13,7 +13,7 @@ extern atomic_bool call_split; /*!< True if the auto splitter is requesting to s
 extern atomic_bool toggle_loading;
 extern atomic_bool call_reset; /*!< True if the auto splitter is requesting a run reset */
 extern atomic_bool update_game_time; /*!< True if the auto splitter is requesting the game time to be updated */
-extern atomic_llong game_time_value; /*!< The in-game time value */
+extern atomic_llong game_time_value; /*!< The in-game time value, in milliseconds */
 extern char auto_splitter_file[PATH_MAX]; /*!< The path to the auto splitter Lua file */
 extern int maps_cache_cycles_value; /*!< The number of cycles the cache is active for */
 

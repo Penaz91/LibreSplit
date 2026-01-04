@@ -24,9 +24,9 @@
 #include "settings.h"
 #include "signature.h"
 
-char auto_splitter_file[PATH_MAX];
-int refresh_rate = 60;
-bool use_game_time = false;
+char auto_splitter_file[PATH_MAX]; /*!< The loaded auto splitter file path */
+int refresh_rate = 60; /*!< The Auto Splitter's refresh rate applied */
+bool use_game_time = false; /*!< Enables IGT */
 atomic_bool update_game_time = false;
 atomic_llong game_time_value = 0;
 /**
@@ -48,8 +48,11 @@ atomic_bool run_finished = false; // Disallows starting the timer again after fi
 atomic_bool call_split = false;
 atomic_bool toggle_loading = false;
 atomic_bool call_reset = false;
-bool prev_is_loading;
+bool prev_is_loading; /*!< The previous frame "is_loading" state */
 
+/**
+ * Possibly dangerous functions to disable in LASR.
+ */
 static const char* disabled_functions[] = {
     "collectgarbage",
     "dofile",
@@ -144,6 +147,9 @@ void check_directories()
     }
 }
 
+/**
+ * Lua libraries to enable in LASR
+ */
 static const luaL_Reg lj_lib_load[] = {
     { "", luaopen_base },
     { LUA_STRLIBNAME, luaopen_string },
