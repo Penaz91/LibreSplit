@@ -43,6 +43,14 @@ static gboolean execute_command_on_main_thread(gpointer data)
 
 // Forward declarations for command handlers
 
+/**
+ * Receives a message from the socket.
+ *
+ * @param sockfd The socket file descriptor.
+ * @param out Pointer to the CTLMessage struct used as output.
+ *
+ * @return Zero if a full message was received, non-zero otherwise.
+ */
 int receive_message(int sockfd, CTLMessage** out)
 {
 
@@ -72,6 +80,11 @@ int receive_message(int sockfd, CTLMessage** out)
     return 0;
 }
 
+/**
+ * The remote control server thread.
+ *
+ * @param arg The arguments to pass to the thread
+ */
 void* ls_ctl_server(void* arg)
 {
     char runtime_dir[PATH_MAX - 17];
