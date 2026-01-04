@@ -5,6 +5,14 @@
 #include <string.h>
 #include <unistd.h>
 
+/**
+ * Gets the user's runtime directory.
+ *
+ * Falls back to /run/user/uid if XDG_RUNTIME_DIR is not set.
+ *
+ * @param buffer The buffer to write the runtime directory to.
+ * @param size The size of the destination buffer.
+ */
 void getXDGruntimeDir(char* buffer, size_t size)
 {
     const char* xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
