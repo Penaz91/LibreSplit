@@ -66,13 +66,6 @@ struct _LSAppWindowClass {
 
 G_DEFINE_TYPE(LSAppWindow, ls_app_window, GTK_TYPE_APPLICATION_WINDOW);
 
-static Keybind parse_keybind(const gchar* accelerator)
-{
-    Keybind kb;
-    gtk_accelerator_parse(accelerator, &kb.key, &kb.mods);
-    return kb;
-}
-
 static void ls_app_window_destroy(GtkWidget* widget, gpointer data)
 {
     LSAppWindow* win = (LSAppWindow*)widget;

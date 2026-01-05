@@ -19,3 +19,4 @@ typedef struct
 } LSKeybinds;
 
 int keybind_match(Keybind kb, GdkEventKey key);
+Keybind parse_keybind(const gchar* accelerator);
