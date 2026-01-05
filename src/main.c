@@ -13,6 +13,7 @@
 #include "auto-splitter.h"
 #include "bind.h"
 #include "component/components.h"
+#include "keybinds.h"
 #include "server.h"
 #include "settings.h"
 #include "shared.h"
@@ -42,12 +43,6 @@ static const unsigned char css_data[] = {
 
 static const size_t css_data_len = sizeof(css_data);
 
-typedef struct
-{
-    guint key;
-    GdkModifierType mods;
-} Keybind;
-
 struct _LSAppWindow {
     GtkApplicationWindow parent;
     char data_path[PATH_MAX];
@@ -62,13 +57,7 @@ struct _LSAppWindow {
     GtkCssProvider* style;
     gboolean hide_cursor;
     gboolean global_hotkeys;
-    Keybind keybind_start_split;
-    Keybind keybind_stop_reset;
-    Keybind keybind_cancel;
-    Keybind keybind_unsplit;
-    Keybind keybind_skip_split;
-    Keybind keybind_toggle_decorations;
-    Keybind keybind_toggle_win_on_top;
+    LSKeybinds keybinds;
 };
 
 struct _LSAppWindowClass {
@@ -82,11 +71,6 @@ static Keybind parse_keybind(const gchar* accelerator)
     Keybind kb;
     gtk_accelerator_parse(accelerator, &kb.key, &kb.mods);
     return kb;
-}
-
-static int keybind_match(Keybind kb, GdkEventKey key)
-{
-    return key.keyval == kb.key && kb.mods == (key.state & gtk_accelerator_get_default_mod_mask());
 }
 
 static void ls_app_window_destroy(GtkWidget* widget, gpointer data)
@@ -563,19 +547,19 @@ static gboolean ls_app_window_keypress(GtkWidget* widget,
     gpointer data)
 {
     LSAppWindow* win = (LSAppWindow*)data;
-    if (keybind_match(win->keybind_start_split, event->key)) {
+    if (keybind_match(win->keybinds.start_split, event->key)) {
         timer_start_split(win);
-    } else if (keybind_match(win->keybind_stop_reset, event->key)) {
+    } else if (keybind_match(win->keybinds.stop_reset, event->key)) {
         timer_stop_reset(win);
-    } else if (keybind_match(win->keybind_cancel, event->key)) {
+    } else if (keybind_match(win->keybinds.cancel, event->key)) {
         timer_cancel_run(win);
-    } else if (keybind_match(win->keybind_unsplit, event->key)) {
+    } else if (keybind_match(win->keybinds.unsplit, event->key)) {
         timer_unsplit(win);
-    } else if (keybind_match(win->keybind_skip_split, event->key)) {
+    } else if (keybind_match(win->keybinds.skip_split, event->key)) {
         timer_skip(win);
-    } else if (keybind_match(win->keybind_toggle_decorations, event->key)) {
+    } else if (keybind_match(win->keybinds.toggle_decorations, event->key)) {
         toggle_decorations(win);
-    } else if (keybind_match(win->keybind_toggle_win_on_top, event->key)) {
+    } else if (keybind_match(win->keybinds.toggle_win_on_top, event->key)) {
         toggle_win_on_top(win);
     }
     return TRUE;
@@ -620,21 +604,21 @@ static void ls_app_window_init(LSAppWindow* win)
     // load settings
     win->hide_cursor = json_boolean_value(get_setting_value("libresplit", "hide_cursor"));
     win->global_hotkeys = json_boolean_value(get_setting_value("libresplit", "global_hotkeys"));
-    win->keybind_start_split = parse_keybind(
+    win->keybinds.start_split = parse_keybind(
         json_string_value(get_setting_value("keybinds", "start_split")));
-    win->keybind_stop_reset = parse_keybind(
+    win->keybinds.stop_reset = parse_keybind(
         json_string_value(get_setting_value("keybinds", "stop_reset")));
-    win->keybind_cancel = parse_keybind(
+    win->keybinds.cancel = parse_keybind(
         json_string_value(get_setting_value("keybinds", "cancel")));
-    win->keybind_unsplit = parse_keybind(
+    win->keybinds.unsplit = parse_keybind(
         json_string_value(get_setting_value("keybinds", "unsplit")));
-    win->keybind_skip_split = parse_keybind(
+    win->keybinds.skip_split = parse_keybind(
         json_string_value(get_setting_value("keybinds", "skip_split")));
-    win->keybind_toggle_decorations = parse_keybind(
+    win->keybinds.toggle_decorations = parse_keybind(
         json_string_value(get_setting_value("keybinds", "toggle_decorations")));
     win->decorated = json_boolean_value(get_setting_value("libresplit", "start_decorated"));
     gtk_window_set_decorated(GTK_WINDOW(win), win->decorated);
-    win->keybind_toggle_win_on_top = parse_keybind(
+    win->keybinds.toggle_win_on_top = parse_keybind(
         json_string_value(get_setting_value("keybinds", "toggle_win_on_top")));
     win->win_on_top = json_boolean_value(get_setting_value("libresplit", "start_on_top"));
     gtk_window_set_keep_above(GTK_WINDOW(win), win->win_on_top);
