@@ -51,7 +51,7 @@ atomic_bool call_reset = false;
 bool prev_is_loading; /*!< The previous frame "is_loading" state */
 
 /**
- * Possibly dangerous functions to disable in LASR.
+ * Disable possibly dangerous functions in LASR.
  */
 static const char* disabled_functions[] = {
     "collectgarbage",
