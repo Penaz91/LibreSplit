@@ -260,7 +260,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                         printf("function '%s' wrong result type, expected int\n", func);
                         return false;
                     }
-                    *va_arg(vl, int*) = (int)lua_tonumber(L, nres);
+                    *va_arg(vl, int*) = lua_tointeger(L, nres);
                     break;
 
                 case 's': /* string result */

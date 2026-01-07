@@ -42,7 +42,7 @@ uintptr_t find_base_address(const char* module)
 {
     const char* module_to_grep = module == 0 ? process.name : module;
 
-    for (int32_t i = 0; i < p_maps_cache_size; i++) {
+    for (uint32_t i = 0; i < p_maps_cache_size; i++) {
         const char* name = p_maps_cache[i].name;
         if (strstr(name, module_to_grep) != NULL) {
             return p_maps_cache[i].start;
@@ -82,7 +82,7 @@ uint64_t get_module_size(const char* module)
     const char* module_to_grep = module == 0 ? process.name : module;
 
     // Check the cache
-    for (int32_t i = 0; i < p_maps_cache_size; i++) {
+    for (uint32_t i = 0; i < p_maps_cache_size; i++) {
         const char* name = p_maps_cache[i].name;
         if (strstr(name, module_to_grep) != NULL) {
             return p_maps_cache[i].size;

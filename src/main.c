@@ -78,7 +78,7 @@ struct _LSAppWindowClass {
     GtkApplicationWindowClass parent_class;
 };
 
-G_DEFINE_TYPE(LSAppWindow, ls_app_window, GTK_TYPE_APPLICATION_WINDOW);
+G_DEFINE_TYPE(LSAppWindow, ls_app_window, GTK_TYPE_APPLICATION_WINDOW)
 
 static Keybind parse_keybind(const gchar* accelerator)
 {
@@ -827,7 +827,7 @@ struct _LSAppClass {
     GtkApplicationClass parent_class;
 };
 
-G_DEFINE_TYPE(LSApp, ls_app, GTK_TYPE_APPLICATION);
+G_DEFINE_TYPE(LSApp, ls_app, GTK_TYPE_APPLICATION)
 
 static void open_activated(GSimpleAction* action,
     GVariant* parameter,
