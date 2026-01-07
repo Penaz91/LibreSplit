@@ -124,6 +124,44 @@ static const luaL_Reg lj_lib_load[] = {
     { NULL, NULL }
 };
 
+/**
+ * Additional functions for the Lua Auto Split Runtime
+ *
+ * Must be NULL-terminated.
+ */
+static const lasr_function luac_functions[] = {
+    { "process", find_process_id },
+    { "getBaseAddress", get_base_address },
+    { "readAddress", read_address },
+    { "sizeOf", size_of },
+    { "sig_scan", perform_sig_scan },
+    { "getPID", getPid },
+    { "getModuleSize", lua_get_module_size },
+    { "shallow_copy_tbl", shallow_copy_tbl },
+    { "print_tbl", print_tbl },
+    { "b_and", b_and },
+    { "b_or", b_or },
+    { "b_xor", b_xor },
+    { "b_not", b_not },
+    { "b_lshift", b_lshift },
+    { "b_rshift", b_rshift },
+    { NULL, NULL }
+};
+
+/**
+ * Registers the Lua Auto Split Runtime functions.
+ *
+ * @param L The lua Stack
+ * @param functions The array of name/function pairs to register.
+ */
+void push_lasr_functions(lua_State* L, const lasr_function* functions)
+{
+    for (int i = 0; functions[i].function_name != NULL; i++) {
+        lua_pushcfunction(L, functions[i].function_ptr);
+        lua_setglobal(L, functions[i].function_name);
+    }
+}
+
 LUALIB_API void luaL_openlibs(lua_State* L)
 {
     const luaL_Reg* lib;
@@ -348,38 +386,7 @@ void run_auto_splitter()
     lua_State* L = luaL_newstate();
     luaL_openlibs(L);
     disable_functions(L, disabled_functions);
-    lua_pushcfunction(L, find_process_id);
-    lua_setglobal(L, "process");
-    lua_pushcfunction(L, get_base_address);
-    lua_setglobal(L, "getBaseAddress");
-    lua_pushcfunction(L, read_address);
-    lua_setglobal(L, "readAddress");
-    lua_pushcfunction(L, size_of);
-    lua_setglobal(L, "sizeOf");
-    lua_pushcfunction(L, perform_sig_scan);
-    lua_setglobal(L, "sig_scan");
-    lua_pushcfunction(L, getPid);
-    lua_setglobal(L, "getPID");
-    lua_pushcfunction(L, lua_get_module_size);
-    lua_setglobal(L, "getModuleSize");
-    lua_pushcfunction(L, shallow_copy_tbl);
-    lua_setglobal(L, "shallow_copy_tbl");
-    lua_pushcfunction(L, print_tbl);
-    lua_setglobal(L, "print_tbl");
-    lua_pushcfunction(L, b_and);
-    lua_setglobal(L, "b_and");
-    lua_pushcfunction(L, b_or);
-    lua_setglobal(L, "b_or");
-    lua_pushcfunction(L, b_xor);
-    lua_setglobal(L, "b_xor");
-    lua_pushcfunction(L, b_not);
-    lua_setglobal(L, "b_and");
-    lua_pushcfunction(L, b_and);
-    lua_setglobal(L, "b_not");
-    lua_pushcfunction(L, b_lshift);
-    lua_setglobal(L, "b_lshift");
-    lua_pushcfunction(L, b_rshift);
-    lua_setglobal(L, "b_rshift");
+    push_lasr_functions(L, luac_functions);
 
     char current_file[PATH_MAX];
     strcpy(current_file, auto_splitter_file);
