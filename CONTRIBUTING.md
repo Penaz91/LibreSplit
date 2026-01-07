@@ -1,6 +1,22 @@
 Contributing
 ============
 
+Coding Style
+------------
+
+The project uses `clang-format` to check for coding style. You will need to format the files accordingly before opening a Pull Request.
+
+If you want to format a file, you can use the `clang-format -i -- myfile.c` (where `myfile.c` is the name of the file to format) to format a file in-place.
+
+Alternatively, you can configure your editor to use `clang-format` on save automatically.
+
+Opening a PR
+------------
+
+- If you're thinking about implementing a big feature or undertaking some major refactoring of the project, you should discuss it first through issues or discussions;
+- If you're fixing an open issue, remember to refer to such issue either in the PR description or in the commit message that fixes the issue properly;
+- Try to describe what your Pull Request is about, what it does and the rationale behind it, where appropriate.
+
 Generating the developer documentation
 --------------------------------------
 
