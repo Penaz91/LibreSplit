@@ -53,6 +53,7 @@ static const char* disabled_functions[] = {
     "module",
     "require",
     "newproxy",
+    NULL
 };
 
 extern game_process process;
