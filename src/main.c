@@ -56,6 +56,9 @@ struct _LSAppWindow {
     ls_game* game;
     ls_timer* timer;
     GdkDisplay* display;
+    GtkWidget* container;
+    GtkWidget* welcome;
+    GtkWidget* welcome_lbl;
     GtkWidget* box;
     GList* components;
     GtkWidget* footer;
@@ -122,6 +125,7 @@ static void ls_app_window_clear_game(LSAppWindow* win)
     atomic_store(&run_finished, false);
 
     gtk_widget_hide(win->box);
+    gtk_widget_show_all(win->welcome);
 
     for (l = win->components; l != NULL; l = l->next) {
         LSComponent* component = l->data;
@@ -263,6 +267,7 @@ static void ls_app_window_show_game(LSAppWindow* win)
     }
 
     gtk_widget_show(win->box);
+    gtk_widget_hide(win->welcome);
 }
 
 static void resize_window(LSAppWindow* win,
@@ -713,11 +718,28 @@ static void ls_app_window_init(LSAppWindow* win)
             G_CALLBACK(ls_app_window_keypress), win);
     }
 
+    win->container = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_set_margin_top(win->container, WINDOW_PAD);
+    gtk_widget_set_margin_bottom(win->container, WINDOW_PAD);
+    gtk_widget_set_vexpand(win->container, TRUE);
+    gtk_container_add(GTK_CONTAINER(win), win->container);
+    gtk_widget_show(win->container);
+
+    win->welcome = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_set_margin_top(win->welcome, 0);
+    add_class(win->welcome, "welcome-screen");
+    gtk_widget_set_margin_bottom(win->welcome, 0);
+    gtk_widget_set_vexpand(win->welcome, TRUE);
+    gtk_container_add(GTK_CONTAINER(win->container), win->welcome);
+    win->welcome_lbl = gtk_label_new("Welcome to LibreSplit!\nNo split is currently loaded.\nRight click this window to open a split JSON file!");
+    gtk_container_add(GTK_CONTAINER(win->welcome), win->welcome_lbl);
+
     win->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_widget_set_margin_top(win->box, WINDOW_PAD);
-    gtk_widget_set_margin_bottom(win->box, WINDOW_PAD);
+    add_class(win->welcome, "main-screen");
+    gtk_widget_set_margin_top(win->box, 0);
+    gtk_widget_set_margin_bottom(win->box, 0);
     gtk_widget_set_vexpand(win->box, TRUE);
-    gtk_container_add(GTK_CONTAINER(win), win->box);
+    gtk_container_add(GTK_CONTAINER(win->container), win->box);
 
     // Create all available components (TODO: change this in the future)
     win->components = NULL;
@@ -852,6 +874,7 @@ static void open_activated(GSimpleAction* action,
         }
     }
 
+    // We couldn't recover any previous split, open the file dialog
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
         splits_path);
 
@@ -866,6 +889,8 @@ static void open_activated(GSimpleAction* action,
         ls_app_window_open(win, filename);
         ls_update_setting("history", "split_file", json_string(filename));
         g_free(filename);
+    } else {
+        gtk_widget_show_all(win->welcome);
     }
     gtk_widget_destroy(dialog);
 }
