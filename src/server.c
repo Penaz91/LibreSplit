@@ -13,15 +13,23 @@
 
 extern atomic_bool exit_requested;
 
-// Structure to pass command data to main thread
+/**
+ * Structure to pass command data to main thread
+ */
 typedef struct {
-    CTLCommand command;
+    CTLCommand command; /*!< The command to send to the main thread */
 } CommandData;
 
-// External functions from main.c to handle commands
+/**
+ * External functions from main.c to handle commands
+ *
+ * @param command The command to be handled.
+ */
 extern void handle_ctl_command(CTLCommand command);
 
-// Command execution function that runs on the main thread
+/**
+ * Command execution function that runs on the main thread
+ */
 static gboolean execute_command_on_main_thread(gpointer data)
 {
     CommandData* cmd_data = (CommandData*)data;
@@ -35,6 +43,14 @@ static gboolean execute_command_on_main_thread(gpointer data)
 
 // Forward declarations for command handlers
 
+/**
+ * Receives a message from the socket.
+ *
+ * @param sockfd The socket file descriptor.
+ * @param out Pointer to the CTLMessage struct used as output.
+ *
+ * @return Zero if a full message was received, non-zero otherwise.
+ */
 int receive_message(int sockfd, CTLMessage** out)
 {
 
@@ -64,6 +80,11 @@ int receive_message(int sockfd, CTLMessage** out)
     return 0;
 }
 
+/**
+ * The remote control server thread.
+ *
+ * @param arg The arguments to pass to the thread
+ */
 void* ls_ctl_server(void* arg)
 {
     char runtime_dir[PATH_MAX - 17];

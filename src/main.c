@@ -34,7 +34,7 @@ typedef struct _LSAppWindowClass LSAppWindowClass;
 
 #define WINDOW_PAD (8)
 
-atomic_bool exit_requested = 0;
+atomic_bool exit_requested = 0; /*!< Set to 1 when LibreSplit is exiting */
 
 static const unsigned char css_data[] = {
 #embed "main.css"
@@ -42,17 +42,23 @@ static const unsigned char css_data[] = {
 
 static const size_t css_data_len = sizeof(css_data);
 
+/**
+ * @brief Keybind A GTK Key bind
+ */
 typedef struct
 {
-    guint key;
-    GdkModifierType mods;
+    guint key; /*!< The key value */
+    GdkModifierType mods; /*!< The modifiers used (shift, ctrl, ...) */
 } Keybind;
 
+/**
+ * @brief The main LibreSplit application window
+ */
 struct _LSAppWindow {
-    GtkApplicationWindow parent;
-    char data_path[PATH_MAX];
-    gboolean decorated;
-    gboolean win_on_top;
+    GtkApplicationWindow parent; /*!< The proper GTK base application*/
+    char data_path[PATH_MAX]; /*!< The path to the libresplit user config directory */
+    gboolean decorated; /*!< Defines whether LibreSplit is currently showing window decorations */
+    gboolean win_on_top; /*!< Defines whether LibreSplit is currently "always-on-top" */
     ls_game* game;
     ls_timer* timer;
     GdkDisplay* display;
@@ -63,15 +69,15 @@ struct _LSAppWindow {
     GList* components;
     GtkWidget* footer;
     GtkCssProvider* style;
-    gboolean hide_cursor;
-    gboolean global_hotkeys;
-    Keybind keybind_start_split;
-    Keybind keybind_stop_reset;
-    Keybind keybind_cancel;
-    Keybind keybind_unsplit;
-    Keybind keybind_skip_split;
-    Keybind keybind_toggle_decorations;
-    Keybind keybind_toggle_win_on_top;
+    gboolean hide_cursor; /*!< Defines whether the cursor should be hidden when on top of LibreSplit */
+    gboolean global_hotkeys; /*!< Defines whether global hotkeys are currently enabled */
+    Keybind keybind_start_split; /*!< The "start or split" global keybind */
+    Keybind keybind_stop_reset; /*!< The "stop or reset timer" global keybind */
+    Keybind keybind_cancel; /*!< The "cancel" global keybind */
+    Keybind keybind_unsplit; /*!< The "undo split" global keybind */
+    Keybind keybind_skip_split; /*!< The "skip split" global keybind */
+    Keybind keybind_toggle_decorations; /*!< The "toggle decorations" global keybind */
+    Keybind keybind_toggle_win_on_top; /*!< The "always-on-top" global keybind */
 };
 
 struct _LSAppWindowClass {
@@ -80,6 +86,14 @@ struct _LSAppWindowClass {
 
 G_DEFINE_TYPE(LSAppWindow, ls_app_window, GTK_TYPE_APPLICATION_WINDOW)
 
+/**
+ * Parses a string representing a Keybind definition
+ * into a Keybind structure.
+ *
+ * @param accelerator The string representation of the keybind.
+ *
+ * @return A Keybind struct corresponding to the requested keybind.
+ */
 static Keybind parse_keybind(const gchar* accelerator)
 {
     Keybind kb;
@@ -87,11 +101,25 @@ static Keybind parse_keybind(const gchar* accelerator)
     return kb;
 }
 
+/**
+ * Matches a Gdk key press event with a Keybind.
+ *
+ * @param kb The keybind to compare against.
+ * @param key The Gdk event key that needs to be compared.
+ *
+ * @return Zero if the keybinds don't match, a non-zero value otherwise.
+ */
 static int keybind_match(Keybind kb, GdkEventKey key)
 {
     return key.keyval == kb.key && kb.mods == (key.state & gtk_accelerator_get_default_mod_mask());
 }
 
+/**
+ * Closes LibreSplit.
+ *
+ * @param widget The pointer to the LibreSplit window, as a widget.
+ * @param data Usually NULL.
+ */
 static void ls_app_window_destroy(GtkWidget* widget, gpointer data)
 {
     LSAppWindow* win = (LSAppWindow*)widget;
@@ -117,6 +145,11 @@ static void save_game(ls_game* game)
     g_thread_new("save_game", save_game_thread, game);
 }
 
+/**
+ * Clears the current game and reset all the components.
+ *
+ * @param win The LibreSplit app window
+ */
 static void ls_app_window_clear_game(LSAppWindow* win)
 {
     GdkScreen* screen;
@@ -150,6 +183,11 @@ static void timer_stop(LSAppWindow* win);
 static void timer_split(LSAppWindow* win, bool updateComponents);
 static void timer_reset(LSAppWindow* win);
 
+/**
+ * Updates the internal state of the LibreSplit Window.
+ *
+ * @param data Pointer to the LibreSplit Window.
+ */
 static gboolean ls_app_window_step(gpointer data)
 {
     LSAppWindow* win = data;
@@ -200,6 +238,16 @@ static gboolean ls_app_window_step(gpointer data)
     return TRUE;
 }
 
+/**
+ * Finds a theme, given its name and variant.
+ *
+ * @param win The LibreSplit Window.
+ * @param theme_name The name of the theme to load.
+ * @param theme_variant The name of the variant to load (can be empty).
+ * @param str Pointer to a string onto which the theme path will be copied.
+ *
+ * @return 1 if the load is successful, 0 otherwise.
+ */
 static int ls_app_window_find_theme(const LSAppWindow* win,
     const char* theme_name,
     const char* theme_variant,
@@ -230,6 +278,12 @@ static int ls_app_window_find_theme(const LSAppWindow* win,
     return 1;
 }
 
+/**
+ * Prepares the LibreSplit window to be shown, using the data
+ * from the loaded split file.
+ *
+ * @param win The LibreSplit window.
+ */
 static void ls_app_window_show_game(LSAppWindow* win)
 {
     GdkScreen* screen;
@@ -771,7 +825,9 @@ static void ls_app_window_init(LSAppWindow* win)
     gtk_container_add(GTK_CONTAINER(win->box), win->footer);
     gtk_widget_show(win->footer);
 
+    // Update the internal state every millisecond
     g_timeout_add(1, ls_app_window_step, win);
+    // Draw the window at 30 FPS
     g_timeout_add((int)(1000 / 30.), ls_app_window_draw, win);
 }
 
@@ -834,6 +890,14 @@ struct _LSAppClass {
 
 G_DEFINE_TYPE(LSApp, ls_app, GTK_TYPE_APPLICATION)
 
+/**
+ * Shows the "Open JSON Split File" dialog eventually using
+ * the last known split folder. Also saves a new "last used split folder".
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void open_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -900,6 +964,15 @@ static void open_activated(GSimpleAction* action,
     gtk_widget_destroy(dialog);
 }
 
+/**
+ * Shows the "Open Lua Auto Splitter" dialog eventually using
+ * the last known auto splitter folder. Also saves a new
+ * "last used auto splitter folder".
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void open_auto_splitter(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -972,6 +1045,13 @@ static void open_auto_splitter(GSimpleAction* action,
     gtk_widget_destroy(dialog);
 }
 
+/**
+ * Saves the splits in the JSON Split file.
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void save_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -998,6 +1078,13 @@ static void save_activated(GSimpleAction* action,
     }
 }
 
+/**
+ * Reloads LibreSplit.
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void reload_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -1022,6 +1109,13 @@ static void reload_activated(GSimpleAction* action,
     }
 }
 
+/**
+ * Closes the current split file, emptying the LibreSplit window.
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void close_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -1052,6 +1146,13 @@ static void close_activated(GSimpleAction* action,
     gtk_widget_set_size_request(GTK_WIDGET(win), -1, -1);
 }
 
+/**
+ * Exits LibreSplit.
+ *
+ * @param action Usually NULL
+ * @param parameter Usually NULL
+ * @param app Pointer to the LibreSplit app.
+ */
 static void quit_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
@@ -1059,6 +1160,12 @@ static void quit_activated(GSimpleAction* action,
     exit(0);
 }
 
+/**
+ * Callback to toggle the Auto Splitter on and off.
+ *
+ * @param menu_item Pointer to the menu item that triggered this callback.
+ * @param user_data Usually NULL
+ */
 static void toggle_auto_splitter(GtkCheckMenuItem* menu_item, gpointer user_data)
 {
     gboolean active = gtk_check_menu_item_get_active(menu_item);
@@ -1071,6 +1178,12 @@ static void toggle_auto_splitter(GtkCheckMenuItem* menu_item, gpointer user_data
     }
 }
 
+/**
+ * Callback to toggle the EWMH "Always on top" hint.
+ *
+ * @param menu_item Pointer to the menu item that triggered this callback.
+ * @param app Usually NULL
+ */
 static void menu_toggle_win_on_top(GtkCheckMenuItem* menu_item,
     gpointer app)
 {
@@ -1087,7 +1200,15 @@ static void menu_toggle_win_on_top(GtkCheckMenuItem* menu_item,
     win->win_on_top = active;
 }
 
-// Create the context menu
+/**
+ * Creates the Context Menu.
+ *
+ * @param widget The widget that was right clicked. Not used here.
+ * @param event The click event, containing which button was used to click.
+ * @param app Pointer to the LibreSplit application.
+ *
+ * @return True if the click was done with the RMB (and a context menu was shown), False otherwise.
+ */
 static gboolean button_right_click(GtkWidget* widget, GdkEventButton* event, gpointer app)
 {
     if (event->button == GDK_BUTTON_SECONDARY) {
@@ -1138,6 +1259,12 @@ static gboolean button_right_click(GtkWidget* widget, GdkEventButton* event, gpo
     return FALSE;
 }
 
+/**
+ * Starts LibreSplit, loading the last splits and auto splitter.
+ * Eventually opens some dialogs if there are no last splits or auto-splitters.
+ *
+ * @param app Pointer to the LibreSplit application.
+ */
 static void ls_app_activate(GApplication* app)
 {
     LSAppWindow* win;
@@ -1216,6 +1343,11 @@ static void ls_app_class_init(LSAppClass* class)
     G_APPLICATION_CLASS(class)->open = ls_app_open;
 }
 
+/**
+ * LibreSplit's auto splitter thread.
+ *
+ * @param arg Unused.
+ */
 static void* ls_auto_splitter(void* arg)
 {
     while (1) {
@@ -1231,6 +1363,13 @@ static void* ls_auto_splitter(void* arg)
     return NULL;
 }
 
+/**
+ * Opens the default browser on the LibreSplit troubleshooting documentation.
+ *
+ * @param dialog The dialog that triggered this callback.
+ * @param response_id Unused.
+ * @param user_data Unused.
+ */
 static void dialog_response_cb(GtkWidget* dialog, gint response_id, gpointer user_data)
 {
     if (response_id == GTK_RESPONSE_OK) {
@@ -1239,6 +1378,13 @@ static void dialog_response_cb(GtkWidget* dialog, gint response_id, gpointer use
     gtk_widget_destroy(dialog);
 }
 
+/**
+ * Shows a message dialog in case of a memory read error.
+ *
+ * @param data Unused.
+ *
+ * @return False, to remove the function from the queue.
+ */
 gboolean display_non_capable_mem_read_dialog(gpointer data)
 {
     atomic_store(&auto_splitter_enabled, 0);

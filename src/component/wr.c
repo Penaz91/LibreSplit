@@ -1,15 +1,25 @@
+/** \file wr.c
+ *
+ * Implementation of the "World Record" component
+ */
 #include "components.h"
 
+/**
+ * @brief The component representing the saved World Record
+ */
 typedef struct _LSWr {
-    LSComponent base;
-    GtkWidget* container;
-    GtkWidget* world_record_label;
-    GtkWidget* world_record;
+    LSComponent base; /*!< The base struct that is extended */
+    GtkWidget* container; /*!< The container for the world record */
+    GtkWidget* world_record_label; /*!< The label showing the "World record" text */
+    GtkWidget* world_record; /*!< The label showing the world record time */
 } LSWr;
 extern LSComponentOps ls_wr_operations;
 
 #define WORLD_RECORD "World record"
 
+/**
+ * Constructor
+ */
 LSComponent* ls_component_wr_new()
 {
     LSWr* self;
@@ -38,16 +48,34 @@ LSComponent* ls_component_wr_new()
     return (LSComponent*)self;
 }
 
+/**
+ * Destructor
+ *
+ * @param self The component to destroy
+ */
 static void wr_delete(LSComponent* self)
 {
     free(self);
 }
 
+/**
+ * Returns the World Record GTK widget.
+ *
+ * @param self The World Record component itself.
+ * @return The container as a GTK Widget.
+ */
 static GtkWidget* wr_widget(LSComponent* self)
 {
     return ((LSWr*)self)->container;
 }
 
+/**
+ * Function to execute when ls_app_window_show_game is executed.
+ *
+ * @param self_ The World Record component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void wr_show_game(LSComponent* self_,
     const ls_game* game, const ls_timer* timer)
 {
@@ -63,6 +91,11 @@ static void wr_show_game(LSComponent* self_,
     }
 }
 
+/**
+ * Function to execute when ls_app_window_clear_game is executed.
+ *
+ * @param self_ The best time component itself.
+ */
 static void wr_clear_game(LSComponent* self_)
 {
     LSWr* self = (LSWr*)self_;
@@ -70,6 +103,13 @@ static void wr_clear_game(LSComponent* self_)
     gtk_widget_hide(self->world_record);
 }
 
+/**
+ * Function to execute when ls_app_window_draw is executed.
+ *
+ * @param self_ The World Record component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void wr_draw(LSComponent* self_, const ls_game* game,
     const ls_timer* timer)
 {

@@ -24,7 +24,11 @@ extern game_process process;
         return NULL;      \
     } while (0)
 
-// Error logging function
+/**
+ * Error logging function
+ *
+ * @param[out] format The format string
+ */
 void log_error(const char* format, ...)
 {
     va_list args;
@@ -38,8 +42,8 @@ void log_error(const char* format, ...)
 /**
  * Gets all the memory regions of a certain PID
  *
- * @param pid The ID of the process to get the memory regions of
- * @param count A pointer to a counter onto where to store the number of regions
+ * @param[in] pid The ID of the process to get the memory regions of
+ * @param[in] count A pointer to a counter onto where to store the number of regions
  *
  * @return A dinamically allocated array of ProcessMap that have been found
  */
@@ -88,9 +92,9 @@ ProcessMap* get_memory_regions(pid_t pid, int* count)
 /**
  * Matches a pattern with an array of bytes.
  *
- * @param data The data to compare the pattern against.
- * @param pattern The pattern to test for.
- * @param pattern_size The length of the pattern.
+ * @param[in] data The data to compare the pattern against.
+ * @param[in] pattern The pattern to test for.
+ * @param[in] pattern_size The length of the pattern.
  *
  * @return True if the pattern matches the data, false otherwise
  */
@@ -110,8 +114,8 @@ bool match_pattern(const uint8_t* data, const uint16_t* pattern, size_t pattern_
  * Converts an IDA-like signature into a pattern to be used in LibreSplit.
  * Supports the '??' string to ignore certain bytes in the comparison.
  *
- * @param signature A string containing the signature to convert.
- * @param pattern_size A pointer onto where to save the size of the pattern.
+ * @param[in] signature A string containing the signature to convert.
+ * @param[out] pattern_size A pointer onto where to save the size of the pattern.
  *
  * @return A pattern to be used with the LibreSplit signature scan functions.
  */
@@ -178,7 +182,7 @@ bool validate_process_memory(pid_t pid, uintptr_t address, void* buffer, size_t 
  *
  * @param L The lua state.
  *
- * @return Always 1
+ * @return Always 1 (one parameter is always pushed on the stack, either the address or nil)
  */
 int perform_sig_scan(lua_State* L)
 {

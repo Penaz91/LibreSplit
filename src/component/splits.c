@@ -1,10 +1,17 @@
+/** \file splits.c
+ *
+ * Implementation of the splits component.
+ */
 #include "components.h"
 #include <limits.h>
 
+/**
+ * @brief The component containing all the splits for the game.
+ */
 typedef struct _LSSplits {
-    LSComponent base;
-    int split_count;
-    GtkWidget* container;
+    LSComponent base; /*!< The base struct that is extended */
+    int split_count; /*!< The number of splits */
+    GtkWidget* container; /*!< The container for the splits */
     GtkWidget* splits;
     GtkWidget* split_last;
     GtkAdjustment* split_adjust;
@@ -19,6 +26,9 @@ typedef struct _LSSplits {
 } LSSplits;
 extern LSComponentOps ls_splits_operations;
 
+/**
+ * Constructor
+ */
 LSComponent* ls_component_splits_new()
 {
     LSSplits* self;
@@ -62,11 +72,22 @@ LSComponent* ls_component_splits_new()
     return (LSComponent*)self;
 }
 
+/**
+ * Destructor
+ *
+ * @param self The component to destroy
+ */
 static void splits_delete(LSComponent* self)
 {
     free(self);
 }
 
+/**
+ * Returns the Splits container GTK widget.
+ *
+ * @param self The splits component itself.
+ * @return The container as a GTK Widget.
+ */
 static GtkWidget* splits_widget(LSComponent* self)
 {
     return ((LSSplits*)self)->container;
@@ -108,6 +129,13 @@ static void splits_trailer(LSComponent* self_)
     g_object_unref(self->split_rows[last]);
 }
 
+/**
+ * Function to execute when ls_app_window_show_game is executed.
+ *
+ * @param self_ The splits component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void splits_show_game(LSComponent* self_, const ls_game* game,
     const ls_timer* timer)
 {
@@ -243,6 +271,11 @@ static void splits_show_game(LSComponent* self_, const ls_game* game,
     splits_trailer(self_);
 }
 
+/**
+ * Function to execute when ls_app_window_clear_game is executed.
+ *
+ * @param self_ The splits component itself.
+ */
 static void splits_clear_game(LSComponent* self_)
 {
     LSSplits* self = (LSSplits*)self_;
@@ -263,6 +296,13 @@ static void splits_clear_game(LSComponent* self_)
 }
 
 #define SHOW_DELTA_THRESHOLD (-30 * 1000000LL)
+/**
+ * Function to execute when ls_app_window_draw is executed.
+ *
+ * @param self_ The splits component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void splits_draw(LSComponent* self_, const ls_game* game, const ls_timer* timer)
 {
     LSSplits* self = (LSSplits*)self_;

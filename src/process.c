@@ -1,3 +1,6 @@
+/** \file process.c
+ * Implementation of process-related functions
+ */
 #include <linux/limits.h>
 #include <signal.h>
 #include <stdatomic.h>
@@ -18,6 +21,12 @@ struct game_process process;
 ProcessMap p_maps_cache[MAPS_CACHE_MAX_SIZE];
 uint32_t p_maps_cache_size = 0;
 
+/**
+ * Executes a command, piping its output into an output string.
+ *
+ * @param command The command to execute.
+ * @param output Pointer to a string that will contain the command output.
+ */
 void execute_command(const char* command, char* output)
 {
     char buffer[4096];
@@ -34,10 +43,13 @@ void execute_command(const char* command, char* output)
     pclose(pipe);
 }
 
-/*
-Gets the base address of a module
-if `module` equals to a nullptr, the main process is used, else it will search for the base addr of the specified module
-*/
+/**
+ * Gets the base address of a module.
+ *
+ * @param module The module name for which to find the base address of. If NULL, the main process is used.
+ *
+ * @return The base address of the chosen module.
+ */
 uintptr_t find_base_address(const char* module)
 {
     const char* module_to_grep = module == 0 ? process.name : module;
@@ -179,6 +191,13 @@ void stock_process_id(const char* pid_command)
     process.dll_address = process.base_address;
 }
 
+/**
+ * Finds the ID of the process indicated by the Lua Auto Splitter.
+ *
+ * @param L The Lua State.
+ *
+ * @return Always zero.
+ */
 int find_process_id(lua_State* L)
 {
     printf("\033[2J\033[1;1H"); // Clear the console
@@ -211,12 +230,24 @@ int find_process_id(lua_State* L)
     return 0;
 }
 
+/**
+ * Returns the Pid of the game process to the Lua Auto Splitter.
+ *
+ * @param L the Lua state.
+ *
+ * @return Always 1.
+ */
 int getPid(lua_State* L)
 {
     lua_pushinteger(L, process.pid);
     return 1;
 }
 
+/**
+ * Check if the game process exists and is running.
+ *
+ * @returns Zero if the process is not running, non-zero if it is.
+ */
 int process_exists()
 {
     int result = kill(process.pid, 0);

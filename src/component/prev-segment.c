@@ -1,16 +1,26 @@
+/** \file prev-segment.c
+ *
+ * Implementation of the "previous segment" component.
+ */
 #include "components.h"
 
+/**
+ * @brief The component representing the "Previous segment" part of LibreSplit
+ */
 typedef struct _LSPrevSegment {
-    LSComponent base;
-    GtkWidget* container;
-    GtkWidget* previous_segment_label;
-    GtkWidget* previous_segment;
+    LSComponent base; /*!< The base struct that is extended */
+    GtkWidget* container; /*!< The container for the previous segment */
+    GtkWidget* previous_segment_label; /*!< Label containing the previous segment text (or live segment in some cases) */
+    GtkWidget* previous_segment; /*!< Label containing the time */
 } LSPrevSegment;
 extern LSComponentOps ls_prev_segment_operations;
 
 #define PREVIOUS_SEGMENT "Previous segment"
 #define LIVE_SEGMENT "Live segment"
 
+/**
+ * Constructor
+ */
 LSComponent* ls_component_prev_segment_new()
 {
     LSPrevSegment* self;
@@ -44,16 +54,34 @@ LSComponent* ls_component_prev_segment_new()
     return (LSComponent*)self;
 }
 
+/**
+ * Destructor
+ *
+ * @param self The component to destroy
+ */
 static void prev_segment_delete(LSComponent* self)
 {
     free(self);
 }
 
+/**
+ * Returns the Previous Segment GTK widget.
+ *
+ * @param self The Previous Segment component itself.
+ * @return The container as a GTK Widget.
+ */
 static GtkWidget* prev_segment_widget(LSComponent* self)
 {
     return ((LSPrevSegment*)self)->container;
 }
 
+/**
+ * Function to execute when ls_app_window_show_game is executed.
+ *
+ * @param self_ The prev-segment component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void prev_segment_show_game(LSComponent* self_,
     const ls_game* game, const ls_timer* timer)
 {
@@ -63,6 +91,11 @@ static void prev_segment_show_game(LSComponent* self_,
     remove_class(self->previous_segment, "best-segment");
 }
 
+/**
+ * Function to execute when ls_app_window_clear_game is executed.
+ *
+ * @param self_ The prev-segment component itself.
+ */
 static void prev_segment_clear_game(LSComponent* self_)
 {
     LSPrevSegment* self = (LSPrevSegment*)self_;
@@ -71,6 +104,13 @@ static void prev_segment_clear_game(LSComponent* self_)
     gtk_label_set_text(GTK_LABEL(self->previous_segment), "");
 }
 
+/**
+ * Function to execute when ls_app_window_draw is executed.
+ *
+ * @param self_ The best time component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void prev_segment_draw(LSComponent* self_, const ls_game* game,
     const ls_timer* timer)
 {

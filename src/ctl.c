@@ -1,3 +1,6 @@
+/** \file ctl.c
+ * Implementation of the Libresplitctl executable
+ */
 #include "shared.h"
 
 #include <arpa/inet.h>
@@ -10,6 +13,11 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+/**
+ * Prints a small help screen.
+ *
+ * Shows the available commands to the user.
+ */
 void print_help()
 {
     printf("Available commands:\n");
@@ -22,6 +30,12 @@ void print_help()
     printf("  help          - Show this help message\n");
 }
 
+/**
+ * Sends a command to LibreSplit via Unix Socket.
+ *
+ * @param cmd The LibreSplit command to send
+ * @return True if the command is successfully sent, false otherwise.
+ */
 bool sendToLibreSplit(const CTLCommand cmd)
 {
     char runtime_dir[PATH_MAX - 17];
@@ -70,6 +84,9 @@ bool sendToLibreSplit(const CTLCommand cmd)
     return true;
 }
 
+/**
+ * The main entrypoint for Libresplitctl
+ */
 int main(int argc, char* argv[])
 {
     if (argc != 2) {

@@ -1,3 +1,7 @@
+/** \file timer.c
+ *
+ * Implementation of the timer
+ */
 #include "timer.h"
 #include "auto-splitter.h"
 #include <jansson.h>
@@ -9,6 +13,12 @@
 #include <string.h>
 #include <time.h>
 
+/**
+ * Returns the current time, taken from a monotonic clock
+ * (a clock that is not affected by leap seconds or daylight savings).
+ *
+ * @return The current time, in milliseconds
+ */
 long long ls_time_now(void)
 {
     struct timespec timespec;
@@ -16,6 +26,15 @@ long long ls_time_now(void)
     return timespec.tv_sec * 1000000LL + timespec.tv_nsec / 1000;
 }
 
+/**
+ * Converts a time string into milliseconds
+ *
+ * Takes a HH:MM:SS.mmmmmm formatted time string and converts it into
+ * milliseconds.
+ *
+ * @param string The time string to convert, in HH:MM:SS.mmmmmm format
+ * @return The time string converted to milliseconds
+ */
 long long ls_time_value(const char* string)
 {
     char seconds_part[256];
@@ -68,6 +87,20 @@ long long ls_time_value(const char* string)
     return sign * ((hours * 60 * 60 + minutes * 60 + seconds) * 1000000LL + (long long)(subseconds_part * 1000000.));
 }
 
+/**
+ * Converts a time in milliseconds to a formatted string.
+ *
+ * Takes a time in milliseconds and converts it into a human-readable format
+ * copying it via side-effect into the first and second argument, a bit
+ * like strcpy would do.
+ *
+ * @param string The destination where to copy the formatted string to.
+ * @param millis The destination where to copy the subseconds part string to.
+ * @param time The time to convert
+ * @param serialized Show all 6 decimal places, if set to zero will only show 2
+ * @param delta Show the time as a delta, when negative
+ * @param compact Defines whether to use the "extended" or "compact" formatting
+ */
 static void ls_time_string_format(char* string,
     char* millis,
     long long time,

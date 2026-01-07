@@ -1,21 +1,31 @@
+/** \file detailed-timer.c
+ *
+ * Implementation of the "Detailed timer" component.
+ */
 #include "components.h"
 
+/**
+ * @brief The component representing the detailed timer part of the window.
+ */
 typedef struct _LSDetailedTimer {
-    LSComponent base;
-    GtkWidget* detailed_timer;
-    GtkWidget* detailed_info;
-    GtkWidget* segment_pb;
-    GtkWidget* segment_best;
-    GtkWidget* detailed_time;
-    GtkWidget* time;
-    GtkWidget* time_seconds;
-    GtkWidget* time_millis;
-    GtkWidget* segment;
-    GtkWidget* segment_seconds;
-    GtkWidget* segment_millis;
+    LSComponent base; /*!< The base struct that is extended */
+    GtkWidget* detailed_timer; /*!< The container for the detailed timer */
+    GtkWidget* detailed_info; /*!< Box */
+    GtkWidget* segment_pb; /*!< Label */
+    GtkWidget* segment_best; /*!< Label */
+    GtkWidget* detailed_time; /*!< Box */
+    GtkWidget* time; /*!< Box */
+    GtkWidget* time_seconds; /*!< Label */
+    GtkWidget* time_millis; /*!< Label */
+    GtkWidget* segment; /*!< Box */
+    GtkWidget* segment_seconds; /*!< Label */
+    GtkWidget* segment_millis; /*!< Label */
 } LSDetailedTimer;
 extern LSComponentOps ls_detailed_timer_operations;
 
+/**
+ * Constructor
+ */
 LSComponent* ls_component_detailed_timer_new()
 {
     LSDetailedTimer* self;
@@ -109,16 +119,32 @@ LSComponent* ls_component_detailed_timer_new()
 }
 
 // Avoid collision with timer_delete of time.h
+/**
+ * Destructor
+ *
+ * @param self The component to destroy
+ */
 static void ls_detailed_timer_delete(LSComponent* self)
 {
     free(self);
 }
 
+/**
+ * Returns the detailed timer GTK widget.
+ *
+ * @param self The detailed timer component itself.
+ * @return The container as a GTK Widget.
+ */
 static GtkWidget* detailed_timer_widget(LSComponent* self)
 {
     return ((LSDetailedTimer*)self)->detailed_timer;
 }
 
+/**
+ * Function to execute when ls_app_window_clear_game is executed.
+ *
+ * @param self_ The detailed timer component itself.
+ */
 static void detailed_timer_clear_game(LSComponent* self_)
 {
     LSDetailedTimer* self = (LSDetailedTimer*)self_;
@@ -131,6 +157,13 @@ static void detailed_timer_clear_game(LSComponent* self_)
     remove_class(self->time, "losing");
 }
 
+/**
+ * Function to execute when ls_app_window_draw is executed.
+ *
+ * @param self_ The detailed timer component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void detailed_timer_draw(LSComponent* self_, const ls_game* game, const ls_timer* timer)
 {
     LSDetailedTimer* self = (LSDetailedTimer*)self_;

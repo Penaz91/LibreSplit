@@ -1,14 +1,24 @@
+/** \file best-sum.c
+ *
+ * Implementation of the "Sum of best segments" component
+ */
 #include "components.h"
 
+/**
+ * @brief The component representing a sum of the best segments.
+ */
 typedef struct _LSBestSum {
-    LSComponent base;
-    GtkWidget* container;
-    GtkWidget* sum_of_bests;
+    LSComponent base; /*!< The base struct that is extended */
+    GtkWidget* container; /*!< The container for the sum of bests */
+    GtkWidget* sum_of_bests; /*!< The actual timer/label showing the sum of bests */
 } LSBestSum;
 extern LSComponentOps ls_best_sum_operations;
 
 #define SUM_OF_BEST_SEGMENTS "Sum of best segments"
 
+/**
+ * Constructor
+ */
 LSComponent* ls_component_best_sum_new()
 {
     LSBestSum* self;
@@ -41,16 +51,34 @@ LSComponent* ls_component_best_sum_new()
     return (LSComponent*)self;
 }
 
+/**
+ * Destructor
+ *
+ * @param self The component to destroy
+ */
 static void best_sum_delete(LSComponent* self)
 {
     free(self);
 }
 
+/**
+ * Returns the best sum GTK widget.
+ *
+ * @param self The best sum component itself.
+ * @return The container as a GTK Widget.
+ */
 static GtkWidget* best_sum_widget(LSComponent* self)
 {
     return ((LSBestSum*)self)->container;
 }
 
+/**
+ * Function to execute when ls_app_window_show_game is executed.
+ *
+ * @param self_ The best sum component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void best_sum_show_game(LSComponent* self_,
     const ls_game* game, const ls_timer* timer)
 {
@@ -62,12 +90,24 @@ static void best_sum_show_game(LSComponent* self_,
     }
 }
 
+/**
+ * Function to execute when ls_app_window_clear_game is executed.
+ *
+ * @param self_ The best time component itself.
+ */
 static void best_sum_clear_game(LSComponent* self_)
 {
     LSBestSum* self = (LSBestSum*)self_;
     gtk_label_set_text(GTK_LABEL(self->sum_of_bests), "");
 }
 
+/**
+ * Function to execute when ls_app_window_draw is executed.
+ *
+ * @param self_ The best time component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void best_sum_draw(LSComponent* self_, const ls_game* game,
     const ls_timer* timer)
 {

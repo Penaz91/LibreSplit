@@ -1,14 +1,26 @@
+/** \file title.c
+ *
+ * Implementation of the title component
+ */
 #include "components.h"
 
+/**
+ * @brief The component representing the title.
+ *
+ * Represents the title of the run, as well as the count of attempts, both finished and total.
+ */
 typedef struct _LSTitle {
-    LSComponent base;
-    GtkWidget* header;
-    GtkWidget* title;
-    GtkWidget* attempt_count;
-    GtkWidget* finished_count;
+    LSComponent base; /*!< The base struct that is extended */
+    GtkWidget* header; /*!< The container for the title */
+    GtkWidget* title; /*!< The label containing the title itself */
+    GtkWidget* attempt_count; /*!< The label containing the number of attempts. */
+    GtkWidget* finished_count; /*<! The label containing the number of finished runs. */
 } LSTitle;
 extern LSComponentOps ls_title_operations; // defined at the end of the file
 
+/**
+ * Constructor
+ */
 LSComponent* ls_component_title_new()
 {
     LSTitle* self;
@@ -47,16 +59,34 @@ LSComponent* ls_component_title_new()
     return (LSComponent*)self;
 }
 
+/**
+ * Destructor
+ *
+ * @param self The component to destroy
+ */
 static void title_delete(LSComponent* self)
 {
     free(self);
 }
 
+/**
+ * Returns the Title GTK widget.
+ *
+ * @param self The Title component itself.
+ * @return The container as a GTK Widget.
+ */
 static GtkWidget* title_widget(LSComponent* self)
 {
     return ((LSTitle*)self)->header;
 }
 
+/**
+ * Function to execute when resize_window is executed (the LibreSplit window is resized).
+ *
+ * @param self_ The title component itself.
+ * @param win_width The new window width.
+ * @param win_height The new window height.
+ */
 static void title_resize(LSComponent* self_, int win_width, int win_height)
 {
     GdkRectangle rect;
@@ -76,6 +106,13 @@ static void title_resize(LSComponent* self_, int win_width, int win_height)
     gtk_widget_set_allocation(self->title, &rect);
 }
 
+/**
+ * Function to execute when ls_app_window_show_game is executed.
+ *
+ * @param self_ The Title component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void title_show_game(LSComponent* self_, const ls_game* game,
     const ls_timer* timer)
 {
@@ -86,6 +123,13 @@ static void title_show_game(LSComponent* self_, const ls_game* game,
     gtk_label_set_text(GTK_LABEL(self->attempt_count), str);
 }
 
+/**
+ * Function to execute when ls_app_window_draw is executed.
+ *
+ * @param self_ The Title component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void title_draw(LSComponent* self_, const ls_game* game, const ls_timer* timer)
 {
     char attempt_str[64];

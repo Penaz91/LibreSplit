@@ -1,13 +1,23 @@
+/** \file clock.c
+ *
+ * Implementation of the clock/timer component.
+ */
 #include "components.h"
 
+/**
+ * @brief The Timer component itself.
+ */
 typedef struct _LSTimer {
-    LSComponent base;
-    GtkWidget* time;
-    GtkWidget* time_seconds;
-    GtkWidget* time_millis;
+    LSComponent base; /*!< The base struct that is extended. */
+    GtkWidget* time; /*!< The timer container */
+    GtkWidget* time_seconds; /*!< The label representing the seconds part of the timer */
+    GtkWidget* time_millis; /*!< The label representing the milliseconds part of the timer */
 } LSTimer;
 extern LSComponentOps ls_timer_operations;
 
+/**
+ * Constructor
+ */
 LSComponent* ls_component_timer_new()
 {
     LSTimer* self;
@@ -50,16 +60,32 @@ LSComponent* ls_component_timer_new()
 }
 
 // Avoid collision with timer_delete of time.h
+/**
+ * Destructor.
+ *
+ * @param self The clock component itself
+ */
 static void ls_timer_delete(LSComponent* self)
 {
     free(self);
 }
 
+/**
+ * Returns the clock GTK widget.
+ *
+ * @param self The clock component itself.
+ * @return The container as a GTK Widget.
+ */
 static GtkWidget* timer_widget(LSComponent* self)
 {
     return ((LSTimer*)self)->time;
 }
 
+/**
+ * Function to execute when ls_app_window_clear_game is executed.
+ *
+ * @param self_ The best time component itself.
+ */
 static void timer_clear_game(LSComponent* self_)
 {
     LSTimer* self = (LSTimer*)self_;
@@ -69,6 +95,13 @@ static void timer_clear_game(LSComponent* self_)
     remove_class(self->time, "losing");
 }
 
+/**
+ * Function to execute when ls_app_window_draw is executed.
+ *
+ * @param self_ The best time component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void timer_draw(LSComponent* self_, const ls_game* game, const ls_timer* timer)
 {
     LSTimer* self = (LSTimer*)self_;

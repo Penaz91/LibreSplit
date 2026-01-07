@@ -1,14 +1,24 @@
+/** \file pb.c
+ *
+ * Implementation of the "Personal Best" component
+ */
 #include "components.h"
 
+/**
+ * @brief The component representing a personal best
+ */
 typedef struct _LSPb {
-    LSComponent base;
-    GtkWidget* container;
-    GtkWidget* personal_best;
+    LSComponent base; /*!< The base struct that is extended */
+    GtkWidget* container; /*!< The container for the PB */
+    GtkWidget* personal_best; /*< The actual personal best label */
 } LSPb;
 extern LSComponentOps ls_pb_operations;
 
 #define PERSONAL_BEST "Personal best"
 
+/**
+ * Constructor
+ */
 LSComponent* ls_component_pb_new()
 {
     LSPb* self;
@@ -41,16 +51,34 @@ LSComponent* ls_component_pb_new()
     return (LSComponent*)self;
 }
 
+/**
+ * Destructor
+ *
+ * @param self The component to destroy
+ */
 static void pb_delete(LSComponent* self)
 {
     free(self);
 }
 
+/**
+ * Returns the Personal Best GTK widget.
+ *
+ * @param self The personal best component itself.
+ * @return The container as a GTK Widget.
+ */
 static GtkWidget* pb_widget(LSComponent* self)
 {
     return ((LSPb*)self)->container;
 }
 
+/**
+ * Function to execute when ls_app_window_show_game is executed.
+ *
+ * @param self_ The personal best component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void pb_show_game(LSComponent* self_,
     const ls_game* game, const ls_timer* timer)
 {
@@ -63,12 +91,24 @@ static void pb_show_game(LSComponent* self_,
     }
 }
 
+/**
+ * Function to execute when ls_app_window_clear_game is executed.
+ *
+ * @param self_ The best time component itself.
+ */
 static void pb_clear_game(LSComponent* self_)
 {
     LSPb* self = (LSPb*)self_;
     gtk_label_set_text(GTK_LABEL(self->personal_best), "");
 }
 
+/**
+ * Function to execute when ls_app_window_draw is executed.
+ *
+ * @param self_ The best time component itself.
+ * @param game The game struct instance.
+ * @param timer The timer instance.
+ */
 static void pb_draw(LSComponent* self_, const ls_game* game,
     const ls_timer* timer)
 {
