@@ -1,5 +1,5 @@
 #include "bind.h"
-#include "component/components.h"
+#include "gui/component/components.h"
 #include "keybinds.h"
 #include "lasr/auto-splitter.h"
 #include "server.h"
