@@ -99,6 +99,9 @@ static void ls_app_window_destroy(GtkWidget* widget, gpointer data)
     if (win->game) {
         ls_game_release(win->game);
     }
+    if (win->welcome_box) {
+        welcome_box_destroy(win->welcome_box);
+    }
     atomic_store(&auto_splitter_enabled, 0);
     atomic_store(&exit_requested, 1);
 }
