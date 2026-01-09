@@ -1,4 +1,4 @@
-#ifndef KEYBINDS_H
+#pragma once
 
 #include "gdk/gdk.h"
 #include "glib.h"
@@ -26,7 +26,3 @@ typedef struct {
 } LSKeybinds;
 
 Keybind parse_keybind(const gchar* accelerator);
-
-#define KEYBINDS_H
-
-#endif /* end of include guard: KEYBINDS_H */

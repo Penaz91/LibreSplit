@@ -1,6 +1,4 @@
-#ifndef OPTS_H
-
-#define OPTS_H
+#pragma once
 
 #include "glib.h"
 
@@ -13,5 +11,3 @@ typedef struct {
     gboolean decorated; /*!< Defines whether LibreSplit is currently showing window decorations */
     gboolean win_on_top; /*!< Defines whether LibreSplit is currently "always-on-top" */
 } LSOpts;
-
-#endif /* end of include guard: OPTS_H */
