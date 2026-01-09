@@ -45,6 +45,10 @@ executable(
         'src/lasr/functions/signature.c',
         'src/lasr/functions/sizeOf.c',
 
+        # GUI
+        'src/gui/utils.c',
+        'src/gui/welcome_box.c',
+
         # GUI Components
         'src/gui/component/best-sum.c',
         'src/gui/component/clock.c',
