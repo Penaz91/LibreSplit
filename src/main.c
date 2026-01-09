@@ -705,16 +705,16 @@ static void ls_app_window_init(LSAppWindow* win)
     // load settings
     win->opts.hide_cursor = cfg.libresplit.hide_cursor.value.b;
     win->opts.global_hotkeys = cfg.libresplit.global_hotkeys.value.b;
+    win->opts.decorated = cfg.libresplit.start_decorated.value.b;
+    win->opts.win_on_top = cfg.libresplit.start_on_top.value.b;
     win->keybinds.start_split = parse_keybind(cfg.keybinds.start_split.value.s);
     win->keybinds.stop_reset = parse_keybind(cfg.keybinds.stop_reset.value.s);
     win->keybinds.cancel = parse_keybind(cfg.keybinds.cancel.value.s);
     win->keybinds.unsplit = parse_keybind(cfg.keybinds.unsplit.value.s);
     win->keybinds.skip_split = parse_keybind(cfg.keybinds.skip_split.value.s);
     win->keybinds.toggle_decorations = parse_keybind(cfg.keybinds.toggle_decorations.value.s);
-    win->opts.decorated = cfg.libresplit.start_decorated.value.b;
-    gtk_window_set_decorated(GTK_WINDOW(win), win->opts.decorated);
     win->keybinds.toggle_win_on_top = parse_keybind(cfg.keybinds.toggle_win_on_top.value.s);
-    win->opts.win_on_top = cfg.libresplit.start_on_top.value.b;
+    gtk_window_set_decorated(GTK_WINDOW(win), win->opts.decorated);
     gtk_window_set_keep_above(GTK_WINDOW(win), win->opts.win_on_top);
 
     // Load theme
