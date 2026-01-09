@@ -18,3 +18,8 @@ LSWelcomeBox* welcome_box_new(GtkWidget* container)
     gtk_container_add(GTK_CONTAINER(container), self->box);
     return self;
 }
+
+void welcome_box_destroy(LSWelcomeBox* self)
+{
+    free(self);
+}

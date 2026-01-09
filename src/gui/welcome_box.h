@@ -10,5 +10,6 @@ typedef struct {
 } LSWelcomeBox;
 
 LSWelcomeBox* welcome_box_new(GtkWidget* container);
+void welcome_box_destroy(LSWelcomeBox* self);
 
 #endif /* end of include guard: WELCOME_BOX_H */
