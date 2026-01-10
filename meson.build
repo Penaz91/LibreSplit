@@ -48,6 +48,7 @@ executable(
         # GUI
         'src/gui/utils.c',
         'src/gui/welcome_box.c',
+        'src/gui/dialogs.c',
 
         # GUI Components
         'src/gui/component/best-sum.c',
