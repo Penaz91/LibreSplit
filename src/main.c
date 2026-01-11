@@ -366,8 +366,10 @@ static void ls_app_window_show_game(LSAppWindow* win)
             win->game->height);
     }
 
-    // set game theme
-    ls_app_load_theme_with_fallback(win, win->game->theme, win->game->theme_variant, &win->style);
+    // set game theme (if it is set)
+    if (win->game->theme) {
+        ls_app_load_theme_with_fallback(win, win->game->theme, win->game->theme_variant, &win->style);
+    }
 
     for (l = win->components; l != NULL; l = l->next) {
         LSComponent* component = l->data;
