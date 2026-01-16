@@ -1063,6 +1063,38 @@ static void open_auto_splitter(GSimpleAction* action,
 }
 
 /**
+ * Compares the current timer and the saved one to see
+ * if the current one is better
+ *
+ * Ported from paoloose/urn @7456bfe
+ *
+ * @param game The current timer
+ * @param timer The previous timer
+ *
+ * @return True if the current timer is better
+ */
+bool ls_is_timer_better(ls_game* game, ls_timer* timer)
+{
+    int i;
+    // Find the latest split with a time
+    for (i = game->split_count - 1; i >= 0; i--) {
+        if (timer->split_times[i] != 0ll || game->split_times[i] != 0ll) {
+            break;
+        }
+    }
+    if (i < 0) {
+        return true;
+    }
+    if (timer->split_times[i] == 0ll) {
+        return false;
+    }
+    if (game->split_times[i] == 0ll) {
+        return true;
+    }
+    return timer->split_times[i] < game->split_times[i];
+}
+
+/**
  * Saves the splits in the JSON Split file.
  *
  * @param action Usually NULL
@@ -1090,8 +1122,24 @@ static void save_activated(GSimpleAction* action,
         gtk_window_get_size(GTK_WINDOW(win), &width, &height);
         win->game->width = width;
         win->game->height = height;
-        ls_game_update_splits(win->game, win->timer);
-        save_game(win->game);
+        bool saving = true;
+        if (!ls_is_timer_better(win->game, win->timer)) {
+            GtkWidget* confirm = gtk_message_dialog_new(
+                GTK_WINDOW(win),
+                GTK_DIALOG_MODAL,
+                GTK_MESSAGE_QUESTION,
+                GTK_BUTTONS_YES_NO,
+                "This run seems to be worse than the saved one. Continue?");
+            gint response = gtk_dialog_run(GTK_DIALOG(confirm));
+            if (!response) {
+                saving = false;
+            }
+            gtk_widget_destroy(confirm);
+        }
+        if (saving) {
+            ls_game_update_splits(win->game, win->timer);
+            save_game(win->game);
+        }
     }
 }
 
