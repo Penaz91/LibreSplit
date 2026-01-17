@@ -3,6 +3,7 @@
  * Implementation of the timer
  */
 #include "timer.h"
+#include "settings/utils.h"
 
 #include "lasr/auto-splitter.h"
 
@@ -538,6 +539,91 @@ int ls_game_save(const ls_game* game)
     return error;
 }
 
+int ls_run_save(ls_timer* timer, const char* reason)
+{
+    if (timer->time == 0)
+        return 0;
+
+    int error = 0;
+    char final_time_str[128];
+    ls_time_string_serialized(final_time_str, timer->time);
+
+    // Root JSON Object
+    json_t* json = json_object();
+
+    // Basic Run Info
+    if (timer->game->title) {
+        json_object_set_new(json, "title", json_string(timer->game->title));
+    }
+    if (timer->game->attempt_count) {
+        json_object_set_new(json, "attempt_count", json_integer(timer->game->attempt_count));
+    }
+    if (timer->game->finished_count) {
+        json_object_set_new(json, "finished_count", json_integer(timer->game->finished_count));
+    }
+    json_object_set_new(json, "final_time", json_string(final_time_str));
+    json_object_set_new(json, "reason", json_string(reason));
+
+    // Splits Array
+    json_t* splits = json_array();
+
+    for (int i = 0; i < timer->game->split_count; i++) {
+        json_t* split = json_object();
+
+        // Title
+        json_object_set_new(split, "title", json_string(timer->game->split_titles[i]));
+
+        // Time
+        if (i < timer->curr_split) {
+            // Check if time > 0, avoids saving time on skipped splits
+            if (timer->split_times[i] > 0 && timer->split_times[i] < LLONG_MAX) {
+                char split_time_str[128];
+                ls_time_string_serialized(split_time_str, timer->split_times[i]);
+                json_object_set_new(split, "time", json_string(split_time_str));
+                // Check if segment time > 0, avoids saving segment time AFTER skipped split
+                if (timer->segment_times[i] > 0 && timer->segment_times[i] < LLONG_MAX) {
+                    char segment_time_str[128];
+                    ls_time_string_serialized(segment_time_str, timer->segment_times[i]);
+                    json_object_set_new(split, "segment", json_string(segment_time_str));
+                } else {
+                    json_object_set_new(split, "segment", json_null());
+                }
+            } else {
+                json_object_set_new(split, "time", json_null());
+                json_object_set_new(split, "segment", json_null());
+            }
+        }
+        json_array_append_new(splits, split);
+    }
+
+    json_object_set_new(json, "splits", splits);
+
+    char path[PATH_MAX];
+    get_libresplit_folder_path(path);
+    strncat(path, "/runs", sizeof(path) - strlen(path) - 1);
+
+    time_t rawtime;
+    struct tm* timeinfo;
+    char time_buf[64];
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    strftime(time_buf, sizeof(time_buf), "%Y-%m-%d_%H-%M-%S", timeinfo);
+
+    char filename[PATH_MAX];
+    snprintf(filename, sizeof(filename), "%s/run_%s.json", path, time_buf);
+
+    const int json_dump_result = json_dump_file(json, filename, JSON_PRESERVE_ORDER | JSON_INDENT(2));
+    if (json_dump_result) {
+        printf("Error dumping JSON:\n%s\n", json_dumps(json, JSON_PRESERVE_ORDER | JSON_INDENT(2)));
+        printf("Error: '%d'\n", json_dump_result);
+        printf("Path: %s\n", filename);
+        error = 1;
+    }
+
+    json_decref(json);
+    return error;
+}
+
 void ls_timer_release(const ls_timer* timer)
 {
     if (timer->split_times) {
@@ -767,6 +853,7 @@ int ls_timer_split(ls_timer* timer)
                 ls_timer_stop(timer);
                 atomic_store(&run_finished, true);
                 ls_game_update_splits((ls_game*)timer->game, timer);
+                ls_run_save(timer, "FINISHED");
             }
             return timer->curr_split;
         }
@@ -824,6 +911,9 @@ int ls_timer_reset(ls_timer* timer)
     if (!timer->running) {
         if (timer->started && timer->time <= 0) {
             return ls_timer_cancel(timer);
+        }
+        if (timer->curr_split < timer->game->split_count) {
+            ls_run_save(timer, "RESET");
         }
         reset_timer(timer);
         return 1;
