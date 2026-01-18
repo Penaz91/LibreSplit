@@ -8,6 +8,7 @@
 #include "settings/settings.h"
 #include "settings/utils.h"
 #include "shared.h"
+#include "src/opts.h"
 #include "timer.h"
 
 #include <gtk/gtk.h>
@@ -49,8 +50,6 @@ static const size_t css_data_len = sizeof(css_data);
 struct _LSAppWindow {
     GtkApplicationWindow parent; /*!< The proper GTK base application*/
     char data_path[PATH_MAX]; /*!< The path to the libresplit user config directory */
-    gboolean decorated; /*!< Defines whether LibreSplit is currently showing window decorations */
-    gboolean win_on_top; /*!< Defines whether LibreSplit is currently "always-on-top" */
     ls_game* game;
     ls_timer* timer;
     GdkDisplay* display;
@@ -60,9 +59,8 @@ struct _LSAppWindow {
     GList* components;
     GtkWidget* footer;
     GtkCssProvider* style; // Current style provider, there can be only one
-    gboolean hide_cursor; /*!< Defines whether the cursor should be hidden when on top of LibreSplit */
-    gboolean global_hotkeys; /*!< Defines whether global hotkeys are currently enabled */
     LSKeybinds keybinds; /*!< The keybinds related to this application window */
+    LSOpts opts; /*!< The window options */
 };
 
 struct _LSAppWindowClass {
@@ -131,7 +129,7 @@ static gboolean ls_app_window_step(gpointer data)
     LSAppWindow* win = data;
     long long now = ls_time_now();
     static int set_cursor;
-    if (win->hide_cursor && !set_cursor) {
+    if (win->opts.hide_cursor && !set_cursor) {
         GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(win));
         if (gdk_window) {
             GdkCursor* cursor = gdk_cursor_new_for_display(win->display, GDK_BLANK_CURSOR);
@@ -545,14 +543,14 @@ static void timer_unsplit(LSAppWindow* win)
 
 static void toggle_decorations(LSAppWindow* win)
 {
-    gtk_window_set_decorated(GTK_WINDOW(win), !win->decorated);
-    win->decorated = !win->decorated;
+    gtk_window_set_decorated(GTK_WINDOW(win), !win->opts.decorated);
+    win->opts.decorated = !win->opts.decorated;
 }
 
 static void toggle_win_on_top(LSAppWindow* win)
 {
-    gtk_window_set_keep_above(GTK_WINDOW(win), !win->win_on_top);
-    win->win_on_top = !win->win_on_top;
+    gtk_window_set_keep_above(GTK_WINDOW(win), !win->opts.win_on_top);
+    win->opts.win_on_top = !win->opts.win_on_top;
 }
 
 static void keybind_start_split(GtkWidget* widget, LSAppWindow* win)
@@ -694,19 +692,19 @@ static void ls_app_window_init(LSAppWindow* win)
     get_libresplit_folder_path(win->data_path);
 
     // load settings
-    win->hide_cursor = cfg.libresplit.hide_cursor.value.b;
-    win->global_hotkeys = cfg.libresplit.global_hotkeys.value.b;
+    win->opts.hide_cursor = cfg.libresplit.hide_cursor.value.b;
+    win->opts.global_hotkeys = cfg.libresplit.global_hotkeys.value.b;
+    win->opts.decorated = cfg.libresplit.start_decorated.value.b;
+    win->opts.win_on_top = cfg.libresplit.start_on_top.value.b;
     win->keybinds.start_split = parse_keybind(cfg.keybinds.start_split.value.s);
     win->keybinds.stop_reset = parse_keybind(cfg.keybinds.stop_reset.value.s);
     win->keybinds.cancel = parse_keybind(cfg.keybinds.cancel.value.s);
     win->keybinds.unsplit = parse_keybind(cfg.keybinds.unsplit.value.s);
     win->keybinds.skip_split = parse_keybind(cfg.keybinds.skip_split.value.s);
     win->keybinds.toggle_decorations = parse_keybind(cfg.keybinds.toggle_decorations.value.s);
-    win->decorated = cfg.libresplit.start_decorated.value.b;
-    gtk_window_set_decorated(GTK_WINDOW(win), win->decorated);
     win->keybinds.toggle_win_on_top = parse_keybind(cfg.keybinds.toggle_win_on_top.value.s);
-    win->win_on_top = cfg.libresplit.start_on_top.value.b;
-    gtk_window_set_keep_above(GTK_WINDOW(win), win->win_on_top);
+    gtk_window_set_decorated(GTK_WINDOW(win), win->opts.decorated);
+    gtk_window_set_keep_above(GTK_WINDOW(win), win->opts.win_on_top);
 
     // Load theme
     theme = cfg.libresplit.theme.value.s;
@@ -727,7 +725,7 @@ static void ls_app_window_init(LSAppWindow* win)
     const bool is_wayland = getenv("WAYLAND_DISPLAY");
     const bool force_global_hotkeys = getenv("LIBRESPLIT_FORCE_GLOBAL_HOTKEYS");
 
-    const bool enable_global_hotkeys = win->global_hotkeys && (force_global_hotkeys || !is_wayland);
+    const bool enable_global_hotkeys = win->opts.global_hotkeys && (force_global_hotkeys || !is_wayland);
 
     if (enable_global_hotkeys) {
         keybinder_init();
@@ -1225,8 +1223,8 @@ static void menu_toggle_win_on_top(GtkCheckMenuItem* menu_item,
     } else {
         win = ls_app_window_new(LS_APP(app));
     }
-    gtk_window_set_keep_above(GTK_WINDOW(win), !win->win_on_top);
-    win->win_on_top = active;
+    gtk_window_set_keep_above(GTK_WINDOW(win), !win->opts.win_on_top);
+    win->opts.win_on_top = active;
 }
 
 /**
@@ -1256,7 +1254,7 @@ static gboolean button_right_click(GtkWidget* widget, GdkEventButton* event, gpo
         GtkWidget* menu_enable_auto_splitter = gtk_check_menu_item_new_with_label("Enable Auto Splitter");
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_enable_auto_splitter), atomic_load(&auto_splitter_enabled));
         GtkWidget* menu_enable_win_on_top = gtk_check_menu_item_new_with_label("Always on Top");
-        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_enable_win_on_top), win->win_on_top);
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_enable_win_on_top), win->opts.win_on_top);
         GtkWidget* menu_reload = gtk_menu_item_new_with_label("Reload");
         GtkWidget* menu_close = gtk_menu_item_new_with_label("Close");
         GtkWidget* menu_quit = gtk_menu_item_new_with_label("Quit");
