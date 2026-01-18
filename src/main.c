@@ -1,5 +1,6 @@
 #include "bind.h"
 #include "gui/component/components.h"
+#include "gui/utils.h"
 #include "lasr/auto-splitter.h"
 #include "server.h"
 #include "settings/settings.h"
