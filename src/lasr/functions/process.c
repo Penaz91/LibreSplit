@@ -90,7 +90,7 @@ int find_process_id(lua_State* L)
     }
 
     char command[256];
-    snprintf(command, sizeof(command), "pgrep \"%.*s\"%s", (int)strnlen(process.name, 15), process.name, sortCmd);
+    snprintf(command, sizeof(command), "pgrep \"%.*s\"%s", (int)strnlen(process.name, sizeof(command) - strlen(sortCmd) - 1), process.name, sortCmd);
 
     stock_process_id(command);
 
