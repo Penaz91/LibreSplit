@@ -1,6 +1,6 @@
 #include "welcome_box.h"
-#include <gtk/gtk.h>
 #include "utils.h"
+#include <gtk/gtk.h>
 #include <stdlib.h>
 
 LSWelcomeBox* welcome_box_new(GtkWidget* container)

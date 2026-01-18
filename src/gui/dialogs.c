@@ -6,8 +6,8 @@
  * @return False, to remove the function from the queue.
  */
 #include "glib.h"
-#include <gtk/gtk.h>
 #include "src/lasr/auto-splitter.h"
+#include <gtk/gtk.h>
 #include <stdatomic.h>
 
 /**
