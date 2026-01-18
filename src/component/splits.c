@@ -3,6 +3,7 @@
  * Implementation of the splits component.
  */
 #include "components.h"
+#include "gtk/gtk.h"
 #include <limits.h>
 
 /**
@@ -46,6 +47,8 @@ LSComponent* ls_component_splits_new()
     gtk_widget_set_hexpand(self->split_scroller, TRUE);
     gtk_widget_show(self->split_scroller);
     gtk_widget_add_events(self->split_scroller, GDK_SCROLL_MASK);
+    gtk_widget_hide(gtk_scrolled_window_get_vscrollbar(GTK_SCROLLED_WINDOW(self->split_scroller)));
+    gtk_widget_hide(gtk_scrolled_window_get_hscrollbar(GTK_SCROLLED_WINDOW(self->split_scroller)));
 
     self->split_viewport = gtk_viewport_new(NULL, NULL);
     gtk_container_add(GTK_CONTAINER(self->split_scroller),
