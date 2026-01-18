@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/prctl.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -87,6 +88,8 @@ int receive_message(int sockfd, CTLMessage** out)
  */
 void* ls_ctl_server(void* arg)
 {
+    prctl(PR_SET_NAME, "LS CTL Server", 0, 0, 0);
+
     char runtime_dir[PATH_MAX - 17];
     getXDGruntimeDir(runtime_dir, sizeof(runtime_dir));
     if (strlen(runtime_dir) == 0) {
