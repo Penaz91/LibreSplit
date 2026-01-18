@@ -18,6 +18,6 @@ jobs:
                   if [ -n "$changed_files" ]; then
                     echo "The following files require formatting:"
                     echo "$changed_files"
-                    echo "Run 'make format' and commit the changes."
+                    echo "Run 'clang-format -i src/**/*.{c,h}' and commit the changes."
                     exit 1
                   fi
