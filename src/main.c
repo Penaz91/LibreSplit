@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/prctl.h>
 #include <sys/stat.h>
 
 #define LS_APP_TYPE (ls_app_get_type())
@@ -1410,6 +1411,7 @@ static void ls_app_class_init(LSAppClass* class)
  */
 static void* ls_auto_splitter(void* arg)
 {
+    prctl(PR_SET_NAME, "LS LASR", 0, 0, 0);
     while (1) {
         if (atomic_load(&auto_splitter_enabled) && auto_splitter_file[0] != '\0') {
             atomic_store(&auto_splitter_running, true);
