@@ -1,5 +1,5 @@
 #include "welcome_box.h"
-#include "gtk/gtk.h"
+#include <gtk/gtk.h>
 #include "utils.h"
 #include <stdlib.h>
 

@@ -1,4 +1,4 @@
-#include "gtk/gtk.h"
+#include <gtk/gtk.h>
 
 /**
  * Adds a styling class to a GTK Widget.

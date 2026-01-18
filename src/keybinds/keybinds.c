@@ -1,5 +1,5 @@
 #include "keybinds.h"
-#include "gtk/gtk.h"
+#include <gtk/gtk.h>
 
 /**
  * Parses a string representing a Keybind definition
