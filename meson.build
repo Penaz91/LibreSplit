@@ -54,6 +54,7 @@ executable(
 
         # Keybinds
         'src/keybinds/keybinds.c',
+        'src/keybinds/keybinds_callbacks.c',
 
         # GUI
         'src/gui/utils.c',
