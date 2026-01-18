@@ -2,7 +2,7 @@
 #include "gui/component/components.h"
 #include "gui/utils.h"
 #include "gui/welcome_box.h"
-#include "keybinds.h"
+#include "keybinds/keybinds.h"
 #include "lasr/auto-splitter.h"
 #include "server.h"
 #include "settings/settings.h"

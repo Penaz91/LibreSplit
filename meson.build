@@ -26,7 +26,6 @@ executable(
     'libresplit',
     [
         'src/main.c',
-        'src/keybinds.c',
         'src/bind.c',
         'src/server.c',
         'src/shared.c',
@@ -52,6 +51,9 @@ executable(
         'src/lasr/functions/shallow_copy_tbl.c',
         'src/lasr/functions/signature.c',
         'src/lasr/functions/sizeOf.c',
+
+        # Keybinds
+        'src/keybinds/keybinds.c',
 
         # GUI
         'src/gui/utils.c',
