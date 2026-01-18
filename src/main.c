@@ -2,6 +2,7 @@
 #include "gui/component/components.h"
 #include "gui/utils.h"
 #include "gui/welcome_box.h"
+#include "keybinds.h"
 #include "lasr/auto-splitter.h"
 #include "server.h"
 #include "settings/settings.h"
@@ -43,15 +44,6 @@ static const unsigned char css_data[] = {
 static const size_t css_data_len = sizeof(css_data);
 
 /**
- * @brief Keybind A GTK Key bind
- */
-typedef struct
-{
-    guint key; /*!< The key value */
-    GdkModifierType mods; /*!< The modifiers used (shift, ctrl, ...) */
-} Keybind;
-
-/**
  * @brief The main LibreSplit application window
  */
 struct _LSAppWindow {
@@ -70,13 +62,7 @@ struct _LSAppWindow {
     GtkCssProvider* style; // Current style provider, there can be only one
     gboolean hide_cursor; /*!< Defines whether the cursor should be hidden when on top of LibreSplit */
     gboolean global_hotkeys; /*!< Defines whether global hotkeys are currently enabled */
-    Keybind keybind_start_split; /*!< The "start or split" global keybind */
-    Keybind keybind_stop_reset; /*!< The "stop or reset timer" global keybind */
-    Keybind keybind_cancel; /*!< The "cancel" global keybind */
-    Keybind keybind_unsplit; /*!< The "undo split" global keybind */
-    Keybind keybind_skip_split; /*!< The "skip split" global keybind */
-    Keybind keybind_toggle_decorations; /*!< The "toggle decorations" global keybind */
-    Keybind keybind_toggle_win_on_top; /*!< The "always-on-top" global keybind */
+    LSKeybinds keybinds; /*!< The keybinds related to this application window */
 };
 
 struct _LSAppWindowClass {
@@ -84,21 +70,6 @@ struct _LSAppWindowClass {
 };
 
 G_DEFINE_TYPE(LSAppWindow, ls_app_window, GTK_TYPE_APPLICATION_WINDOW)
-
-/**
- * Parses a string representing a Keybind definition
- * into a Keybind structure.
- *
- * @param accelerator The string representation of the keybind.
- *
- * @return A Keybind struct corresponding to the requested keybind.
- */
-static Keybind parse_keybind(const gchar* accelerator)
-{
-    Keybind kb;
-    gtk_accelerator_parse(accelerator, &kb.key, &kb.mods);
-    return kb;
-}
 
 /**
  * Matches a Gdk key press event with a Keybind.
@@ -671,19 +642,19 @@ static gboolean ls_app_window_keypress(GtkWidget* widget,
     gpointer data)
 {
     LSAppWindow* win = (LSAppWindow*)data;
-    if (keybind_match(win->keybind_start_split, event->key)) {
+    if (keybind_match(win->keybinds.start_split, event->key)) {
         timer_start_split(win);
-    } else if (keybind_match(win->keybind_stop_reset, event->key)) {
+    } else if (keybind_match(win->keybinds.stop_reset, event->key)) {
         timer_stop_reset(win);
-    } else if (keybind_match(win->keybind_cancel, event->key)) {
+    } else if (keybind_match(win->keybinds.cancel, event->key)) {
         timer_cancel_run(win);
-    } else if (keybind_match(win->keybind_unsplit, event->key)) {
+    } else if (keybind_match(win->keybinds.unsplit, event->key)) {
         timer_unsplit(win);
-    } else if (keybind_match(win->keybind_skip_split, event->key)) {
+    } else if (keybind_match(win->keybinds.skip_split, event->key)) {
         timer_skip(win);
-    } else if (keybind_match(win->keybind_toggle_decorations, event->key)) {
+    } else if (keybind_match(win->keybinds.toggle_decorations, event->key)) {
         toggle_decorations(win);
-    } else if (keybind_match(win->keybind_toggle_win_on_top, event->key)) {
+    } else if (keybind_match(win->keybinds.toggle_win_on_top, event->key)) {
         toggle_win_on_top(win);
     }
     return TRUE;
@@ -725,15 +696,15 @@ static void ls_app_window_init(LSAppWindow* win)
     // load settings
     win->hide_cursor = cfg.libresplit.hide_cursor.value.b;
     win->global_hotkeys = cfg.libresplit.global_hotkeys.value.b;
-    win->keybind_start_split = parse_keybind(cfg.keybinds.start_split.value.s);
-    win->keybind_stop_reset = parse_keybind(cfg.keybinds.stop_reset.value.s);
-    win->keybind_cancel = parse_keybind(cfg.keybinds.cancel.value.s);
-    win->keybind_unsplit = parse_keybind(cfg.keybinds.unsplit.value.s);
-    win->keybind_skip_split = parse_keybind(cfg.keybinds.skip_split.value.s);
-    win->keybind_toggle_decorations = parse_keybind(cfg.keybinds.toggle_decorations.value.s);
+    win->keybinds.start_split = parse_keybind(cfg.keybinds.start_split.value.s);
+    win->keybinds.stop_reset = parse_keybind(cfg.keybinds.stop_reset.value.s);
+    win->keybinds.cancel = parse_keybind(cfg.keybinds.cancel.value.s);
+    win->keybinds.unsplit = parse_keybind(cfg.keybinds.unsplit.value.s);
+    win->keybinds.skip_split = parse_keybind(cfg.keybinds.skip_split.value.s);
+    win->keybinds.toggle_decorations = parse_keybind(cfg.keybinds.toggle_decorations.value.s);
     win->decorated = cfg.libresplit.start_decorated.value.b;
     gtk_window_set_decorated(GTK_WINDOW(win), win->decorated);
-    win->keybind_toggle_win_on_top = parse_keybind(cfg.keybinds.toggle_win_on_top.value.s);
+    win->keybinds.toggle_win_on_top = parse_keybind(cfg.keybinds.toggle_win_on_top.value.s);
     win->win_on_top = cfg.libresplit.start_on_top.value.b;
     gtk_window_set_keep_above(GTK_WINDOW(win), win->win_on_top);
 
