@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../timer.h"
+#include "../../timer.h"
 
 typedef struct _LSComponent LSComponent;
 typedef struct _LSComponentOps LSComponentOps;
