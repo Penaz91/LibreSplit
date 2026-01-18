@@ -1,6 +1,7 @@
 #include "bind.h"
 #include "gui/component/components.h"
 #include "gui/utils.h"
+#include "gui/welcome_box.h"
 #include "lasr/auto-splitter.h"
 #include "server.h"
 #include "settings/settings.h"
@@ -62,8 +63,7 @@ struct _LSAppWindow {
     ls_timer* timer;
     GdkDisplay* display;
     GtkWidget* container;
-    GtkWidget* welcome;
-    GtkWidget* welcome_lbl;
+    LSWelcomeBox* welcome_box;
     GtkWidget* box;
     GList* components;
     GtkWidget* footer;
@@ -328,7 +328,7 @@ static void ls_app_window_clear_game(LSAppWindow* win)
     atomic_store(&run_finished, false);
 
     gtk_widget_hide(win->box);
-    gtk_widget_show_all(win->welcome);
+    gtk_widget_show_all(win->welcome_box->box);
 
     for (l = win->components; l != NULL; l = l->next) {
         LSComponent* component = l->data;
@@ -370,7 +370,7 @@ static void ls_app_window_show_game(LSAppWindow* win)
     }
 
     gtk_widget_show(win->box);
-    gtk_widget_hide(win->welcome);
+    gtk_widget_hide(win->welcome_box->box);
 }
 
 static void resize_window(LSAppWindow* win,
@@ -800,17 +800,10 @@ static void ls_app_window_init(LSAppWindow* win)
     gtk_container_add(GTK_CONTAINER(win), win->container);
     gtk_widget_show(win->container);
 
-    win->welcome = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_widget_set_margin_top(win->welcome, 0);
-    add_class(win->welcome, "welcome-screen");
-    gtk_widget_set_margin_bottom(win->welcome, 0);
-    gtk_widget_set_vexpand(win->welcome, TRUE);
-    gtk_container_add(GTK_CONTAINER(win->container), win->welcome);
-    win->welcome_lbl = gtk_label_new("Welcome to LibreSplit!\nNo split is currently loaded.\nRight click this window to open a split JSON file!");
-    gtk_container_add(GTK_CONTAINER(win->welcome), win->welcome_lbl);
+    win->welcome_box = welcome_box_new(win->container);
 
     win->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    add_class(win->welcome, "main-screen");
+    add_class(win->welcome_box->box, "main-screen");
     gtk_widget_set_margin_top(win->box, 0);
     gtk_widget_set_margin_bottom(win->box, 0);
     gtk_widget_set_vexpand(win->box, TRUE);
@@ -975,7 +968,7 @@ static void open_activated(GSimpleAction* action,
         CFG_SET_STR(cfg.history.split_file.value.s, filename);
         g_free(filename);
     } else {
-        gtk_widget_show_all(win->welcome);
+        gtk_widget_show_all(win->welcome_box->box);
     }
     gtk_widget_destroy(dialog);
     config_save();
@@ -1208,6 +1201,9 @@ static void close_activated(GSimpleAction* action,
     if (win->game) {
         ls_game_release(win->game);
         win->game = 0;
+    }
+    if (win->welcome_box) {
+        welcome_box_destroy(win->welcome_box);
     }
     gtk_widget_set_size_request(GTK_WIDGET(win), -1, -1);
 }
