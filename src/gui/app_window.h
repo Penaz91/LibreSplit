@@ -6,6 +6,8 @@
 #include "src/timer.h"
 #include <gtk/gtk.h>
 
+#define WINDOW_PAD (8)
+
 typedef struct _LSAppWindowClass {
     GtkApplicationWindowClass parent_class;
 } LSAppWindowClass;
@@ -39,3 +41,5 @@ typedef struct _LSAppWindow {
 
 void toggle_decorations(LSAppWindow* win);
 void toggle_win_on_top(LSAppWindow* win);
+
+gboolean ls_app_window_resize(GtkWidget* widget, GdkEvent* event, gpointer data);

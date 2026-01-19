@@ -36,8 +36,6 @@ G_DEFINE_TYPE(LSApp, ls_app, GTK_TYPE_APPLICATION)
 
 G_DEFINE_TYPE(LSAppWindow, ls_app_window, GTK_TYPE_APPLICATION_WINDOW)
 
-#define WINDOW_PAD (8)
-
 atomic_bool exit_requested = 0; /*!< Set to 1 when LibreSplit is exiting */
 
 /**
@@ -112,30 +110,6 @@ static gboolean ls_app_window_step(gpointer data)
     }
 
     return TRUE;
-}
-
-static void resize_window(LSAppWindow* win,
-    int window_width,
-    int window_height)
-{
-    GList* l;
-    for (l = win->components; l != NULL; l = l->next) {
-        LSComponent* component = l->data;
-        if (component->ops->resize) {
-            component->ops->resize(component,
-                window_width - 2 * WINDOW_PAD,
-                window_height);
-        }
-    }
-}
-
-static gboolean ls_app_window_resize(GtkWidget* widget,
-    GdkEvent* event,
-    gpointer data)
-{
-    LSAppWindow* win = (LSAppWindow*)widget;
-    resize_window(win, event->configure.width, event->configure.height);
-    return FALSE;
 }
 
 // Global application instance for CTL command handling
