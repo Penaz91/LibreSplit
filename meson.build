@@ -26,7 +26,7 @@ executable(
     'libresplit',
     [
         'src/main.c',
-        'src/bind.c',
+        'src/keybinds/bind.c',
         'src/server.c',
         'src/shared.c',
         'src/timer.c',

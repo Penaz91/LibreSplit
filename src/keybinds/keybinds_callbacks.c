@@ -1,5 +1,5 @@
 #include "keybinds_callbacks.h"
-#include "src/bind.h"
+#include "bind.h"
 
 void keybind_start_split(GtkWidget* widget, LSAppWindow* win)
 {
