@@ -52,16 +52,25 @@ executable(
         'src/lasr/functions/signature.c',
         'src/lasr/functions/sizeOf.c',
 
+        # Keybinds
+        'src/keybinds/keybinds.c',
+        'src/keybinds/keybinds_callbacks.c',
+
+        # GUI
+        'src/gui/utils.c',
+        'src/gui/welcome_box.c',
+        'src/gui/dialogs.c',
+
         # Components
-        'src/component/best-sum.c',
-        'src/component/clock.c',
-        'src/component/components.c',
-        'src/component/pb.c',
-        'src/component/prev-segment.c',
-        'src/component/splits.c',
-        'src/component/title.c',
-        'src/component/wr.c',
-        'src/component/detailed-timer.c',
+        'src/gui/component/best-sum.c',
+        'src/gui/component/clock.c',
+        'src/gui/component/components.c',
+        'src/gui/component/pb.c',
+        'src/gui/component/prev-segment.c',
+        'src/gui/component/splits.c',
+        'src/gui/component/title.c',
+        'src/gui/component/wr.c',
+        'src/gui/component/detailed-timer.c',
     ],
     dependencies: [threads, gtk, luajit, x11, jansson],
     c_args: [

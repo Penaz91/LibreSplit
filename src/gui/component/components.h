@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../timer.h"
+#include "../../timer.h"
+#include "../utils.h"
 
 typedef struct _LSComponent LSComponent;
 typedef struct _LSComponentOps LSComponentOps;
@@ -39,10 +40,5 @@ struct _LSComponentAvailable {
 
 // A NULL-terminated array of all available components
 extern LSComponentAvailable ls_components[];
-
-// Utility functions
-void add_class(GtkWidget* widget, const char* class);
-
-void remove_class(GtkWidget* widget, const char* class);
 
 #endif /* __COMPONENTS_H__ */
