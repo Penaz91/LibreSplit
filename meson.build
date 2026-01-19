@@ -61,6 +61,8 @@ executable(
         'src/gui/welcome_box.c',
         'src/gui/dialogs.c',
         'src/gui/theming.c',
+        'src/gui/timer.c',
+        'src/gui/game.c',
 
         # Components
         'src/gui/component/best-sum.c',

@@ -1,6 +1,8 @@
 #include "gui/app_window.h"
 #include "gui/component/components.h"
+#include "gui/game.h"
 #include "gui/theming.h"
+#include "gui/timer.h"
 #include "gui/utils.h"
 #include "gui/welcome_box.h"
 #include "keybinds/keybinds.h"
@@ -57,24 +59,6 @@ static void ls_app_window_destroy(GtkWidget* widget, gpointer data)
     atomic_store(&exit_requested, 1);
 }
 
-static gpointer save_game_thread(gpointer data)
-{
-    ls_game* game = data;
-    ls_game_save(game);
-    return NULL;
-}
-
-static void save_game(ls_game* game)
-{
-    g_thread_new("save_game", save_game_thread, game);
-}
-
-// Forward declarations
-static void timer_start(LSAppWindow* win, bool updateComponents);
-static void timer_stop(LSAppWindow* win);
-static void timer_split(LSAppWindow* win, bool updateComponents);
-static void timer_reset(LSAppWindow* win);
-
 /**
  * Updates the internal state of the LibreSplit Window.
  *
@@ -130,63 +114,6 @@ static gboolean ls_app_window_step(gpointer data)
     return TRUE;
 }
 
-/**
- * Clears the current game and reset all the components.
- *
- * @param win The LibreSplit app window
- */
-static void ls_app_window_clear_game(LSAppWindow* win)
-{
-    GList* l;
-
-    atomic_store(&run_finished, false);
-
-    gtk_widget_hide(win->box);
-    gtk_widget_show_all(win->welcome_box->box);
-
-    for (l = win->components; l != NULL; l = l->next) {
-        LSComponent* component = l->data;
-        if (component->ops->clear_game) {
-            component->ops->clear_game(component);
-        }
-    }
-
-    ls_app_load_theme_with_fallback(win, cfg.libresplit.theme.value.s, cfg.libresplit.theme_variant.value.s);
-}
-
-/**
- * Prepares the LibreSplit window to be shown, using the data
- * from the loaded split file.
- *
- * @param win The LibreSplit window.
- */
-static void ls_app_window_show_game(LSAppWindow* win)
-{
-    GList* l;
-
-    // set dimensions
-    if (win->game->width > 0 && win->game->height > 0) {
-        gtk_widget_set_size_request(GTK_WIDGET(win),
-            win->game->width,
-            win->game->height);
-    }
-
-    // set game theme (if it is set)
-    if (win->game->theme) {
-        ls_app_load_theme_with_fallback(win, win->game->theme, win->game->theme_variant);
-    }
-
-    for (l = win->components; l != NULL; l = l->next) {
-        LSComponent* component = l->data;
-        if (component->ops->show_game) {
-            component->ops->show_game(component, win->game, win->timer);
-        }
-    }
-
-    gtk_widget_show(win->box);
-    gtk_widget_hide(win->welcome_box->box);
-}
-
 static void resize_window(LSAppWindow* win,
     int window_width,
     int window_height)
@@ -209,181 +136,6 @@ static gboolean ls_app_window_resize(GtkWidget* widget,
     LSAppWindow* win = (LSAppWindow*)widget;
     resize_window(win, event->configure.width, event->configure.height);
     return FALSE;
-}
-
-void timer_start_split(LSAppWindow* win)
-{
-    if (win->timer) {
-        GList* l;
-        if (!win->timer->running) {
-            if (ls_timer_start(win->timer)) {
-                save_game(win->game);
-            }
-        } else {
-            timer_split(win, false);
-        }
-        for (l = win->components; l != NULL; l = l->next) {
-            LSComponent* component = l->data;
-            if (component->ops->start_split) {
-                component->ops->start_split(component, win->timer);
-            }
-        }
-    }
-}
-
-static void timer_start(LSAppWindow* win, bool updateComponents)
-{
-    if (win->timer) {
-        GList* l;
-        if (!win->timer->running) {
-            if (ls_timer_start(win->timer)) {
-                save_game(win->game);
-            }
-            if (updateComponents) {
-                for (l = win->components; l != NULL; l = l->next) {
-                    LSComponent* component = l->data;
-                    if (component->ops->start_split) {
-                        component->ops->start_split(component, win->timer);
-                    }
-                }
-            }
-        }
-    }
-}
-
-static void timer_split(LSAppWindow* win, bool updateComponents)
-{
-    if (win->timer) {
-        GList* l;
-        ls_timer_split(win->timer);
-        if (updateComponents) {
-            for (l = win->components; l != NULL; l = l->next) {
-                LSComponent* component = l->data;
-                if (component->ops->start_split) {
-                    component->ops->start_split(component, win->timer);
-                }
-            }
-        }
-    }
-}
-
-static void timer_stop(LSAppWindow* win)
-{
-    if (win->timer) {
-        GList* l;
-        if (win->timer->running) {
-            ls_timer_stop(win->timer);
-        }
-        for (l = win->components; l != NULL; l = l->next) {
-            LSComponent* component = l->data;
-            if (component->ops->stop_reset) {
-                component->ops->stop_reset(component, win->timer);
-            }
-        }
-    }
-}
-
-void timer_stop_reset(LSAppWindow* win)
-{
-    if (win->timer) {
-        GList* l;
-        if (atomic_load(&run_started) || win->timer->running) {
-            ls_timer_stop(win->timer);
-        } else {
-            const bool was_asl_enabled = atomic_load(&auto_splitter_enabled);
-            atomic_store(&auto_splitter_enabled, false);
-            while (atomic_load(&auto_splitter_running) && was_asl_enabled) {
-                // wait, this will be very fast so its ok to just spin
-            }
-            if (was_asl_enabled)
-                atomic_store(&auto_splitter_enabled, true);
-
-            if (ls_timer_reset(win->timer)) {
-                ls_app_window_clear_game(win);
-                ls_app_window_show_game(win);
-                save_game(win->game);
-            }
-        }
-        for (l = win->components; l != NULL; l = l->next) {
-            LSComponent* component = l->data;
-            if (component->ops->stop_reset) {
-                component->ops->stop_reset(component, win->timer);
-            }
-        }
-    }
-}
-
-static void timer_reset(LSAppWindow* win)
-{
-    if (win->timer) {
-        GList* l;
-        if (win->timer->running) {
-            ls_timer_stop(win->timer);
-            for (l = win->components; l != NULL; l = l->next) {
-                LSComponent* component = l->data;
-                if (component->ops->stop_reset) {
-                    component->ops->stop_reset(component, win->timer);
-                }
-            }
-        }
-        if (ls_timer_reset(win->timer)) {
-            ls_app_window_clear_game(win);
-            ls_app_window_show_game(win);
-            save_game(win->game);
-        }
-        for (l = win->components; l != NULL; l = l->next) {
-            LSComponent* component = l->data;
-            if (component->ops->stop_reset) {
-                component->ops->stop_reset(component, win->timer);
-            }
-        }
-    }
-}
-
-void timer_cancel_run(LSAppWindow* win)
-{
-    if (win->timer) {
-        GList* l;
-        if (ls_timer_cancel(win->timer)) {
-            ls_app_window_clear_game(win);
-            ls_app_window_show_game(win);
-            save_game(win->game);
-        }
-        for (l = win->components; l != NULL; l = l->next) {
-            LSComponent* component = l->data;
-            if (component->ops->cancel_run) {
-                component->ops->cancel_run(component, win->timer);
-            }
-        }
-    }
-}
-
-void timer_skip(LSAppWindow* win)
-{
-    if (win->timer) {
-        GList* l;
-        ls_timer_skip(win->timer);
-        for (l = win->components; l != NULL; l = l->next) {
-            LSComponent* component = l->data;
-            if (component->ops->skip) {
-                component->ops->skip(component, win->timer);
-            }
-        }
-    }
-}
-
-void timer_unsplit(LSAppWindow* win)
-{
-    if (win->timer) {
-        GList* l;
-        ls_timer_unsplit(win->timer);
-        for (l = win->components; l != NULL; l = l->next) {
-            LSComponent* component = l->data;
-            if (component->ops->unsplit) {
-                component->ops->unsplit(component, win->timer);
-            }
-        }
-    }
 }
 
 void toggle_decorations(LSAppWindow* win)
