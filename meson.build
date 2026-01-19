@@ -64,6 +64,7 @@ executable(
         'src/gui/timer.c',
         'src/gui/game.c',
         'src/gui/app_window.c',
+        'src/gui/help_dialog.c',
 
         # Components
         'src/gui/component/best-sum.c',
