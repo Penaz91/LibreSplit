@@ -26,7 +26,7 @@ executable(
     'libresplit',
     [
         'src/main.c',
-        'src/bind.c',
+        'src/keybinds/bind.c',
         'src/server.c',
         'src/shared.c',
         'src/timer.c',
@@ -60,6 +60,10 @@ executable(
         'src/gui/utils.c',
         'src/gui/welcome_box.c',
         'src/gui/dialogs.c',
+        'src/gui/theming.c',
+        'src/gui/timer.c',
+        'src/gui/game.c',
+        'src/gui/app_window.c',
 
         # Components
         'src/gui/component/best-sum.c',
