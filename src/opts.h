@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glib.h"
+#include <glib.h>
 
 /**
  * @brief The LSAppWindow options
