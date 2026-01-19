@@ -65,6 +65,7 @@ executable(
         'src/gui/game.c',
         'src/gui/app_window.c',
         'src/gui/help_dialog.c',
+        'src/gui/settings_dialog.c',
 
         # Components
         'src/gui/component/best-sum.c',

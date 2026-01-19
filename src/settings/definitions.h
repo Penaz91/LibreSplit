@@ -20,6 +20,7 @@ typedef struct ConfigEntry {
     const char* key;
     ConfigType type;
     ConfigValue value; // Serves as default value unless explicitly changed by user configuration
+    const char* desc;
 } ConfigEntry;
 
 typedef struct LibreSplitConfig {
