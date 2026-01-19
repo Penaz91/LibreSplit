@@ -36,3 +36,6 @@ typedef struct _LSAppWindow {
     LSKeybinds keybinds; /*!< The keybinds related to this application window */
     LSOpts opts; /*!< The window options */
 } LSAppWindow;
+
+void toggle_decorations(LSAppWindow* win);
+void toggle_win_on_top(LSAppWindow* win);
