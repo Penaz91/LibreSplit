@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gtk/gtk.h"
+#include <gtk/gtk.h>
 
 void add_class(GtkWidget* widget, const char* class);
 

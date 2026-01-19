@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gtk/gtk.h"
+#include <gtk/gtk.h>
 
 typedef struct {
     GtkWidget* box;

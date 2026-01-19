@@ -1,5 +1,6 @@
 #pragma once
-#include "gdk/gdk.h"
+
+#include <gdk/gdk.h>
 
 /**
  * @brief Keybind A GTK Key bind
