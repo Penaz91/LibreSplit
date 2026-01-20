@@ -6,7 +6,8 @@
 typedef enum ConfigType {
     CFG_BOOL,
     CFG_INT,
-    CFG_STRING
+    CFG_STRING,
+    CFG_KEYBIND
 } ConfigType;
 
 typedef union ConfigValue {

@@ -49,6 +49,12 @@ static bool set_entry_from_json(ConfigEntry* e, json_t* v)
                 return false;
             strncpy(e->value.s, json_string_value(v), sizeof(e->value.s) - 1);
             return true;
+        case CFG_KEYBIND:
+            // Keybinds are saved as strings
+            if (!json_is_string(v))
+                return false;
+            strncpy(e->value.s, json_string_value(v), sizeof(e->value.s) - 1);
+            return true;
     }
     return false;
 }

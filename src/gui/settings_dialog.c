@@ -1,4 +1,5 @@
 #include "settings_dialog.h"
+#include "glib-object.h"
 #include "src/settings/definitions.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
@@ -36,6 +37,13 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
                     GtkEntryBuffer* entry_box_buffer_str = gtk_entry_buffer_new(entry.value.s, sizeof(entry.value.s));
                     GtkWidget* entry_box_str = gtk_entry_new_with_buffer(entry_box_buffer_str);
                     gtk_container_add(GTK_CONTAINER(box), entry_box_str);
+                    break;
+                case CFG_KEYBIND:
+                    GtkWidget* lbl_kb = gtk_label_new(entry.desc);
+                    gtk_container_add(GTK_CONTAINER(box), lbl_kb);
+                    GtkEntryBuffer* entry_box_buffer_kb = gtk_entry_buffer_new(entry.value.s, sizeof(entry.value.s));
+                    GtkWidget* entry_box_kb = gtk_entry_new_with_buffer(entry_box_buffer_kb);
+                    gtk_container_add(GTK_CONTAINER(box), entry_box_kb);
                     break;
                 case CFG_INT:
                     GtkWidget* lbl_int = gtk_label_new(entry.desc);
