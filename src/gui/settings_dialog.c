@@ -7,20 +7,25 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
 {
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "LibreSplit Settings");
-    gtk_window_set_default_size(GTK_WINDOW(window), 400, 600);
+    gtk_window_set_default_size(GTK_WINDOW(window), 400, 400);
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
-    GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-    gtk_widget_set_margin_top(box, 8);
-    gtk_widget_set_margin_bottom(box, 8);
-    gtk_widget_set_margin_start(box, 8);
-    gtk_widget_set_margin_end(box, 8);
-    gtk_widget_set_vexpand(box, TRUE);
+    GtkWidget* tabs = gtk_notebook_new();
+    gtk_widget_set_margin_top(tabs, 8);
+    gtk_widget_set_margin_bottom(tabs, 8);
+    gtk_widget_set_margin_start(tabs, 8);
+    gtk_widget_set_margin_end(tabs, 8);
+    gtk_widget_set_vexpand(tabs, TRUE);
+    gtk_widget_set_hexpand(tabs, TRUE);
     for (size_t s = 0; s < sections_count; ++s) {
         SectionInfo section_info = sections[s];
+        GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+        gtk_widget_set_margin_top(box, 8);
+        gtk_widget_set_margin_bottom(box, 8);
+        gtk_widget_set_margin_start(box, 8);
+        gtk_widget_set_margin_end(box, 8);
+        gtk_widget_set_vexpand(box, TRUE);
+        gtk_widget_set_hexpand(box, TRUE);
         GtkWidget* title = gtk_accel_label_new(section_info.name);
-        gtk_widget_set_halign(title, GTK_ALIGN_CENTER);
-        gtk_widget_set_valign(title, GTK_ALIGN_CENTER);
-        gtk_container_add(GTK_CONTAINER(box), title);
         for (size_t i = 0; i < section_info.count; ++i) {
             ConfigEntry entry = ((ConfigEntry*)section_info.entries)[i];
             switch (entry.type) {
@@ -42,9 +47,10 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
                     break;
             }
         }
+        gtk_notebook_append_page(GTK_NOTEBOOK(tabs), box, title);
     }
-    gtk_container_add(GTK_CONTAINER(window), box);
-    gtk_widget_show_all(box);
+    gtk_container_add(GTK_CONTAINER(window), tabs);
+    gtk_widget_show_all(tabs);
     gtk_window_present(GTK_WINDOW(window));
 }
 
