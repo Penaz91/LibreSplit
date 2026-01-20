@@ -47,19 +47,19 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
                     GtkWidget* entry_box_kb = gtk_entry_new_with_buffer(entry_box_buffer_kb);
                     gtk_container_add(GTK_CONTAINER(box), entry_box_kb);
                     break;
-                case CFG_INT:
-                    GtkWidget* lbl_int = gtk_label_new(entry.desc);
-                    gtk_container_add(GTK_CONTAINER(box), lbl_int);
-                    char* setting_as_str = {};
-                    sprintf(setting_as_str, "%d", entry.value.i);
-                    GtkEntryBuffer* entry_box_buffer_int = gtk_entry_buffer_new(setting_as_str, sizeof(setting_as_str));
-                    GtkWidget* entry_box_int = gtk_entry_new_with_buffer(entry_box_buffer_int);
-                    gtk_container_add(GTK_CONTAINER(box), entry_box_int);
-                    break;
                 case CFG_BOOL:
                     GtkWidget* checkbox = gtk_check_button_new_with_label(entry.desc);
                     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox), entry.value.b);
                     gtk_container_add(GTK_CONTAINER(box), checkbox);
+                    break;
+                case CFG_INT:
+                    GtkWidget* lbl_int = gtk_label_new(entry.desc);
+                    gtk_container_add(GTK_CONTAINER(box), lbl_int);
+                    char setting_as_str[(int)((entry.value.i / 10) + 1)];
+                    sprintf(setting_as_str, "%d", entry.value.i);
+                    GtkEntryBuffer* entry_box_buffer_int = gtk_entry_buffer_new(setting_as_str, sizeof(setting_as_str));
+                    GtkWidget* entry_box_int = gtk_entry_new_with_buffer(entry_box_buffer_int);
+                    gtk_container_add(GTK_CONTAINER(box), entry_box_int);
                     break;
             }
         }
