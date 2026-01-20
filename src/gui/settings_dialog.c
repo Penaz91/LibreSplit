@@ -2,12 +2,13 @@
 #include "src/settings/definitions.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
+#include <stdio.h>
 
 static void build_settings_dialog(GtkApplication* app, gpointer data)
 {
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "LibreSplit Settings");
-    gtk_window_set_default_size(GTK_WINDOW(window), 400, 400);
+    gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
     GtkWidget* tabs = gtk_notebook_new();
     gtk_widget_set_margin_top(tabs, 8);
@@ -32,17 +33,22 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
                 case CFG_STRING:
                     GtkWidget* lbl_str = gtk_label_new(entry.desc);
                     gtk_container_add(GTK_CONTAINER(box), lbl_str);
-                    GtkWidget* entry_box_str = gtk_entry_new();
+                    GtkEntryBuffer* entry_box_buffer_str = gtk_entry_buffer_new(entry.value.s, sizeof(entry.value.s));
+                    GtkWidget* entry_box_str = gtk_entry_new_with_buffer(entry_box_buffer_str);
                     gtk_container_add(GTK_CONTAINER(box), entry_box_str);
                     break;
                 case CFG_INT:
                     GtkWidget* lbl_int = gtk_label_new(entry.desc);
                     gtk_container_add(GTK_CONTAINER(box), lbl_int);
-                    GtkWidget* entry_box_int = gtk_entry_new();
+                    char* setting_as_str = NULL;
+                    sprintf(setting_as_str, "%d", entry.value.i);
+                    GtkEntryBuffer* entry_box_buffer_int = gtk_entry_buffer_new(setting_as_str, sizeof(setting_as_str));
+                    GtkWidget* entry_box_int = gtk_entry_new_with_buffer(entry_box_buffer_int);
                     gtk_container_add(GTK_CONTAINER(box), entry_box_int);
                     break;
                 case CFG_BOOL:
                     GtkWidget* checkbox = gtk_check_button_new_with_label(entry.desc);
+                    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox), entry.value.b);
                     gtk_container_add(GTK_CONTAINER(box), checkbox);
                     break;
             }
