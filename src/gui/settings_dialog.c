@@ -50,7 +50,7 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
                 case CFG_INT:
                     GtkWidget* lbl_int = gtk_label_new(entry.desc);
                     gtk_container_add(GTK_CONTAINER(box), lbl_int);
-                    char* setting_as_str = NULL;
+                    char* setting_as_str = {};
                     sprintf(setting_as_str, "%d", entry.value.i);
                     GtkEntryBuffer* entry_box_buffer_int = gtk_entry_buffer_new(setting_as_str, sizeof(setting_as_str));
                     GtkWidget* entry_box_int = gtk_entry_new_with_buffer(entry_box_buffer_int);
