@@ -123,9 +123,9 @@ AppConfig cfg = {
 };
 
 SectionInfo sections[] = {
-    { "libresplit", &cfg.libresplit, sizeof(cfg.libresplit) / sizeof(ConfigEntry) },
-    { "keybinds", &cfg.keybinds, sizeof(cfg.keybinds) / sizeof(ConfigEntry) },
-    { "history", &cfg.history, sizeof(cfg.history) / sizeof(ConfigEntry) },
+    { "libresplit", &cfg.libresplit, sizeof(cfg.libresplit) / sizeof(ConfigEntry), true },
+    { "keybinds", &cfg.keybinds, sizeof(cfg.keybinds) / sizeof(ConfigEntry), true },
+    { "history", &cfg.history, sizeof(cfg.history) / sizeof(ConfigEntry), false },
 };
 
 const size_t sections_count = sizeof(sections) / sizeof(sections[0]);

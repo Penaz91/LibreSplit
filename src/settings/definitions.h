@@ -65,6 +65,7 @@ typedef struct SectionInfo {
     const char* name;
     void* entries; /* pointer to first ConfigEntry in the section */
     size_t count;
+    bool in_gui;
 } SectionInfo;
 
 extern SectionInfo sections[];

@@ -1,5 +1,4 @@
 #include "settings_dialog.h"
-#include "glib-object.h"
 #include "src/settings/definitions.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
@@ -20,6 +19,9 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
     gtk_widget_set_hexpand(tabs, TRUE);
     for (size_t s = 0; s < sections_count; ++s) {
         SectionInfo section_info = sections[s];
+        if (!section_info.in_gui) {
+            continue;
+        }
         GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
         gtk_widget_set_margin_top(box, 8);
         gtk_widget_set_margin_bottom(box, 8);
