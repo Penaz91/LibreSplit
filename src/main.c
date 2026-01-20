@@ -729,13 +729,17 @@ static gboolean button_right_click(GtkWidget* widget, GdkEventButton* event, gpo
         // Add the menu items to the menu
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_open_splits);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_save_splits);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_open_auto_splitter);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_enable_auto_splitter);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_enable_win_on_top);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_reload);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_close);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_enable_win_on_top);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_settings);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_about);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_quit);
 
         // Attach the callback functions to the menu items
