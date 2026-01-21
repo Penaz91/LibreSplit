@@ -10,14 +10,29 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: "Install dependencies"
+            - name: "Add gcc-15 PPA"
               run: |
-                  sudo add-apt-repository ppa:puni070/gcc-noble -y
-                  sudo apt -y update
-                  sudo apt -y install gcc-15 libgtk-3-dev libx11-dev libjansson-dev libluajit-5.1-dev
-                  sudo pip3 install meson
-                  sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 150
-                  sudo update-alternatives --set gcc /usr/bin/gcc-15
+                sudo add-apt-repository ppa:puni070/gcc-noble -y
+                sudo apt update
+
+            - name: "Install and cache C dependencies"
+              uses: awalsh128/cache-apt-pkgs-action@latest
+              with:
+                packages: >
+                  gcc-15
+                  libgtk-3-dev
+                  libx11-dev
+                  libjansson-dev
+                  libluajit-5.1-dev
+                version: 1.0
+
+            - name: "Install Meson"
+              run: sudo pip3 install meson
+
+            - name: "Set up compiler"
+              run: |
+                sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 150
+                sudo update-alternatives --set gcc /usr/bin/gcc-15
 
             - name: "Configure"
               run: meson setup build -Dbuildtype=release -Dprefix=/usr
@@ -35,12 +50,12 @@ jobs:
 
             - name: "Bundle extra files"
               run: |
-                  mkdir release
+                  rm -rf release
+                  mkdir -p release
+                  # Use meson install to stage the install tree for a relocatable release
+                  meson install -C build --destdir=$(pwd)/release
+                  # Include extra non-installed files
                   cp -r assets release/
-                  cp -r build/libresplit release/
-                  cp -r build/libresplit-ctl release/
-                  cp README.md release/
-                  cp LICENSE release/
 
             - name: "Upload artifacts"
               uses: actions/upload-artifact@v4
@@ -63,6 +78,7 @@ jobs:
               with:
                   pattern: LibreSplit-*
                   merge-multiple: true
+                  path: release
 
             - name: "Install AppImage dependencies"
               run: |
@@ -77,32 +93,26 @@ jobs:
               shell: bash
               run: echo "git_short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-            - name: "Setup AppDir structure"
+            - name: "Prepare AppDir from release artifact"
               run: |
-                  mkdir -p AppDir/usr/bin
-                  mkdir -p AppDir/usr/share/applications
-                  mkdir -p AppDir/usr/share/libresplit
-                  mkdir -p AppDir/usr/share/pixmaps
-                  mkdir -p AppDir/usr/share/doc/libresplit
-                  mkdir -p AppDir/usr/share/licenses/libresplit
+                rm -rf AppDir
+                mkdir -p AppDir
 
-                  cp libresplit AppDir/usr/bin/
-                  cp libresplit-ctl AppDir/usr/bin/
-                  chmod +x AppDir/usr/bin/libresplit
-                  chmod +x AppDir/usr/bin/libresplit-ctl
+                if [ -d release ]; then
+                  cp -a release/* AppDir/
+                  rm -rf AppDir/assets
+                else
+                  echo "release directory not found; listing files:" && ls -la
+                  exit 1
+                fi
 
-                  cp assets/libresplit.desktop AppDir/usr/share/applications/
-
-                  cp assets/icons/libresplit-256.png AppDir/usr/share/pixmaps/libresplit.png
-
-                  cp LICENSE AppDir/usr/share/licenses/libresplit/
-
-                  # Create AppImage-compatible desktop entry at root
-                  cp assets/libresplit.desktop AppDir/
-                  sed -i 's/^Exec=.*/Exec=AppRun/' AppDir/libresplit.desktop
-                  cp assets/appimage.sh AppDir/AppRun
-                  chmod +x AppDir/AppRun
-                  cp assets/icons/libresplit-256.png AppDir/libresplit.png
+                mkdir -p AppDir/usr/share/applications
+                cp assets/libresplit.desktop AppDir/
+                cp assets/libresplit.desktop AppDir/usr/share/applications/
+                sed -i 's/^Exec=.*/Exec=AppRun/' AppDir/libresplit.desktop
+                cp assets/appimage.sh AppDir/AppRun
+                cp assets/icons/libresplit-256.png AppDir/libresplit.png
+                chmod +x AppDir/AppRun
 
             - name: "Download linuxdeploy"
               run: |
