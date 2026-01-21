@@ -1,8 +1,8 @@
 #include "settings_dialog.h"
-#include "glib-object.h"
 #include "src/settings/definitions.h"
 #include "src/settings/settings.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <glib-object.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 
