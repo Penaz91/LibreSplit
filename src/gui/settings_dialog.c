@@ -1,13 +1,15 @@
 #include "settings_dialog.h"
+#include "glib-object.h"
 #include "src/settings/definitions.h"
+#include "src/settings/settings.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 
 LSGuiSetting* gui_settings;
-int settings_number = 0;
+size_t settings_number = 0;
 
-static int enumerate_settings(AppConfig cfg)
+static size_t enumerate_settings(AppConfig cfg)
 {
     for (size_t s = 0; s < sections_count; ++s) {
         SectionInfo section_info = sections[s];
@@ -19,16 +21,60 @@ static int enumerate_settings(AppConfig cfg)
     return settings_number;
 }
 
+static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    gtk_widget_destroy(widget);
+    free(gui_settings);
+    settings_number = 0;
+    return TRUE;
+}
+
+static void save_gui_settings(GSimpleAction* action, GVariant* parameter, gpointer app)
+{
+    // Parse all values in gui_settings, assign them to the respective cfg settings
+    for (size_t i = 0; i < settings_number; i++) {
+        LSGuiSetting setting_to_save = gui_settings[i];
+        switch (setting_to_save.settings_entry->type) {
+            case CFG_STRING:
+                const char* str_value = gtk_entry_buffer_get_text(setting_to_save.entry_buffer);
+                strcpy(setting_to_save.settings_entry->value.s, str_value);
+                break;
+            case CFG_KEYBIND:
+                const char* kbd_value = gtk_entry_buffer_get_text(setting_to_save.entry_buffer);
+                strcpy(setting_to_save.settings_entry->value.s, kbd_value);
+                break;
+            case CFG_BOOL:
+                bool bool_value = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(setting_to_save.widget));
+                setting_to_save.settings_entry->value.b = bool_value;
+                break;
+            case CFG_INT:
+                const char* int_str_value = gtk_entry_buffer_get_text(setting_to_save.entry_buffer);
+                int int_value = atoi(int_str_value);
+                setting_to_save.settings_entry->value.i = int_value;
+                break;
+        }
+    }
+    // Call the normal save_settings thing
+    config_save();
+}
+
 static void build_settings_dialog(GtkApplication* app, gpointer data)
 {
     int settings_number = enumerate_settings(cfg);
-    // TODO: [Penaz] [2026-01-21] FREE MEMORY AT THE CLOSE OF WIN
     gui_settings = malloc(settings_number * sizeof(LSGuiSetting));
 
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "LibreSplit Settings");
     gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
+    g_signal_connect(window, "delete-event", G_CALLBACK(on_help_window_delete), NULL);
+    GtkWidget* main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+    gtk_widget_set_margin_top(main_box, 8);
+    gtk_widget_set_margin_bottom(main_box, 8);
+    gtk_widget_set_margin_start(main_box, 8);
+    gtk_widget_set_margin_end(main_box, 8);
+    gtk_widget_set_vexpand(main_box, TRUE);
+    gtk_widget_set_hexpand(main_box, TRUE);
     GtkWidget* tabs = gtk_notebook_new();
     gtk_widget_set_margin_top(tabs, 8);
     gtk_widget_set_margin_bottom(tabs, 8);
@@ -52,7 +98,7 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
         GtkWidget* title = gtk_accel_label_new(section_info.name);
         for (size_t i = 0; i < section_info.count; ++i) {
             ConfigEntry entry = ((ConfigEntry*)section_info.entries)[i];
-            gui_settings[settings_idx].settings_entry = &entry;
+            gui_settings[settings_idx].settings_entry = &((ConfigEntry*)section_info.entries)[i];
             switch (entry.type) {
                 case CFG_STRING:
                     GtkWidget* lbl_str = gtk_label_new(entry.desc);
@@ -90,8 +136,12 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
         }
         gtk_notebook_append_page(GTK_NOTEBOOK(tabs), box, title);
     }
-    gtk_container_add(GTK_CONTAINER(window), tabs);
-    gtk_widget_show_all(tabs);
+    gtk_container_add(GTK_CONTAINER(main_box), tabs);
+    GtkWidget* save_btn = gtk_button_new_with_label("Save");
+    g_signal_connect(save_btn, "clicked", G_CALLBACK(save_gui_settings), NULL);
+    gtk_container_add(GTK_CONTAINER(main_box), save_btn);
+    gtk_container_add(GTK_CONTAINER(window), main_box);
+    gtk_widget_show_all(main_box);
     gtk_window_present(GTK_WINDOW(window));
 }
 
