@@ -58,6 +58,16 @@ static void save_gui_settings(GSimpleAction* action, GVariant* parameter, gpoint
     config_save();
 }
 
+static void set_defaults(GtkWidget* obj)
+{
+    gtk_widget_set_margin_top(obj, 8);
+    gtk_widget_set_margin_bottom(obj, 8);
+    gtk_widget_set_margin_start(obj, 8);
+    gtk_widget_set_margin_end(obj, 8);
+    gtk_widget_set_vexpand(obj, TRUE);
+    gtk_widget_set_hexpand(obj, TRUE);
+}
+
 static void build_settings_dialog(GtkApplication* app, gpointer data)
 {
     int settings_number = enumerate_settings(cfg);
@@ -69,19 +79,9 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
     g_signal_connect(window, "delete-event", G_CALLBACK(on_help_window_delete), NULL);
     GtkWidget* main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-    gtk_widget_set_margin_top(main_box, 8);
-    gtk_widget_set_margin_bottom(main_box, 8);
-    gtk_widget_set_margin_start(main_box, 8);
-    gtk_widget_set_margin_end(main_box, 8);
-    gtk_widget_set_vexpand(main_box, TRUE);
-    gtk_widget_set_hexpand(main_box, TRUE);
+    set_defaults(main_box);
     GtkWidget* tabs = gtk_notebook_new();
-    gtk_widget_set_margin_top(tabs, 8);
-    gtk_widget_set_margin_bottom(tabs, 8);
-    gtk_widget_set_margin_start(tabs, 8);
-    gtk_widget_set_margin_end(tabs, 8);
-    gtk_widget_set_vexpand(tabs, TRUE);
-    gtk_widget_set_hexpand(tabs, TRUE);
+    set_defaults(tabs);
     int settings_idx = 0;
     for (size_t s = 0; s < sections_count; ++s) {
         SectionInfo section_info = sections[s];
@@ -89,12 +89,7 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
             continue;
         }
         GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-        gtk_widget_set_margin_top(box, 8);
-        gtk_widget_set_margin_bottom(box, 8);
-        gtk_widget_set_margin_start(box, 8);
-        gtk_widget_set_margin_end(box, 8);
-        gtk_widget_set_vexpand(box, TRUE);
-        gtk_widget_set_hexpand(box, TRUE);
+        set_defaults(box);
         GtkWidget* title = gtk_accel_label_new(section_info.name);
         for (size_t i = 0; i < section_info.count; ++i) {
             ConfigEntry entry = ((ConfigEntry*)section_info.entries)[i];
@@ -124,7 +119,7 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
                 case CFG_INT:
                     GtkWidget* lbl_int = gtk_label_new(entry.desc);
                     gtk_container_add(GTK_CONTAINER(box), lbl_int);
-                    char setting_as_str[(int)((entry.value.i / 10) + 1)];
+                    char setting_as_str[64];
                     sprintf(setting_as_str, "%d", entry.value.i);
 
                     gui_settings[settings_idx].entry_buffer = gtk_entry_buffer_new(setting_as_str, sizeof(setting_as_str));
