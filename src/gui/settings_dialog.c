@@ -8,10 +8,10 @@
 #include <stdio.h>
 
 static LSGuiSetting* gui_settings;
-size_t settings_number = 0;
 
 static size_t enumerate_settings(AppConfig cfg)
 {
+    int settings_number = 0;
     for (size_t s = 0; s < sections_count; ++s) {
         SectionInfo section_info = sections[s];
         if (!section_info.in_gui) {
@@ -26,12 +26,12 @@ static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpoint
 {
     gtk_widget_destroy(widget);
     free(gui_settings);
-    settings_number = 0;
     return TRUE;
 }
 
 static void save_gui_settings(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
+    size_t settings_number = enumerate_settings(cfg);
     // Parse all values in gui_settings, assign them to the respective cfg settings
     for (size_t i = 0; i < settings_number; i++) {
         LSGuiSetting setting_to_save = gui_settings[i];
