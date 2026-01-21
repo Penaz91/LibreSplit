@@ -76,6 +76,8 @@ static json_t* json_from_entry(const ConfigEntry* e)
             return json_pack("i", e->value.i);
         case CFG_STRING:
             return json_pack("s", e->value.s);
+        case CFG_KEYBIND:
+            return json_pack("s", e->value.s);
         default:
             printf("Unknown config entry type \"%d\". Returning null JSON field.\n", e->type);
             break;
