@@ -1,12 +1,13 @@
 #include "settings_dialog.h"
 #include "src/settings/definitions.h"
 #include "src/settings/settings.h"
+
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 
-LSGuiSetting* gui_settings;
+static LSGuiSetting* gui_settings;
 size_t settings_number = 0;
 
 static size_t enumerate_settings(AppConfig cfg)
@@ -58,7 +59,7 @@ static void save_gui_settings(GSimpleAction* action, GVariant* parameter, gpoint
     config_save();
 }
 
-static void set_defaults(GtkWidget* obj)
+static void set_widget_defaults(GtkWidget* obj)
 {
     gtk_widget_set_margin_top(obj, 8);
     gtk_widget_set_margin_bottom(obj, 8);
@@ -79,9 +80,9 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
     g_signal_connect(window, "delete-event", G_CALLBACK(on_help_window_delete), NULL);
     GtkWidget* main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-    set_defaults(main_box);
+    set_widget_defaults(main_box);
     GtkWidget* tabs = gtk_notebook_new();
-    set_defaults(tabs);
+    set_widget_defaults(tabs);
     int settings_idx = 0;
     for (size_t s = 0; s < sections_count; ++s) {
         SectionInfo section_info = sections[s];
@@ -89,7 +90,7 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
             continue;
         }
         GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-        set_defaults(box);
+        set_widget_defaults(box);
         GtkWidget* title = gtk_accel_label_new(section_info.name);
         for (size_t i = 0; i < section_info.count; ++i) {
             ConfigEntry entry = ((ConfigEntry*)section_info.entries)[i];
