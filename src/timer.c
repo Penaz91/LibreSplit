@@ -16,8 +16,6 @@
 #include <string.h>
 #include <time.h>
 
-#define DECIMALS_ON_SCREEN 2
-
 /**
  * Returns the current time, taken from a monotonic clock
  * (a clock that is not affected by leap seconds or daylight savings).
@@ -134,8 +132,14 @@ static void ls_time_string_format(char* string,
     seconds = (time / 1000000LL) % 60;
     sprintf(dot_subsecs, ".%06lld", time % 1000000LL);
     if (!serialized) {
-        /* Show only a dot and 2 decimal places instead of all 6 */
-        dot_subsecs[DECIMALS_ON_SCREEN + 1] = '\0';
+        int display_decimals = cfg.libresplit.decimals.value.i;
+        if (display_decimals < 1) {
+            display_decimals = 1;
+        } else if (display_decimals > 6) {
+            display_decimals = 6;
+        }
+        /* Show only a dot and x decimal places instead of all 6 */
+        dot_subsecs[display_decimals + 1] = '\0';
     }
     if (millis) {
         strcpy(millis, &dot_subsecs[1]);
