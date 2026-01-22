@@ -37,12 +37,9 @@ static void save_gui_settings(GSimpleAction* action, GVariant* parameter, gpoint
         LSGuiSetting setting_to_save = gui_settings[i];
         switch (setting_to_save.settings_entry->type) {
             case CFG_STRING:
+            case CFG_KEYBIND: // TODO: Keygrab logic for keybinds
                 const char* str_value = gtk_entry_buffer_get_text(setting_to_save.entry_buffer);
                 strcpy(setting_to_save.settings_entry->value.s, str_value);
-                break;
-            case CFG_KEYBIND:
-                const char* kbd_value = gtk_entry_buffer_get_text(setting_to_save.entry_buffer);
-                strcpy(setting_to_save.settings_entry->value.s, kbd_value);
                 break;
             case CFG_BOOL:
                 bool bool_value = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(setting_to_save.widget));
