@@ -49,6 +49,12 @@ static bool set_entry_from_json(ConfigEntry* e, json_t* v)
                 return false;
             strncpy(e->value.s, json_string_value(v), sizeof(e->value.s) - 1);
             return true;
+        case CFG_KEYBIND:
+            // Keybinds are saved as strings
+            if (!json_is_string(v))
+                return false;
+            strncpy(e->value.s, json_string_value(v), sizeof(e->value.s) - 1);
+            return true;
     }
     return false;
 }
@@ -69,6 +75,8 @@ static json_t* json_from_entry(const ConfigEntry* e)
         case CFG_INT:
             return json_pack("i", e->value.i);
         case CFG_STRING:
+            return json_pack("s", e->value.s);
+        case CFG_KEYBIND:
             return json_pack("s", e->value.s);
         default:
             printf("Unknown config entry type \"%d\". Returning null JSON field.\n", e->type);

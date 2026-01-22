@@ -2,6 +2,7 @@
 #include "gui/component/components.h"
 #include "gui/game.h"
 #include "gui/help_dialog.h"
+#include "gui/settings_dialog.h"
 #include "gui/theming.h"
 #include "gui/timer.h"
 #include "gui/utils.h"
@@ -724,18 +725,24 @@ static gboolean button_right_click(GtkWidget* widget, GdkEventButton* event, gpo
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_enable_win_on_top), win->opts.win_on_top);
         GtkWidget* menu_reload = gtk_menu_item_new_with_label("Reload");
         GtkWidget* menu_close = gtk_menu_item_new_with_label("Close");
+        GtkWidget* menu_settings = gtk_menu_item_new_with_label("Settings");
         GtkWidget* menu_about = gtk_menu_item_new_with_label("About and help");
         GtkWidget* menu_quit = gtk_menu_item_new_with_label("Quit");
 
         // Add the menu items to the menu
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_open_splits);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_save_splits);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_open_auto_splitter);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_enable_auto_splitter);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_enable_win_on_top);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_reload);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_close);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_enable_win_on_top);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_settings);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_about);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_quit);
 
         // Attach the callback functions to the menu items
@@ -746,6 +753,7 @@ static gboolean button_right_click(GtkWidget* widget, GdkEventButton* event, gpo
         g_signal_connect(menu_enable_win_on_top, "toggled", G_CALLBACK(menu_toggle_win_on_top), app);
         g_signal_connect(menu_reload, "activate", G_CALLBACK(reload_activated), app);
         g_signal_connect(menu_close, "activate", G_CALLBACK(close_activated), app);
+        g_signal_connect(menu_settings, "activate", G_CALLBACK(show_settings_dialog), app);
         g_signal_connect(menu_about, "activate", G_CALLBACK(show_help_dialog), app);
         g_signal_connect(menu_quit, "activate", G_CALLBACK(quit_activated), app);
 

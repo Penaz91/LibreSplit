@@ -6,7 +6,8 @@
 typedef enum ConfigType {
     CFG_BOOL,
     CFG_INT,
-    CFG_STRING
+    CFG_STRING,
+    CFG_KEYBIND
 } ConfigType;
 
 typedef union ConfigValue {
@@ -20,6 +21,7 @@ typedef struct ConfigEntry {
     const char* key;
     ConfigType type;
     ConfigValue value; // Serves as default value unless explicitly changed by user configuration
+    const char* desc;
 } ConfigEntry;
 
 typedef struct LibreSplitConfig {
@@ -63,6 +65,7 @@ typedef struct SectionInfo {
     const char* name;
     void* entries; /* pointer to first ConfigEntry in the section */
     size_t count;
+    bool in_gui;
 } SectionInfo;
 
 extern SectionInfo sections[];
