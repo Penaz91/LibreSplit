@@ -96,7 +96,8 @@ css_o = custom_target(
 
 executable(
     'libresplit',
-    libresplit_sources + css_o,
+    libresplit_sources,
+    objects: [css_o],
     dependencies: [threads, gtk, luajit, x11, jansson],
     c_args: [
         '-DPREFIX="' + get_option('prefix') + '"',
