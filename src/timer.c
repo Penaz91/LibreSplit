@@ -131,15 +131,18 @@ static void ls_time_string_format(char* string,
     minutes = (time / (1000000LL * 60)) % 60;
     seconds = (time / 1000000LL) % 60;
     sprintf(dot_subsecs, ".%06lld", time % 1000000LL);
+    int display_decimals = cfg.libresplit.decimals.value.i;
     if (!serialized) {
-        int display_decimals = cfg.libresplit.decimals.value.i;
-        if (display_decimals < 1) {
-            display_decimals = 1;
+        int subsec_idx = 0;
+        if (display_decimals <= 0) {
+            subsec_idx = 0;
         } else if (display_decimals > 6) {
-            display_decimals = 6;
+            subsec_idx = 7;
+        } else {
+            subsec_idx = display_decimals + 1;
         }
         /* Show only a dot and x decimal places instead of all 6 */
-        dot_subsecs[display_decimals + 1] = '\0';
+        dot_subsecs[subsec_idx] = '\0';
     }
     if (millis) {
         strcpy(millis, &dot_subsecs[1]);
