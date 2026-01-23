@@ -4,6 +4,7 @@
 
 typedef struct {
     GtkWidget* box;
+    GtkWidget* img;
     GtkWidget* welcome_lbl;
 } LSWelcomeBox;
 
