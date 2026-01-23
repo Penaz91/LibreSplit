@@ -401,10 +401,9 @@ static void open_activated(GSimpleAction* action,
         ls_app_window_open(win, filename);
         CFG_SET_STR(cfg.history.split_file.value.s, filename);
         g_free(filename);
-    } else {
-        if (!win->game || !win->timer) {
-            gtk_widget_show_all(win->welcome_box->box);
-        }
+    }
+    if (!win->game || !win->timer) {
+        gtk_widget_show_all(win->welcome_box->box);
     }
     gtk_widget_destroy(dialog);
     config_save();
