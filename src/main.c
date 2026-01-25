@@ -401,7 +401,8 @@ static void open_activated(GSimpleAction* action,
         ls_app_window_open(win, filename);
         CFG_SET_STR(cfg.history.split_file.value.s, filename);
         g_free(filename);
-    } else {
+    }
+    if (!win->game || !win->timer) {
         gtk_widget_show_all(win->welcome_box->box);
     }
     gtk_widget_destroy(dialog);
@@ -639,9 +640,6 @@ static void close_activated(GSimpleAction* action,
         ls_game_release(win->game);
         win->game = 0;
     }
-    if (win->welcome_box) {
-        welcome_box_destroy(win->welcome_box);
-    }
     gtk_widget_set_size_request(GTK_WIDGET(win), -1, -1);
 }
 
@@ -656,6 +654,21 @@ static void quit_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
 {
+    GList* windows;
+    LSAppWindow* win;
+    if (parameter != NULL) {
+        app = parameter;
+    }
+
+    windows = gtk_application_get_windows(GTK_APPLICATION(app));
+    if (windows) {
+        win = LS_APP_WINDOW(windows->data);
+    } else {
+        win = ls_app_window_new(LS_APP(app));
+    }
+    if (win->welcome_box) {
+        welcome_box_destroy(win->welcome_box);
+    }
     exit(0);
 }
 
