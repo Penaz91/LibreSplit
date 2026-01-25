@@ -32,6 +32,7 @@ typedef struct LibreSplitConfig {
     ConfigEntry global_hotkeys;
     ConfigEntry theme;
     ConfigEntry theme_variant;
+    ConfigEntry decimals;
 } LibreSplitConfig;
 
 typedef struct KeybindConfig {

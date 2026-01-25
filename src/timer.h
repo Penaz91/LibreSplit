@@ -1,9 +1,13 @@
 #pragma once
 
+#include "src/settings/definitions.h"
+
 #define LS_INFO_BEHIND_TIME (1)
 #define LS_INFO_LOSING_TIME (2)
 #define LS_INFO_BEST_SPLIT (4)
 #define LS_INFO_BEST_SEGMENT (8)
+
+extern AppConfig cfg;
 
 typedef struct ls_game {
     char* path;

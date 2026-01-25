@@ -49,6 +49,12 @@ AppConfig cfg = {
             .value.s = "",
             .desc = "Theme Variant (if any)",
         },
+        .decimals = {
+            .key = "timer_decimals",
+            .type = CFG_INT,
+            .value.i = 2,
+            .desc = "Decimals shown on timer",
+        },
     },
     .keybinds = {
         .start_split = {
