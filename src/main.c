@@ -377,6 +377,17 @@ static void open_activated(GSimpleAction* action,
     } else {
         win = ls_app_window_new(LS_APP(app));
     }
+    if (is_run_started(win->timer)) {
+        GtkWidget* warning = gtk_message_dialog_new(
+            GTK_WINDOW(win),
+            GTK_DIALOG_MODAL,
+            GTK_MESSAGE_INFO,
+            GTK_BUTTONS_OK,
+            "The timer is currently running, please stop the run before changing splits.");
+        gtk_dialog_run(GTK_DIALOG(warning));
+        gtk_widget_destroy(warning);
+        return;
+    }
     dialog = gtk_file_chooser_dialog_new(
         "Open File", GTK_WINDOW(win), GTK_FILE_CHOOSER_ACTION_OPEN,
         "_Cancel", GTK_RESPONSE_CANCEL,
@@ -453,6 +464,17 @@ static void open_auto_splitter(GSimpleAction* action,
         win = LS_APP_WINDOW(windows->data);
     } else {
         win = ls_app_window_new(LS_APP(app));
+    }
+    if (is_run_started(win->timer)) {
+        GtkWidget* warning = gtk_message_dialog_new(
+            GTK_WINDOW(win),
+            GTK_DIALOG_MODAL,
+            GTK_MESSAGE_INFO,
+            GTK_BUTTONS_OK,
+            "The timer is currently running, please stop the run before changing auto splitter.");
+        gtk_dialog_run(GTK_DIALOG(warning));
+        gtk_widget_destroy(warning);
+        return;
     }
     dialog = gtk_file_chooser_dialog_new(
         "Open File", GTK_WINDOW(win), GTK_FILE_CHOOSER_ACTION_OPEN,
