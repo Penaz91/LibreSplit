@@ -9,6 +9,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <stdatomic.h>
+#include <stdbool.h>
 
 /**
  * Opens the default browser on the LibreSplit troubleshooting documentation.
@@ -54,4 +55,20 @@ gboolean display_non_capable_mem_read_dialog(gpointer data)
 
     // Connect the response signal to the callback function
     return FALSE; // False removes this function from the queue
+}
+
+bool display_confirm_reset_dialog()
+{
+    GtkWidget* dialog = gtk_message_dialog_new(
+        NULL,
+        GTK_DIALOG_MODAL,
+        GTK_MESSAGE_WARNING,
+        GTK_BUTTONS_YES_NO,
+        "This run contains a gold split.\n\n"
+        "Are you sure you want to reset?");
+    gtk_window_set_title(GTK_WINDOW(dialog), "Confirm Reset?");
+
+    gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    return response == GTK_RESPONSE_YES;
 }
