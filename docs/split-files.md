@@ -6,29 +6,29 @@ You can use splits located in [the resource repository](https://github.com/Libre
 
 ## Main Object
 
-| Key             | Value                                   |
-| --------------- | --------------------------------------- |
-| `title`         | Title string at top of window           |
-| `attempt_count` | Number of attempts                      |
-| `start_delay`   | Non-negative delay until timer starts   |
-| `world_record`  | Best known time                         |
-| `splits`        | Array of [split objects](#split-object) |
-| `theme`         | Window theme                            |
-| `theme_variant` | Window theme variant                    |
-| `width`         | Window width                            |
-| `height`        | Window height                           |
+| Key             | Type               | Value                                   |
+| --------------- | ------------------ | --------------------------------------- |
+| `title`         | string             | Title string at top of window           |
+| `attempt_count` | int                | Number of attempts                      |
+| `start_delay`   | string (timestamp) | Non-negative delay until timer starts   |
+| `world_record`  | string             | Best known time                         |
+| `splits`        | array              | Array of [split objects](#split-object) |
+| `theme`         | string             | Window theme                            |
+| `theme_variant` | string             | Window theme variant                    |
+| `width`         | int                | Window width                            |
+| `height`        | int                | Window height                           |
 
 Most of the above keys are optional.
 
 ## Split Object
 
-| Key            | Value                  |
-| -------------- | ---------------------- |
-| `title`        | Split title            |
-| `icon`         | Icon file path or url  |
-| `time`         | Split time             |
-| `best_time`    | Your best split time   |
-| `best_segment` | Your best segment time |
+| Key            | Type   | Value                  |
+| -------------- | ------ | ---------------------- |
+| `title`        | string | Split title            |
+| `icon`         | string | Icon file path or url  |
+| `time`         | string | Split time             |
+| `best_time`    | string | Your best split time   |
+| `best_segment` | string | Your best segment time |
 
 Times are strings in `HH:MM:SS.mmmmmm` format.
 
