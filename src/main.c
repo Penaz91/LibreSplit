@@ -554,7 +554,7 @@ bool ls_is_timer_better(ls_game* game, ls_timer* timer)
     if (game->split_times[i] == 0ll) {
         return true;
     }
-    return timer->split_times[i] < game->split_times[i];
+    return timer->split_times[i] <= game->split_times[i];
 }
 
 /**
@@ -594,7 +594,7 @@ static void save_activated(GSimpleAction* action,
                 GTK_BUTTONS_YES_NO,
                 "This run seems to be worse than the saved one. Continue?");
             gint response = gtk_dialog_run(GTK_DIALOG(confirm));
-            if (!response) {
+            if (response == GTK_RESPONSE_NO) {
                 saving = false;
             }
             gtk_widget_destroy(confirm);
