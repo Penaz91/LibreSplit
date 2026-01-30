@@ -112,8 +112,9 @@ When you start **LibreSplit** for the first time, it will create the `libresplit
 - Splits.
 - Auto Splitters.
 - Themes.
+- Runs.
 
-All 3 directories will start empty, so you may want to download the [resource repository](https://github.com/LibreSplit/LibreSplit-resources/) first and clone it in `~/.config/libresplit/` before starting LibreSplit for the first time.
+All 4 directories will start empty, so you may want to download the [resource repository](https://github.com/LibreSplit/LibreSplit-resources/) first and clone it in `~/.config/libresplit/` before starting LibreSplit for the first time.
 
 A file dialog will then appear, asking you to select a Split JSON file (see [Split files](#split-files)).
 
