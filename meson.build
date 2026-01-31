@@ -67,6 +67,7 @@ libresplit_sources = files(
     'src/gui/app_window.c',
     'src/gui/help_dialog.c',
     'src/gui/settings_dialog.c',
+    'src/gui/context_menu.c',
 
     # Components
     'src/gui/component/best-sum.c',
