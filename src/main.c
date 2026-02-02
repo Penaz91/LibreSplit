@@ -15,6 +15,7 @@
 #include "settings/settings.h"
 #include "settings/utils.h"
 #include "shared.h"
+#include "src/keybinds/delayed_callbacks.h"
 #include "timer.h"
 
 #include <gtk/gtk.h>
@@ -124,10 +125,7 @@ static gboolean ls_app_window_step(gpointer data)
             }
         }
     }
-    if (win->delayed_handlers.reset) {
-        timer_stop_reset(win);
-        win->delayed_handlers.reset = false;
-    }
+    process_delayed_handlers(win);
 
     return TRUE;
 }

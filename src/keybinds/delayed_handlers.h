@@ -1,3 +1,6 @@
+/**
+ * @brief Stores the delayed keybind handlers, to avoid freezing the environment
+ */
 typedef struct DelayedHandlers {
-    bool reset;
+    bool stop_reset;
 } DelayedHandlers;
