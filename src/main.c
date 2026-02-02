@@ -7,6 +7,7 @@
 #include "gui/timer.h"
 #include "gui/utils.h"
 #include "gui/welcome_box.h"
+#include "keybinds/delayed_handlers.h"
 #include "keybinds/keybinds.h"
 #include "keybinds/keybinds_callbacks.h"
 #include "lasr/auto-splitter.h"
@@ -122,6 +123,10 @@ static gboolean ls_app_window_step(gpointer data)
                 atomic_store(&update_game_time, false);
             }
         }
+    }
+    if (win->delayed_handlers.reset) {
+        timer_stop_reset(win);
+        win->delayed_handlers.reset = false;
     }
 
     return TRUE;
