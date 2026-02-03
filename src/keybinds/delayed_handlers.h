@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @brief Stores the delayed keybind handlers, to avoid freezing the environment
  */
