@@ -1,4 +1,6 @@
 #include "settings_dialog.h"
+#include "gdk/gdk.h"
+#include "glibconfig.h"
 #include "src/settings/definitions.h"
 #include "src/settings/settings.h"
 
@@ -26,6 +28,47 @@ static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpoint
 {
     gtk_widget_destroy(widget);
     free(gui_settings);
+    return TRUE;
+}
+
+static void get_key_string(gint keyval, GdkModifierType modifiers, char* buffer, size_t buffer_size)
+{
+    const char* key_name = gdk_keyval_name(gdk_keyval_to_lower(keyval));
+    const unsigned int modifier_length = 30 * 5 * sizeof(char);
+    char* str_modifiers = (char*)malloc(modifier_length);
+
+    if (str_modifiers == NULL) {
+        printf("Cannot allocate memory for keygrab");
+        return;
+    }
+
+    str_modifiers[0] = '\0';
+
+    // Process modifiers
+    if (modifiers & GDK_CONTROL_MASK) {
+        strcat(str_modifiers, "<Control>");
+    }
+    if (modifiers & GDK_SHIFT_MASK) {
+        strcat(str_modifiers, "<Shift>");
+    }
+    if (modifiers & GDK_MOD1_MASK) {
+        strcat(str_modifiers, "<Alt>");
+    }
+    if (modifiers & GDK_SUPER_MASK) {
+        strcat(str_modifiers, "<Super>");
+    }
+    if (modifiers & GDK_HYPER_MASK) {
+        strcat(str_modifiers, "<Hyper>");
+    }
+    snprintf(buffer, buffer_size, "%s%s", str_modifiers, key_name);
+    free(str_modifiers);
+}
+
+bool on_key_press(GtkWidget* widget, GdkEventKey* event, gpointer data)
+{
+    char key_buffer[50];
+    get_key_string(event->keyval, event->state, key_buffer, sizeof(key_buffer));
+    gtk_entry_set_text(GTK_ENTRY(widget), key_buffer);
     return TRUE;
 }
 
@@ -107,6 +150,7 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
 
                     gui_settings[settings_idx].entry_buffer = gtk_entry_buffer_new(entry.value.s, sizeof(entry.value.s));
                     gui_settings[settings_idx].widget = gtk_entry_new_with_buffer(gui_settings[settings_idx].entry_buffer);
+                    g_signal_connect(gui_settings[settings_idx].widget, "key-press-event", G_CALLBACK(on_key_press), NULL);
                     gtk_container_add(GTK_CONTAINER(box), gui_settings[settings_idx].widget);
                     break;
                 case CFG_BOOL:
