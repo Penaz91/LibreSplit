@@ -13,7 +13,7 @@ static inline size_t fallback_css_data_len(void)
     return (size_t)((uintptr_t)_binary____src_fallback_css_end - (uintptr_t)_binary____src_fallback_css_start);
 }
 
-static char* reset_rules = ".window.main-window{all:unset;}\n.window.main-window *{all:unset;}";
+static const char reset_rules[] = ".window.main-window{all:unset;}\n.window.main-window *{all:unset;}";
 
 /**
  * Finds a theme, given its name and variant.
@@ -75,7 +75,7 @@ static bool apply_reset_rules(LSAppWindow* win, GError* gerror)
     gtk_css_provider_load_from_data(
         GTK_CSS_PROVIDER(win->reset_style),
         reset_rules,
-        (gssize)strlen(reset_rules), &gerror);
+        sizeof(reset_rules), &gerror);
     if (gerror != nullptr) {
         g_printerr("Error loading theme reset Rules: %s\n", gerror->message);
         error = true;
@@ -104,18 +104,16 @@ void ls_app_load_theme_with_fallback(LSAppWindow* win, const char* name, const c
         win->style = nullptr;
     }
 
+    GError* gerror = nullptr;
+
     // If reset rules have never been loaded, create them
     if (!win->reset_style) {
         win->reset_style = gtk_css_provider_new();
-    }
-
-    GError* gerror = nullptr;
-
-    apply_reset_rules(win, gerror);
-
-    if (gerror != nullptr) {
-        g_error_free(gerror);
-        gerror = nullptr;
+        apply_reset_rules(win, gerror);
+        if (gerror != nullptr) {
+            g_error_free(gerror);
+            gerror = nullptr;
+        }
     }
 
     if (!win->style) {
