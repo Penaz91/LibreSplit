@@ -947,7 +947,10 @@ int ls_timer_reset(ls_timer* timer)
             }
         }
         if (ls_timer_has_gold_split(timer)) {
-            bool user_reset = display_confirm_reset_dialog();
+            bool user_reset = true;
+            if (cfg.libresplit.ask_on_gold.value.b) {
+                user_reset = display_confirm_reset_dialog();
+            }
             if (user_reset) {
                 reset_timer(timer);
                 return 1;
