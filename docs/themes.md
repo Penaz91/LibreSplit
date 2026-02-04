@@ -105,3 +105,20 @@ Make sure that both LibreSplit and this window are visible, because when you cli
 Once you found what you want to edit, take a note of its `style class` (See [Creating your own theme](#creating-your-own-theme) for a list) and head to the `CSS` tab: there you can edit in real time LiveSplit's aspect. These edits are temporary, but they can help you developing your own CSS theme.
 
 Once you're done developing your theme, feel free to share it with the community!
+
+
+### Can I customize LibreSplit's look even further?
+
+Yes! But you'll need to first erase all your desktop theme's (and LibreSplit's) rules, so your theme will have to start with the following rule:
+
+```
+* {
+    all: unset;
+}
+```
+
+**WARNING:** If you use this rule without setting any others, LibreSplit won't look like a GTK (or an application) at all, and will be next to unusable.
+
+With the help of GTK's [CSS Overview](https://docs.gtk.org/gtk3/css-overview.html) you'll be able to customize everything, including Context Menus, The Help and Settings screens (to an extent).
+
+This is very advanced wizardry, so be careful!
