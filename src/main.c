@@ -27,15 +27,7 @@
 #include <sys/prctl.h>
 #include <sys/stat.h>
 
-#define LS_APP_TYPE (ls_app_get_type())
-#define LS_APP(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj), LS_APP_TYPE, LSApp))
-
 G_DEFINE_TYPE(LSApp, ls_app, GTK_TYPE_APPLICATION)
-
-#define LS_APP_WINDOW_TYPE (ls_app_window_get_type())
-#define LS_APP_WINDOW(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj), LS_APP_WINDOW_TYPE, LSAppWindow))
 
 G_DEFINE_TYPE(LSAppWindow, ls_app_window, GTK_TYPE_APPLICATION_WINDOW)
 

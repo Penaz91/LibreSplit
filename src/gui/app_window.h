@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glib-object.h"
 #include "src/gui/welcome_box.h"
 #include "src/keybinds/delayed_handlers.h"
 #include "src/keybinds/keybinds.h"
@@ -9,17 +10,28 @@
 
 #define WINDOW_PAD (8)
 
-typedef struct _LSAppWindowClass {
+G_DECLARE_FINAL_TYPE(LSApp, ls_app, LS, APP, GtkApplication)
+#define LS_APP_TYPE (ls_app_get_type())
+#define LS_APP(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj), LS_APP_TYPE, LSApp))
+
+G_DECLARE_FINAL_TYPE(LSAppWindow, ls_app_window, LS, APP_WINDOW, GtkApplicationWindow)
+
+#define LS_APP_WINDOW_TYPE (ls_app_window_get_type())
+#define LS_APP_WINDOW(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj), LS_APP_WINDOW_TYPE, LSAppWindow))
+
+struct _LSAppWindowClass {
     GtkApplicationWindowClass parent_class;
-} LSAppWindowClass;
+};
 
-typedef struct LSApp {
+struct _LSApp {
     GtkApplication parent;
-} LSApp;
+};
 
-typedef struct _LSAppClass {
+struct _LSAppClass {
     GtkApplicationClass parent_class;
-} LSAppClass;
+};
 
 /**
  * @brief The main LibreSplit application window
