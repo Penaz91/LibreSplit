@@ -7,7 +7,6 @@
 #include "gui/timer.h"
 #include "gui/utils.h"
 #include "gui/welcome_box.h"
-#include "keybinds/delayed_handlers.h"
 #include "keybinds/keybinds.h"
 #include "keybinds/keybinds_callbacks.h"
 #include "lasr/auto-splitter.h"
@@ -589,18 +588,20 @@ static void save_activated(GSimpleAction* action,
         win->game->width = width;
         win->game->height = height;
         bool saving = true;
-        if (!ls_is_timer_better(win->game, win->timer)) {
-            GtkWidget* confirm = gtk_message_dialog_new(
-                GTK_WINDOW(win),
-                GTK_DIALOG_MODAL,
-                GTK_MESSAGE_QUESTION,
-                GTK_BUTTONS_YES_NO,
-                "This run seems to be worse than the saved one. Continue?");
-            gint response = gtk_dialog_run(GTK_DIALOG(confirm));
-            if (response == GTK_RESPONSE_NO) {
-                saving = false;
+        if (cfg.libresplit.ask_on_worse.value.b) {
+            if (!ls_is_timer_better(win->game, win->timer)) {
+                GtkWidget* confirm = gtk_message_dialog_new(
+                    GTK_WINDOW(win),
+                    GTK_DIALOG_MODAL,
+                    GTK_MESSAGE_QUESTION,
+                    GTK_BUTTONS_YES_NO,
+                    "This run seems to be worse than the saved one. Continue?");
+                gint response = gtk_dialog_run(GTK_DIALOG(confirm));
+                if (response == GTK_RESPONSE_NO) {
+                    saving = false;
+                }
+                gtk_widget_destroy(confirm);
             }
-            gtk_widget_destroy(confirm);
         }
         if (saving) {
             ls_game_update_splits(win->game, win->timer);
