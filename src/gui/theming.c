@@ -64,7 +64,7 @@ int ls_app_window_find_theme(const LSAppWindow* win,
  *
  * @return true if an error occurred
  */
-static void apply_reset_rules(LSAppWindow* win, GError* gerror)
+static void apply_reset_rules(LSAppWindow* win, GError** gerror)
 {
     GdkScreen* screen = gdk_display_get_default_screen(win->display);
     gtk_style_context_add_provider_for_screen(
@@ -74,7 +74,7 @@ static void apply_reset_rules(LSAppWindow* win, GError* gerror)
     gtk_css_provider_load_from_data(
         GTK_CSS_PROVIDER(win->reset_style),
         reset_rules,
-        sizeof(reset_rules), &gerror);
+        sizeof(reset_rules), gerror);
 }
 /**
  * Loads a specific theme, with a fallback to the default theme
@@ -101,7 +101,7 @@ void ls_app_load_theme_with_fallback(LSAppWindow* win, const char* name, const c
     // If reset rules have never been loaded, create them
     if (!win->reset_style) {
         win->reset_style = gtk_css_provider_new();
-        apply_reset_rules(win, gerror);
+        apply_reset_rules(win, &gerror);
         if (gerror != nullptr) {
             g_printerr("Error loading theme reset Rules: %s\n", gerror->message);
             g_error_free(gerror);
