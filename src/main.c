@@ -231,6 +231,7 @@ static void ls_app_window_init(LSAppWindow* win)
 
     // Load window junk
     add_class(GTK_WIDGET(win), "window");
+    add_class(GTK_WIDGET(win), "main-window");
     win->game = 0;
     win->timer = 0;
 
