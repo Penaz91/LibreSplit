@@ -57,3 +57,14 @@ void toggle_decorations(LSAppWindow* win);
 void toggle_win_on_top(LSAppWindow* win);
 
 gboolean ls_app_window_resize(GtkWidget* widget, GdkEvent* event, gpointer data);
+
+LSAppWindow* ls_app_window_new(LSApp* app);
+void ls_app_activate(GApplication* app);
+void ls_app_open(GApplication* app, GFile** files, gint n_files, const gchar* hint);
+LSApp* ls_app_new(void);
+
+void ls_app_window_open(LSAppWindow* win, const char* file);
+
+gboolean ls_app_window_step(gpointer data);
+void ls_app_window_destroy(GtkWidget* widget, gpointer data);
+gboolean ls_app_window_draw(gpointer data);

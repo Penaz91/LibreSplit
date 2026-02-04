@@ -60,6 +60,8 @@ libresplit_sources = files(
 
     # GUI
     'src/gui/utils.c',
+    'src/gui/actions.c',
+    'src/gui/context_menu.c',
     'src/gui/welcome_box.c',
     'src/gui/dialogs.c',
     'src/gui/theming.c',
