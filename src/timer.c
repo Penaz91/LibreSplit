@@ -232,9 +232,71 @@ void ls_game_release(const ls_game* game)
     }
 }
 
+void print_game_error(enum GameCreateError error)
+{
+    switch (error) {
+        case NONE:
+            break;
+        case GAMEALLOCFAIL:
+            fprintf(stderr, "Cannot allocate ls_game");
+            break;
+        case PATHCOPYFAIL:
+            fprintf(stderr, "Cannot copy the game path");
+            break;
+        case JSONLOADERROR:
+            fprintf(stderr, "Cannot load JSON file");
+            break;
+        case TITLECOPYFAIL:
+            fprintf(stderr, "Cannot copy the game title");
+            break;
+        case THEMECOPYFAIL:
+            fprintf(stderr, "Cannot copy the theme");
+            break;
+        case VARIANTCOPYFAIL:
+            fprintf(stderr, "Cannot copy the theme variant");
+            break;
+        case SPLITTITLEALLOCFAIL:
+            fprintf(stderr, "Cannot allocate split titles");
+            break;
+        case SPLITTIMESALLOCFAIL:
+            fprintf(stderr, "Cannot allocate split times");
+            break;
+        case ICONPATHALLOCFAIL:
+            fprintf(stderr, "Cannot allocate split icon paths");
+            break;
+        case SEGMENTTIMESALLOCFAIL:
+            fprintf(stderr, "Cannot allocate split segment times");
+            break;
+        case BESTSPLITSALLOCFAIL:
+            fprintf(stderr, "Cannot allocate best split times");
+            break;
+        case BESTSEGMENTSALLOCFAIL:
+            fprintf(stderr, "Cannot allocate best segment times");
+            break;
+        case SPLITTITLECOPYFAIL:
+            fprintf(stderr, "Cannot copy split titles");
+            break;
+        case SPLITTIMESCOPYFAIL:
+            fprintf(stderr, "Cannot copy split times");
+            break;
+        case ICONPATHCOPYFAIL:
+            fprintf(stderr, "Cannot copy icon paths");
+            break;
+        case SEGMENTTIMESCOPYFAIL:
+            fprintf(stderr, "Cannot copy segment times");
+            break;
+        case BESTSPLITSCOPYFAIL:
+            fprintf(stderr, "Cannot copy best splits");
+            break;
+        case BESTSEGMENTSCOPYFAIL:
+            fprintf(stderr, "Cannot copy best segments");
+            break;
+    }
+}
+
 int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
 {
-    int error = 0;
+    enum GameCreateError error = NONE;
     ls_game* game;
     int i;
     json_t* json = 0;
@@ -243,19 +305,19 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
     // allocate game
     game = calloc(1, sizeof(ls_game));
     if (!game) {
-        error = 1;
+        error = GAMEALLOCFAIL;
         goto game_create_done;
     }
     // copy path to file
     game->path = strdup(path);
     if (!game->path) {
-        error = 1;
+        error = PATHCOPYFAIL;
         goto game_create_done;
     }
     // load json
     json = json_load_file(game->path, 0, &json_error);
     if (!json) {
-        error = 1;
+        error = JSONLOADERROR;
         size_t msg_len = snprintf(NULL, 0, "%s (%d:%d)", json_error.text, json_error.line, json_error.column);
         *error_msg = calloc(msg_len + 1, sizeof(char));
         sprintf(*error_msg, "%s (%d:%d)", json_error.text, json_error.line, json_error.column);
@@ -266,7 +328,7 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
     if (ref) {
         game->title = strdup(json_string_value(ref));
         if (!game->title) {
-            error = 1;
+            error = TITLECOPYFAIL;
             goto game_create_done;
         }
     }
@@ -275,7 +337,7 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
     if (ref) {
         game->theme = strdup(json_string_value(ref));
         if (!game->theme) {
-            error = 1;
+            error = THEMECOPYFAIL;
             goto game_create_done;
         }
     }
@@ -284,7 +346,7 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
     if (ref) {
         game->theme_variant = strdup(json_string_value(ref));
         if (!game->theme_variant) {
-            error = 1;
+            error = VARIANTCOPYFAIL;
             goto game_create_done;
         }
     }
@@ -328,37 +390,37 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
         game->split_titles = calloc(game->split_count,
             sizeof(char*));
         if (!game->split_titles) {
-            error = 1;
+            error = SPLITTITLEALLOCFAIL;
             goto game_create_done;
         }
         // allocate splits
         game->split_times = calloc(game->split_count,
             sizeof(long long));
         if (!game->split_times) {
-            error = 1;
+            error = SPLITTIMESALLOCFAIL;
             goto game_create_done;
         }
         game->split_icon_paths = calloc(game->split_count, sizeof(char*));
         if (!game->split_icon_paths) {
-            error = 1;
+            error = ICONPATHALLOCFAIL;
             goto game_create_done;
         }
         game->segment_times = calloc(game->split_count,
             sizeof(long long));
         if (!game->segment_times) {
-            error = 1;
+            error = SEGMENTTIMESALLOCFAIL;
             goto game_create_done;
         }
         game->best_splits = calloc(game->split_count,
             sizeof(long long));
         if (!game->best_splits) {
-            error = 1;
+            error = BESTSPLITSALLOCFAIL;
             goto game_create_done;
         }
         game->best_segments = calloc(game->split_count,
             sizeof(long long));
         if (!game->best_segments) {
-            error = 1;
+            error = BESTSEGMENTSALLOCFAIL;
             goto game_create_done;
         }
         game->contains_icons = false;
@@ -372,7 +434,7 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
                 game->split_titles[i] = strdup(
                     json_string_value(split_ref));
                 if (!game->split_titles[i]) {
-                    error = 1;
+                    error = SPLITTITLECOPYFAIL;
                     goto game_create_done;
                 }
             }
@@ -381,7 +443,7 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
             if (split_ref) {
                 game->split_icon_paths[i] = strdup(json_string_value(split_ref));
                 if (!game->split_icon_paths[i]) {
-                    error = 1;
+                    error = ICONPATHCOPYFAIL;
                     goto game_create_done;
                 }
                 game->contains_icons = true;
@@ -426,10 +488,12 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
             }
         }
     }
+
 game_create_done:
-    if (!error) {
+    if (error == NONE) {
         *game_ptr = game;
     } else if (game) {
+        print_game_error(error);
         ls_game_release(game);
     }
     if (json) {
