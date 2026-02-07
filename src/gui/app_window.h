@@ -1,11 +1,12 @@
 #pragma once
 
-#include "glib-object.h"
 #include "src/gui/welcome_box.h"
 #include "src/keybinds/delayed_handlers.h"
 #include "src/keybinds/keybinds.h"
 #include "src/opts.h"
 #include "src/timer.h"
+
+#include <glib-object.h>
 #include <gtk/gtk.h>
 
 #define WINDOW_PAD (8)
