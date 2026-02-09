@@ -3,12 +3,27 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 
+/**
+ * Destructor for the help dialog window.
+ *
+ * @param widget The window to be destroyed.
+ * @param event The window destruction event.
+ * @param user_data Unused.
+ *
+ * @return Always true
+ */
 static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpointer user_data)
 {
     gtk_widget_destroy(widget);
     return TRUE;
 }
 
+/**
+ * Builds the about/help dialog.
+ *
+ * @param app The main LibreSplit Application.
+ * @param data Unused.
+ */
 static void build_help_dialog(GtkApplication* app, gpointer data)
 {
     GtkWidget* window = gtk_application_window_new(app);
@@ -71,6 +86,13 @@ static void build_help_dialog(GtkApplication* app, gpointer data)
     gtk_window_present(GTK_WINDOW(window));
 }
 
+/**
+ * Shows the help/about dialog when the ContextMenu option is clicked.
+ *
+ * @param action The action performed.
+ * @param parameter Parameters to the action
+ * @param app The LibreSplit Application pointer.
+ */
 void show_help_dialog(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
     if (parameter != NULL) {
