@@ -100,6 +100,12 @@ bool on_key_press(GtkWidget* widget, GdkEventKey* event, gpointer data)
     return TRUE;
 }
 
+bool on_entry_clear_press(GtkEntry* self, GtkEntryIconPosition icon_pos, GdkEvent* event, gpointer data)
+{
+    gtk_entry_set_text(GTK_ENTRY(self), "");
+    return TRUE;
+}
+
 static void save_gui_settings(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
     size_t settings_number = enumerate_settings(cfg);
@@ -177,6 +183,8 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
 
                         gui_settings[settings_idx].entry_buffer = gtk_entry_buffer_new(entry.value.s, sizeof(entry.value.s));
                         gui_settings[settings_idx].widget = gtk_entry_new_with_buffer(gui_settings[settings_idx].entry_buffer);
+                        gtk_entry_set_icon_from_icon_name(GTK_ENTRY(gui_settings[settings_idx].widget), GTK_ENTRY_ICON_SECONDARY, "edit-clear");
+                        g_signal_connect(gui_settings[settings_idx].widget, "icon-press", G_CALLBACK(on_entry_clear_press), NULL);
                         gtk_container_add(GTK_CONTAINER(box), gui_settings[settings_idx].widget);
                         break;
                     }
@@ -187,7 +195,9 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
 
                         gui_settings[settings_idx].entry_buffer = gtk_entry_buffer_new(entry.value.s, sizeof(entry.value.s));
                         gui_settings[settings_idx].widget = gtk_entry_new_with_buffer(gui_settings[settings_idx].entry_buffer);
+                        gtk_entry_set_icon_from_icon_name(GTK_ENTRY(gui_settings[settings_idx].widget), GTK_ENTRY_ICON_SECONDARY, "edit-clear");
                         g_signal_connect(gui_settings[settings_idx].widget, "key-press-event", G_CALLBACK(on_key_press), NULL);
+                        g_signal_connect(gui_settings[settings_idx].widget, "icon-press", G_CALLBACK(on_entry_clear_press), NULL);
                         gtk_container_add(GTK_CONTAINER(box), gui_settings[settings_idx].widget);
                         break;
                     }
