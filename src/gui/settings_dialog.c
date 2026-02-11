@@ -100,9 +100,19 @@ bool on_key_press(GtkWidget* widget, GdkEventKey* event, gpointer data)
     return TRUE;
 }
 
-bool on_entry_clear_press(GtkEntry* self, GtkEntryIconPosition icon_pos, GdkEvent* event, gpointer data)
+/**
+ * Handler for clicking on the "clear icon" on Entry fields.
+ *
+ * @param widget The entry widget
+ * @param icon_pos The position of the icon clicked (unused).
+ * @param event The icon clicked event
+ * @param data unused
+ *
+ * @return True if the handler terminated correctly.
+ */
+bool on_entry_clear_press(GtkEntry* widget, GtkEntryIconPosition icon_pos, GdkEvent* event, gpointer data)
 {
-    gtk_entry_set_text(GTK_ENTRY(self), "");
+    gtk_entry_set_text(GTK_ENTRY(widget), "");
     return TRUE;
 }
 
