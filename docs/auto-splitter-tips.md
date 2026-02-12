@@ -58,11 +58,15 @@ Here is a small list of the most commonly usd functions:
 - `bit.bor(a, b)`: Performs a bitwise "or" between the integers `a` and `b`;
 - `bit.bxor(a, b)`: Performs a bitwise "exclusive or" between the integers `a` and `b`;
 - `bit.bnot(a)`: Performs a bitwise "not" on the integer `a`;
-- `bit.blshift(a, b)`: Performs a bitwise "logical left shift" on the integer `a` by `b`;
-- `bit.brshift(a, b)`: Performs a bitwise "logical right shift" on the integer `a` by `b`;
+- `bit.lshift(a, b)`: Performs a bitwise "logical left shift" on the integer `a` by `b`;
+- `bit.rshift(a, b)`: Performs a bitwise "logical right shift" on the integer `a` by `b`;
 - `bit.rol(a, b)`: Performs a bitwise "left rotation" on the integer `a` by `b` bits;
 - `bit.rol(a, b)`: Performs a bitwise "right rotation" on the integer `a` by `b` bits;
 - `bit.bswap(a)`: Swap the bytes of `a` and return the result (useful for changing little ⟺  big endian);
+- `bit.tobit(a)`: Normalizes `a` to the numeric range for bit operations and returns it.
+- `bit.tohex(a)`: Converts `a` into hex and returns it. Can accept a second argument to force the number of hex digits returned.
+
+See [The BitOp LuaJIT library documentation](http://bitop.luajit.org/api.html) for more detailed information.
 
 ## A small trick to find items in table
 
