@@ -50,14 +50,19 @@ current.minutes = readAddress(...)
 
 ### Bitwise Binary Operators
 
-LuaJIT doesn't yet support bitwise binary operators, in the meantime we implemented some functions that will bring such features into LibreSplit:
+LuaJIT supports bitwise operators via its `bit` library, which is already included in the global scope for auto splitters.
 
-- `b_and(a, b)`: Performs a bitwise "and" between the integers `a` and `b`;
-- `b_or(a, b)`: Performs a bitwise "or" between the integers `a` and `b`;
-- `b_xor(a, b)`: Performs a bitwise "exclusive or" between the integers `a` and `b`;
-- `b_not(a)`: Performs a bitwise "not" on the integer `a`;
-- `b_lshift(a, b)`: Performs a bitwise "left shift" on the integer `a` by `b`;
-- `b_rshift(a, b)`: Performs a bitwise "right shift" on the integer `a` by `b`;
+Here is a small list of the most commonly usd functions:
+
+- `bit.band(a, b)`: Performs a bitwise "and" between the integers `a` and `b`;
+- `bit.bor(a, b)`: Performs a bitwise "or" between the integers `a` and `b`;
+- `bit.bxor(a, b)`: Performs a bitwise "exclusive or" between the integers `a` and `b`;
+- `bit.bnot(a)`: Performs a bitwise "not" on the integer `a`;
+- `bit.blshift(a, b)`: Performs a bitwise "logical left shift" on the integer `a` by `b`;
+- `bit.brshift(a, b)`: Performs a bitwise "logical right shift" on the integer `a` by `b`;
+- `bit.rol(a, b)`: Performs a bitwise "left rotation" on the integer `a` by `b` bits;
+- `bit.rol(a, b)`: Performs a bitwise "right rotation" on the integer `a` by `b` bits;
+- `bit.bswap(a)`: Swap the bytes of `a` and return the result (useful for changing little ⟺  big endian);
 
 ## A small trick to find items in table
 
