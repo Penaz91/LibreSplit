@@ -60,6 +60,7 @@ Here is a small list of the most commonly usd functions:
 - `bit.bnot(a)`: Performs a bitwise "not" on the integer `a`;
 - `bit.lshift(a, b)`: Performs a bitwise "logical left shift" on the integer `a` by `b`;
 - `bit.rshift(a, b)`: Performs a bitwise "logical right shift" on the integer `a` by `b`;
+- `bit.arshift(a, b)`: Performs a bitwise "arithmetical right shift" on the integer `a` by `b`;
 - `bit.rol(a, b)`: Performs a bitwise "left rotation" on the integer `a` by `b` bits;
 - `bit.rol(a, b)`: Performs a bitwise "right rotation" on the integer `a` by `b` bits;
 - `bit.bswap(a)`: Swap the bytes of `a` and return the result (useful for changing little ⟺  big endian);
