@@ -23,8 +23,8 @@ Under the `libresplit` section, you will find the following settings:
 | `hide_cursor`      | Boolean | Hide cursor in window                                        | `false`        |
 | `global_hotkeys`   | Boolean | Enables global hotkeys                                       | `false`        |
 | `start_on_top`     | Boolean | Start with window as always on top                           | `false`        |
-| `theme`            | String  | Default theme name                                           | `'standard'`   |
-| `theme_variant`    | String  | Default theme variant                                        | `''`           |
+| `theme`            | String  | Default theme name                                           | `"standard"`   |
+| `theme_variant`    | String  | Default theme variant                                        | `""`           |
 | `decimals`         | Integer | Number of decimals to show on the timer (from 0 to 6)        | `2`            |
 | `save_run_history` | Boolean | Save JSON files with old runs in the runs subdirectory       | `true`         |
 | `ask_on_gold`      | Boolean | Ask for confirmation before resetting a run with gold splits | `true`         |
