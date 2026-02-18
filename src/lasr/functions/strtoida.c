@@ -29,6 +29,11 @@ int str2ida(lua_State* L)
     // + 1 at the last for loop, replaced by \0 + 1 for the natural \0 of strcat
     const unsigned int objective_string_length = 3 * starting_string_length + 1;
     char* objective_string = malloc(objective_string_length * sizeof(char));
+    if (!objective_string) {
+        printf("[str2ida] Cannot allocate memory for the string conversion.");
+        lua_pushnil(L);
+        return 1;
+    }
     objective_string[0] = '\0';
     // 2 hex digits + one for \0
     char tmp_buf[3];
