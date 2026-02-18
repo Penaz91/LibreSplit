@@ -28,7 +28,7 @@ int str2ida(lua_State* L)
     // 2 hex digits per character + "n-1" spaces in between
     // + 1 at the last for loop, replaced by \0 + 1 for the natural \0 of strcat
     const unsigned int objective_string_length = 3 * starting_string_length + 1;
-    char objective_string[objective_string_length];
+    char* objective_string = malloc(objective_string_length * sizeof(char));
     objective_string[0] = '\0';
     // 2 hex digits + one for \0
     char tmp_buf[3];
@@ -40,5 +40,6 @@ int str2ida(lua_State* L)
     }
     objective_string[objective_string_length - 1] = '\0';
     lua_pushstring(L, objective_string);
+    free(objective_string);
     return 1;
 }
