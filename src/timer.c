@@ -52,7 +52,7 @@ long long ls_time_value(const char* string)
     }
 
     // Split at the decimal point manually
-    char* dot_pos = strchr(string, '.');
+    char* dot_pos = (char*)strchr(string, '.');
     if (dot_pos) {
         strncpy(seconds_part, string, dot_pos - string);
         seconds_part[dot_pos - string] = '\0';
