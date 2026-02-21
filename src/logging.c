@@ -62,7 +62,6 @@ void logMessage(const char* message)
  */
 void* loggingThread(void* arg)
 {
-    // TODO: [Penaz] [2026-02-20] Consider adding console logging too
     FILE* logfile = fopen("libresplit.log", "a");
     if (!logfile) {
         perror("Failed to open log file");
@@ -78,6 +77,9 @@ void* loggingThread(void* arg)
         // Empty a message from the queue
         // We don't empty the whole queue to avoid being a bottleneck for the
         // addition of new messages.
+        // Log to console
+        printf("%s\n", logQueue.message_queue[logQueue.head]);
+        // Log to file
         fprintf(logfile, "%s\n", logQueue.message_queue[logQueue.head]);
         logQueue.head = (logQueue.head + 1) % LOG_QUEUE_SIZE;
         // Unlock the mutex
