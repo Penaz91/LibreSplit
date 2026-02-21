@@ -1,9 +1,12 @@
 #pragma once
 
 #include <pthread.h>
+#include <stdatomic.h>
 
 #define LOG_QUEUE_SIZE 100
 #define LOG_STR_LEN 256
+
+extern atomic_bool exit_requested;
 
 /** \brief The Log Buffer
  *
@@ -21,6 +24,7 @@ typedef struct LogQueue {
 void initLogQueue(void);
 
 void logMessage(const char* fmt, ...);
+void close_logger();
 
 void* loggingThread(void* arg);
 

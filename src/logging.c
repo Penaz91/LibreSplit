@@ -6,17 +6,19 @@
  */
 #include "logging.h"
 
+#include <linux/prctl.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/prctl.h>
 
 /*! The log queue, used as buffer */
 LogQueue logQueue;
 /*! Atomic bool used to keep the thread active, might be used for clean closing in future */
-atomic_bool logging_active = true;
+atomic_bool logging_active;
 
 /**
  * Initializes the log queue, ready to receive messages
@@ -27,6 +29,7 @@ void initLogQueue(void)
     logQueue.tail = 0;
     pthread_mutex_init(&logQueue.lock, NULL);
     pthread_cond_init(&logQueue.cond, NULL);
+    logging_active = 1;
 }
 
 /**
@@ -58,6 +61,26 @@ void logMessage(const char* fmt, ...)
 }
 
 /**
+ * Pops a message from the log queue, writing it into console
+ * and the log file. Just a utility.
+ *
+ * @param logfile The File pointer to write into
+ */
+void pop_message(FILE* logfile)
+{
+    // Remove a message from the queue
+    // We don't empty the whole queue to avoid being a bottleneck for the
+    // addition of new messages.
+    // Log to console
+    printf("%s\n", logQueue.message_queue[logQueue.head]);
+    // Log to file
+    fprintf(logfile, "%s\n", logQueue.message_queue[logQueue.head]);
+    // Flush the file immediately to disk, in case something crashes
+    fflush(logfile);
+    logQueue.head = (logQueue.head + 1) % LOG_QUEUE_SIZE;
+}
+
+/**
  * The logging thread, writes the queued messages in the log.
  *
  * Works as a consumer
@@ -66,6 +89,7 @@ void logMessage(const char* fmt, ...)
  */
 void* loggingThread(void* arg)
 {
+    prctl(PR_SET_NAME, "LS Logger", 0, 0, 0);
     FILE* logfile = fopen("libresplit.log", "a");
     if (!logfile) {
         perror("Failed to open log file");
@@ -77,21 +101,33 @@ void* loggingThread(void* arg)
         // If the queue is empty, wait
         while (logQueue.head == logQueue.tail) {
             pthread_cond_wait(&logQueue.cond, &logQueue.lock);
+            // We got signalled by the main thread to close up
+            if (!atomic_load(&logging_active)) {
+                break;
+            }
         }
-        // Empty a message from the queue
-        // We don't empty the whole queue to avoid being a bottleneck for the
-        // addition of new messages.
-        // Log to console
-        printf("%s\n", logQueue.message_queue[logQueue.head]);
-        // Log to file
-        fprintf(logfile, "%s\n", logQueue.message_queue[logQueue.head]);
-        // Flush the file immediately to disk, in case something crashes
-        fflush(logfile);
-        logQueue.head = (logQueue.head + 1) % LOG_QUEUE_SIZE;
+        pop_message(logfile);
         // Unlock the mutex
         pthread_mutex_unlock(&logQueue.lock);
     }
     // We're closing the thread, close the file
     fclose(logfile);
-    return NULL;
+    return 0;
+}
+
+/**
+ * Function to close the logger thread.
+ *
+ * This is needed because while we're closing, we might be waiting for
+ * the queue to fill up. If that's the case, we signal the thread to continue
+ * after setting logging_active to false.
+ */
+void close_logger()
+{
+    // If we're stuck waiting for the buffer to fill
+    atomic_store(&logging_active, 0);
+    if (logQueue.head == logQueue.tail) {
+        // Signal the logging thread to continue, so to hit the closing condition
+        pthread_cond_signal(&logQueue.cond);
+    }
 }
