@@ -81,6 +81,8 @@ void* loggingThread(void* arg)
         printf("%s\n", logQueue.message_queue[logQueue.head]);
         // Log to file
         fprintf(logfile, "%s\n", logQueue.message_queue[logQueue.head]);
+        // Flush the file immediately to disk, in case something crashes
+        fflush(logfile);
         logQueue.head = (logQueue.head + 1) % LOG_QUEUE_SIZE;
         // Unlock the mutex
         pthread_mutex_unlock(&logQueue.lock);
