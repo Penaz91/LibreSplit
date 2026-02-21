@@ -20,7 +20,7 @@ typedef struct LogQueue {
 
 void initLogQueue(void);
 
-void logMessage(const char* message);
+void logMessage(const char* fmt, ...);
 
 void* loggingThread(void* arg);
 
@@ -44,26 +44,38 @@ void* loggingThread(void* arg);
         logMessage(LOG_STRING(__FILE__, LOG__STR(__LINE__), #T, message)); \
     }
 
+#define LOGF(T, fmt, ...)                                                           \
+    {                                                                               \
+        logMessage(LOG_STRING(__FILE__, LOG__STR(__LINE__), #T, fmt), __VA_ARGS__); \
+    }
+
 #if LOG_LEVEL == LOG_LEVEL_DEBUG
 #define LOG_DEBUG(message) LOG([Debug], message);
+#define LOG_DEBUGF(fmt, ...) LOGF([Debug], fmt, __VA_ARGS__);
 #else
-#define LOG_DEBUG(message)
+#define LOG_DEBUG(fmt, ...)
+#define LOG_DEBUGF(fmt, ...)
 #endif
 
 #if LOG_LEVEL <= LOG_LEVEL_INFO
 #define LOG_INFO(message) LOG([Info], message);
+#define LOG_INFOF(fmt, ...) LOGF([Info], fmt, __VA_ARGS__);
 #else
 #define LOG_INFO(message)
 #endif
 
 #if LOG_LEVEL <= LOG_LEVEL_WARN
 #define LOG_WARN(message) LOG([Warn], message);
+#define LOG_WARNF(fmt, ...) LOGF([Warn], fmt, __VA_ARGS__);
 #else
 #define LOG_WARN(message)
+#define LOG_WARNF(message)
 #endif
 
 #if LOG_LEVEL <= LOG_LEVEL_ERR
 #define LOG_ERR(message) LOG([ERR], message);
+#define LOG_ERRF(fmt, ...) LOGF([ERR], fmt, __VA_ARGS__);
 #else
 #define LOG_ERR(message)
+#define LOG_ERRF(message)
 #endif

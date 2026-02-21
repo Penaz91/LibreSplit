@@ -7,6 +7,7 @@
 #include "logging.h"
 
 #include <pthread.h>
+#include <stdarg.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -33,9 +34,9 @@ void initLogQueue(void)
  *
  * Works as a producer.
  *
- * @param[in] message The message to print in the log
+ * @param[in] fmt The message to print in the log or the format string
  */
-void logMessage(const char* message)
+void logMessage(const char* fmt, ...)
 {
     // Lock the mutex for writing
     pthread_mutex_lock(&logQueue.lock);
@@ -44,7 +45,10 @@ void logMessage(const char* message)
         pthread_cond_wait(&logQueue.cond, &logQueue.lock);
     }
     // There is space in the queue, add a new message
-    strncpy(logQueue.message_queue[logQueue.tail], message, LOG_STR_LEN);
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(logQueue.message_queue[logQueue.tail], LOG_STR_LEN, fmt, args);
+    va_end(args);
     logQueue.tail = (logQueue.tail + 1) % LOG_QUEUE_SIZE;
 
     // Signal a possibly waiting logging thread
