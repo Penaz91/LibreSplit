@@ -110,7 +110,11 @@ void* loggingThread(void* arg)
         // Unlock the mutex
         pthread_mutex_unlock(&logQueue.lock);
     }
-    // We're closing the thread, close the file
+    // We're closing the logger, empty the remaining logs...
+    while (logQueue.head != logQueue.tail) {
+        pop_message(logfile);
+    }
+    // ... and close the logfile
     fclose(logfile);
     return 0;
 }
@@ -124,10 +128,10 @@ void* loggingThread(void* arg)
  */
 void close_logger()
 {
-    // If we're stuck waiting for the buffer to fill
     atomic_store(&logging_active, 0);
-    if (logQueue.head == logQueue.tail) {
-        // Signal the logging thread to continue, so to hit the closing condition
-        pthread_cond_signal(&logQueue.cond);
-    }
+    LOG_DEBUG("Shutting down logger thread...")
+    // Signal the logging thread to continue, so to hit the closing condition,
+    // in case it is waiting for the log queue to fill. If it isn't, the signal
+    // should be ignored.
+    pthread_cond_signal(&logQueue.cond);
 }
