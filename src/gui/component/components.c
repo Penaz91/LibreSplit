@@ -27,6 +27,8 @@ LSComponentAvailable ls_available_components[] = {
     { NULL, NULL }
 };
 
+LSComponentAvailable* ls_components;
+
 void initialize_components()
 {
     SectionInfo* section;
@@ -44,10 +46,14 @@ void initialize_components()
         }
     }
     ls_components = malloc(components_count + 1 * sizeof(LSComponentAvailable));
+    if (!ls_components) {
+        printf("Cannot allocate memory for components");
+        abort();
+    }
     int compindex = 0;
     for (size_t i = 0; i < sizeof(section->count); i++) {
         ConfigEntry entry = ((ConfigEntry*)section->entries)[i];
-        for (size_t j = 0; j < sizeof(ls_available_components); j++) {
+        for (size_t j = 0; ls_available_components[j].name != NULL; j++) {
             if (strcmp(ls_available_components[j].name, entry.key) == 0) {
                 ls_components[compindex] = ls_available_components[j];
                 compindex++;
