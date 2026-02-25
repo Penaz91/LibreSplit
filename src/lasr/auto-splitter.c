@@ -108,6 +108,7 @@ static const lasr_function luac_functions[] = {
     { "shallow_copy_tbl", shallow_copy_tbl },
     { "print_tbl", print_tbl },
     { "getMaps", getMaps },
+    { "str2ida", str2ida },
     { NULL, NULL }
 };
 

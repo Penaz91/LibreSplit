@@ -60,7 +60,7 @@ gboolean display_non_capable_mem_read_dialog(gpointer data)
 bool display_confirm_reset_dialog(void)
 {
     GtkWidget* dialog = gtk_message_dialog_new(
-        NULL,
+        GTK_WINDOW(NULL),
         GTK_DIALOG_MODAL,
         GTK_MESSAGE_WARNING,
         GTK_BUTTONS_YES_NO,
