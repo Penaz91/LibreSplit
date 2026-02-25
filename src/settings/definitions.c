@@ -118,6 +118,56 @@ AppConfig cfg = {
             .desc = "Toggle Always On Top",
         },
     },
+    .components = {
+        .title = {
+            .key = "title",
+            .type = CFG_BOOL,
+            .value.b = true,
+            .desc = "Title Bar",
+        },
+        .splits = {
+            .key = "splits",
+            .type = CFG_BOOL,
+            .value.b = true,
+            .desc = "Split List",
+        },
+        .timer = {
+            .key = "timer",
+            .type = CFG_BOOL,
+            .value.b = false,
+            .desc = "Simple Timer",
+        },
+        .detailed_timer = {
+            .key = "detailed_timer",
+            .type = CFG_BOOL,
+            .value.b = true,
+            .desc = "Detailed Timer",
+        },
+        .prev_segment = {
+            .key = "prev_segment",
+            .type = CFG_BOOL,
+            .value.b = true,
+            .desc = "Previous Segment",
+        },
+        .best_sum = {
+            .key = "best_sum",
+            .type = CFG_BOOL,
+            .value.b = true,
+            .desc = "Best Sum",
+        },
+        .pb = {
+            .key = "pb",
+            .type = CFG_BOOL,
+            .value.b = true,
+            .desc = "Personal Best",
+        },
+        .wr = {
+            .key = "wr",
+            .type = CFG_BOOL,
+            .value.b = true,
+            .desc = "World Record",
+        },
+    },
     .history = {
         .split_file = {
             .key = "split_file",
@@ -149,6 +199,7 @@ AppConfig cfg = {
 const SectionInfo sections[] = {
     { "libresplit", &cfg.libresplit, sizeof(cfg.libresplit) / sizeof(ConfigEntry), true },
     { "keybinds", &cfg.keybinds, sizeof(cfg.keybinds) / sizeof(ConfigEntry), true },
+    { "components", &cfg.components, sizeof(cfg.components) / sizeof(ConfigEntry), true },
     { "history", &cfg.history, sizeof(cfg.history) / sizeof(ConfigEntry), false },
 };
 

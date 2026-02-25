@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 
 extern atomic_bool exit_requested; /*!< Set to 1 when LibreSplit is exiting */
+extern LSComponentAvailable* ls_components;
 
 static void ls_app_init(LSApp* app)
 {
@@ -207,6 +208,7 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
     }
     atomic_store(&auto_splitter_enabled, 0);
     atomic_store(&exit_requested, 1);
+    deinitialize_components();
     // Close any other open application windows (settings, dialogs, etc.)
     GApplication* app = g_application_get_default();
     if (app) {
@@ -373,6 +375,7 @@ static void ls_app_window_init(LSAppWindow* win)
 
     // Create all available components (TODO: change this in the future)
     win->components = NULL;
+    initialize_components();
     for (i = 0; ls_components[i].name != NULL; i++) {
         LSComponent* component = ls_components[i].new();
         if (component) {

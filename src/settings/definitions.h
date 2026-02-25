@@ -56,10 +56,22 @@ typedef struct HistoryConfig {
     ConfigEntry auto_splitter_file;
 } HistoryConfig;
 
+typedef struct ComponentsConfig {
+    ConfigEntry title;
+    ConfigEntry splits;
+    ConfigEntry timer;
+    ConfigEntry detailed_timer;
+    ConfigEntry prev_segment;
+    ConfigEntry best_sum;
+    ConfigEntry pb;
+    ConfigEntry wr;
+} ComponentsConfig;
+
 typedef struct AppConfig {
     LibreSplitConfig libresplit;
     KeybindConfig keybinds;
     HistoryConfig history;
+    ComponentsConfig components;
 } AppConfig;
 
 /* For each section we point at the first `ConfigEntry` member inside the
