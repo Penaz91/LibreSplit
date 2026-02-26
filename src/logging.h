@@ -4,7 +4,7 @@
 #include <stdatomic.h>
 
 #define LOG_QUEUE_SIZE 100
-#define LOG_STR_LEN 256
+#define LOG_STR_LEN 512
 
 extern atomic_bool exit_requested;
 
