@@ -5,7 +5,9 @@
  * hopes and dreams.
  */
 #include "logging.h"
+#include "settings/utils.h"
 
+#include <linux/limits.h>
 #include <linux/prctl.h>
 #include <pthread.h>
 #include <stdarg.h>
@@ -98,8 +100,11 @@ void pop_message(FILE* logfile)
  */
 void* loggingThread(void* arg)
 {
+    char data_path[PATH_MAX];
+    get_libresplit_data_folder_path(data_path);
+    strcat(data_path, "/libresplit.log");
     prctl(PR_SET_NAME, "LS Logger", 0, 0, 0);
-    FILE* logfile = fopen("libresplit.log", "a");
+    FILE* logfile = fopen(data_path, "a");
     if (!logfile) {
         perror("Failed to open log file");
         return NULL;
