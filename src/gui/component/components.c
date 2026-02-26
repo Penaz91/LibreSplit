@@ -55,8 +55,10 @@ void initialize_components()
         ConfigEntry entry = ((ConfigEntry*)section->entries)[i];
         for (size_t j = 0; ls_available_components[j].name != NULL; j++) {
             if (strcmp(ls_available_components[j].name, entry.key) == 0) {
-                ls_components[compindex] = ls_available_components[j];
-                compindex++;
+                if (entry.value.b) {
+                    ls_components[compindex] = ls_available_components[j];
+                    compindex++;
+                }
             }
         }
     }
