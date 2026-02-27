@@ -31,12 +31,16 @@ LSComponentAvailable* ls_components;
 
 void initialize_components()
 {
-    SectionInfo* section;
+    SectionInfo* section = NULL;
     for (size_t i = 0; i < sections_count; i++) {
         section = (SectionInfo*)&sections[i];
         if (strcmp(section->name, "components") == 0) {
             break;
         }
+    }
+    if (!section) {
+        printf("Cannot find components settings section.");
+        abort();
     }
     int components_count = 0;
     for (size_t i = 0; i < sizeof(section->count); i++) {
