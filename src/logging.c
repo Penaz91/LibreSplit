@@ -100,10 +100,10 @@ static void pop_message(FILE* logfile)
  */
 void* loggingThread(void* arg)
 {
+    prctl(PR_SET_NAME, "LS Logger", 0, 0, 0);
     char data_path[PATH_MAX];
     get_libresplit_data_folder_path(data_path);
     strcat(data_path, "/libresplit.log");
-    prctl(PR_SET_NAME, "LS Logger", 0, 0, 0);
     FILE* logfile = fopen(data_path, "a");
     if (!logfile) {
         perror("Failed to open log file");
