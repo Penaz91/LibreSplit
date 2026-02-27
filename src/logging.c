@@ -19,9 +19,9 @@
 #include <time.h>
 
 /*! The log queue, used as buffer */
-LogQueue logQueue;
+static LogQueue logQueue;
 /*! Atomic bool used to keep the thread active, might be used for clean closing in future */
-atomic_bool logging_active;
+static atomic_bool logging_active;
 
 /**
  * Initializes the log queue, ready to receive messages
@@ -77,7 +77,7 @@ void logMessage(const char* fmt, ...)
  *
  * @param logfile The File pointer to write into
  */
-void pop_message(FILE* logfile)
+static void pop_message(FILE* logfile)
 {
     // Remove a message from the queue
     // We don't empty the whole queue to avoid being a bottleneck for the
