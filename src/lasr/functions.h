@@ -1,5 +1,6 @@
 #pragma once
 
+#include "functions/bitwise.h"
 #include "functions/getBaseAddress.h"
 #include "functions/getMaps.h"
 #include "functions/getModuleSize.h"

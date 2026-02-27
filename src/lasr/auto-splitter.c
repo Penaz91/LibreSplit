@@ -109,6 +109,7 @@ static const lasr_function luac_functions[] = {
     { "print_tbl", print_tbl },
     { "getMaps", getMaps },
     { "str2ida", str2ida },
+    { "tohex", tohex },
     { NULL, NULL }
 };
 
