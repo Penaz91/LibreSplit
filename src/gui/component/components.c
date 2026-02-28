@@ -29,6 +29,10 @@ LSComponentAvailable ls_available_components[] = {
 
 LSComponentAvailable* ls_components;
 
+/**
+ * Initializes the array of active components
+ * by reading the user settings
+ */
 void initialize_components(void)
 {
     SectionInfo* section = NULL;
