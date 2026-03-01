@@ -63,6 +63,7 @@ typedef struct ComponentsConfig {
     ConfigEntry detailed_timer;
     ConfigEntry prev_segment;
     ConfigEntry best_sum;
+    ConfigEntry comparison;
     ConfigEntry pb;
     ConfigEntry wr;
 } ComponentsConfig;

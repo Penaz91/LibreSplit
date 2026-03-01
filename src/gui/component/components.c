@@ -14,6 +14,7 @@ LSComponent* ls_component_prev_segment_new(void);
 LSComponent* ls_component_best_sum_new(void);
 LSComponent* ls_component_pb_new(void);
 LSComponent* ls_component_wr_new(void);
+LSComponent* ls_component_comparison_new(void);
 
 LSComponentAvailable ls_available_components[] = {
     { "title", ls_component_title_new },
@@ -22,6 +23,7 @@ LSComponentAvailable ls_available_components[] = {
     { "detailed_timer", ls_component_detailed_timer_new },
     { "prev_segment", ls_component_prev_segment_new },
     { "best_sum", ls_component_best_sum_new },
+    { "comparison", ls_component_comparison_new },
     { "pb", ls_component_pb_new },
     { "wr", ls_component_wr_new },
     { NULL, NULL }

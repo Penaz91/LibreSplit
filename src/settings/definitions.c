@@ -149,6 +149,12 @@ AppConfig cfg = {
             .value.b = true,
             .desc = "Previous Segment",
         },
+        .comparison = {
+            .key = "comparison",
+            .type = CFG_BOOL,
+            .value.b = false,
+            .desc = "Comparison",
+        },
         .best_sum = {
             .key = "best_sum",
             .type = CFG_BOOL,
