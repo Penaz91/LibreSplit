@@ -29,54 +29,41 @@ static LSComponentAvailable ls_available_components[] = {
     { NULL, NULL }
 };
 
-LSComponentAvailable* ls_components;
-
 /**
  * Initializes the array of active components
  * by reading the user settings
  */
-void initialize_components(void)
+LSComponentAvailable* initialize_components(void)
 {
-    SectionInfo* section = NULL;
-    for (size_t i = 0; i < sections_count; i++) {
-        section = (SectionInfo*)&sections[i];
-        if (strcmp(section->name, "components") == 0) {
-            break;
-        }
-    }
-    if (!section) {
-        printf("Cannot find components settings section.");
-        abort();
-    }
-    int components_count = 0;
-    for (size_t i = 0; i < section->count; i++) {
-        ConfigEntry entry = ((ConfigEntry*)section->entries)[i];
+    // Enumerate the active components
+    ComponentsConfig components = cfg.components;
+    int active_components_count = 0;
+    for (size_t i = 0; i < sizeof(components) / sizeof(ConfigEntry); i++) {
+        ConfigEntry entry = ((ConfigEntry*)&components)[i];
         if (entry.value.b) {
-            components_count++;
+            active_components_count++;
         }
     }
-    ls_components = malloc((components_count + 1) * sizeof(LSComponentAvailable));
+    LSComponentAvailable* ls_components = malloc((active_components_count + 1) * sizeof(LSComponentAvailable));
     if (!ls_components) {
         printf("Cannot allocate memory for components");
         abort();
     }
+    // Create the fitted, null-terminated ls_components array, containing the active components
     int compindex = 0;
-    for (size_t i = 0; i < sizeof(section->count); i++) {
-        ConfigEntry entry = ((ConfigEntry*)section->entries)[i];
+    for (size_t i = 0; i < sizeof(components) / sizeof(ConfigEntry); i++) {
+        ConfigEntry entry = ((ConfigEntry*)&components)[i];
         for (size_t j = 0; ls_available_components[j].name != NULL; j++) {
             if (strcmp(ls_available_components[j].name, entry.key) == 0) {
                 if (entry.value.b) {
                     ls_components[compindex] = ls_available_components[j];
                     compindex++;
                 }
+                continue;
             }
         }
     }
     ls_components[compindex].name = NULL;
     ls_components[compindex].new = NULL;
-}
-
-void deinitialize_components()
-{
-    free(ls_components);
+    return ls_components;
 }

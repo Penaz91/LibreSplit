@@ -40,7 +40,5 @@ typedef struct LSComponentAvailable {
 
 // A NULL-terminated array of all available components
 extern AppConfig cfg;
-extern LSComponentAvailable* ls_components;
 
-void initialize_components();
-void deinitialize_components();
+LSComponentAvailable* initialize_components(void);
