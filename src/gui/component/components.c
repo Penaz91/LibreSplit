@@ -16,7 +16,7 @@ LSComponent* ls_component_pb_new(void);
 LSComponent* ls_component_wr_new(void);
 LSComponent* ls_component_comparison_new(void);
 
-LSComponentAvailable ls_available_components[] = {
+static LSComponentAvailable ls_available_components[] = {
     { "title", ls_component_title_new },
     { "splits", ls_component_splits_new },
     { "timer", ls_component_timer_new },
