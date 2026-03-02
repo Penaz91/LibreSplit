@@ -47,7 +47,7 @@ void initialize_components(LSComponentAvailable** ls_components)
         }
     }
     *ls_components = malloc((active_components_count + 1) * sizeof(LSComponentAvailable));
-    if (!ls_components) {
+    if (!*ls_components) {
         printf("Cannot allocate memory for components");
         abort();
     }
