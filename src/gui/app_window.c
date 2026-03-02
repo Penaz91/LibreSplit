@@ -16,7 +16,6 @@
 #include <sys/stat.h>
 
 extern atomic_bool exit_requested; /*!< Set to 1 when LibreSplit is exiting */
-LSComponentAvailable* ls_components = NULL;
 
 static void ls_app_init(LSApp* app)
 {
@@ -390,6 +389,7 @@ static void ls_app_window_init(LSAppWindow* win)
 
     // Create all available components (TODO: change this in the future)
     win->components = NULL;
+    LSComponentAvailable* ls_components = NULL;
     initialize_components(&ls_components);
     for (i = 0; ls_components[i].name != NULL; i++) {
         LSComponent* component = ls_components[i].new();
