@@ -390,7 +390,7 @@ static void ls_app_window_init(LSAppWindow* win)
 
     // Create all available components (TODO: change this in the future)
     win->components = NULL;
-    ls_components = initialize_components();
+    initialize_components(&ls_components);
     for (i = 0; ls_components[i].name != NULL; i++) {
         LSComponent* component = ls_components[i].new();
         if (component) {

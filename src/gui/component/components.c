@@ -32,8 +32,10 @@ static LSComponentAvailable ls_available_components[] = {
 /**
  * Initializes the array of active components
  * by reading the user settings
+ *
+ * @param[out] ls_components The Array of Activated Components
  */
-LSComponentAvailable* initialize_components(void)
+void initialize_components(LSComponentAvailable** ls_components)
 {
     // Enumerate the active components
     ComponentsConfig components = cfg.components;
@@ -44,7 +46,7 @@ LSComponentAvailable* initialize_components(void)
             active_components_count++;
         }
     }
-    LSComponentAvailable* ls_components = malloc((active_components_count + 1) * sizeof(LSComponentAvailable));
+    *ls_components = malloc((active_components_count + 1) * sizeof(LSComponentAvailable));
     if (!ls_components) {
         printf("Cannot allocate memory for components");
         abort();
@@ -56,14 +58,13 @@ LSComponentAvailable* initialize_components(void)
         for (size_t j = 0; ls_available_components[j].name != NULL; j++) {
             if (strcmp(ls_available_components[j].name, entry.key) == 0) {
                 if (entry.value.b) {
-                    ls_components[compindex] = ls_available_components[j];
+                    (*ls_components)[compindex] = ls_available_components[j];
                     compindex++;
                 }
                 continue;
             }
         }
     }
-    ls_components[compindex].name = NULL;
-    ls_components[compindex].new = NULL;
-    return ls_components;
+    (*ls_components)[compindex].name = NULL;
+    (*ls_components)[compindex].new = NULL;
 }
