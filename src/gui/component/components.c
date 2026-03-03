@@ -61,7 +61,7 @@ void initialize_components(LSComponentAvailable** ls_components)
                     (*ls_components)[compindex] = ls_available_components[j];
                     compindex++;
                 }
-                continue;
+                break;
             }
         }
     }
