@@ -65,7 +65,6 @@ Here is a small list of the most commonly used functions:
 - `bit.rol(a, b)`: Performs a bitwise "right rotation" on the integer `a` by `b` bits;
 - `bit.bswap(a)`: Swap the bytes of `a` and return the result (useful for changing little ⟺  big endian);
 - `bit.tobit(a)`: Normalizes `a` to the numeric range for bit operations and returns it.
-- `bit.tohex(a, [n])`: Converts `a` into hex and returns it. Can accept a second argument to force the number of hex digits returned (up to 8 digits).
 - `tohex(a)`: Converts `a` into a hex string and returns it. This is a stand-in version to work around the 8-digit limitation of `bit.tohex`.
 
 See [The BitOp LuaJIT library documentation](http://bitop.luajit.org/api.html) for more detailed information.
