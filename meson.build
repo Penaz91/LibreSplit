@@ -40,6 +40,7 @@ libresplit_sources = files(
     # LASR
     'src/lasr/auto-splitter.c',
     'src/lasr/utils.c',
+    'src/lasr/functions/watcher.c',
     'src/lasr/maps/maps.c',
     'src/lasr/functions/bitwise.c',
     'src/lasr/functions/getBaseAddress.c',

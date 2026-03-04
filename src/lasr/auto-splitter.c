@@ -117,6 +117,8 @@ static const lasr_function luac_functions[] = {
     { "b_rshift", b_rshift },
     { "getMaps", getMaps },
     { "str2ida", str2ida },
+    { "addwatch", lua_watch },
+    { "updatewatcher", lua_updatewatcher },
     { NULL, NULL }
 };
 
