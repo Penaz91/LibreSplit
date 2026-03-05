@@ -71,7 +71,7 @@ void open_activated(GSimpleAction* action,
     } else {
         win = ls_app_window_new(LS_APP(app));
     }
-    if (win->timer->running) {
+    if (win->timer && win->timer->running) {
         GtkWidget* warning = gtk_message_dialog_new(
             GTK_WINDOW(win),
             GTK_DIALOG_MODAL,
@@ -350,7 +350,7 @@ void open_auto_splitter(GSimpleAction* action,
     } else {
         win = ls_app_window_new(LS_APP(app));
     }
-    if (win->timer->running) {
+    if (win->timer && win->timer->running) {
         GtkWidget* warning = gtk_message_dialog_new(
             GTK_WINDOW(win),
             GTK_DIALOG_MODAL,
