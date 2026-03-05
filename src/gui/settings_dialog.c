@@ -9,7 +9,7 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 
-static LSGuiSetting* gui_settings;
+static LSGuiSetting* gui_settings = NULL;
 
 /**
  * Takes the application config and counts how many settings are available.
@@ -46,6 +46,7 @@ static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpoint
 {
     gtk_widget_destroy(widget);
     free(gui_settings);
+    gui_settings = NULL;
     return TRUE;
 }
 
@@ -163,6 +164,10 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
 {
     int settings_number = enumerate_settings(cfg);
     gui_settings = malloc(settings_number * sizeof(LSGuiSetting));
+    if (gui_settings == NULL) {
+        printf("Cannot allocate memory for the settings GUI.");
+        return;
+    }
 
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "LibreSplit Settings");
