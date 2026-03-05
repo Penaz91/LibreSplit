@@ -27,6 +27,26 @@ typedef struct LSSplits {
 } LSSplits;
 extern LSComponentOps ls_splits_operations;
 
+void free_all(LSSplits* self_)
+{
+    LSSplits* self = (LSSplits*)self_;
+    if (self->split_rows) {
+        free(self->split_rows);
+    }
+    if (self->split_titles) {
+        free(self->split_titles);
+    }
+    if (self->split_icons) {
+        free(self->split_icons);
+    }
+    if (self->split_deltas) {
+        free(self->split_deltas);
+    }
+    if (self->split_times) {
+        free(self->split_times);
+    }
+}
+
 /**
  * Constructor
  */
@@ -152,28 +172,25 @@ static void splits_show_game(LSComponent* self_, const ls_game* game,
 
     self->split_titles = calloc(self->split_count, sizeof(GtkWidget*));
     if (!self->split_titles) {
-        free(self->split_rows);
+        free_all(self);
         return;
     }
 
     self->split_icons = calloc(self->split_count, sizeof(GtkWidget*));
-    if (!self->split_titles) {
-        free(self->split_rows);
+    if (!self->split_icons) {
+        free_all(self);
         return;
     }
 
     self->split_deltas = calloc(self->split_count, sizeof(GtkWidget*));
     if (!self->split_deltas) {
-        free(self->split_rows);
-        free(self->split_titles);
+        free_all(self);
         return;
     }
 
     self->split_times = calloc(self->split_count, sizeof(GtkWidget*));
     if (!self->split_times) {
-        free(self->split_rows);
-        free(self->split_titles);
-        free(self->split_deltas);
+        free_all(self);
         return;
     }
 
@@ -291,10 +308,7 @@ static void splits_clear_game(LSComponent* self_)
             self->split_rows[i]);
     }
     gtk_adjustment_set_value(self->split_adjust, 0);
-    free(self->split_rows);
-    free(self->split_titles);
-    free(self->split_deltas);
-    free(self->split_times);
+    free_all(self);
     self->split_count = 0;
 }
 
