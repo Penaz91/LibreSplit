@@ -245,6 +245,9 @@ void ls_game_release(const ls_game* game)
     if (game->split_times) {
         free(game->split_times);
     }
+    if (game->split_icon_paths) {
+        free(game->split_icon_paths);
+    }
     if (game->segment_times) {
         free(game->segment_times);
     }
