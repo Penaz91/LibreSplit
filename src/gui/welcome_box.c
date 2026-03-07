@@ -37,7 +37,6 @@ LSWelcomeBox* welcome_box_new(GtkWidget* container)
     self->welcome_lbl = gtk_label_new("Welcome to LibreSplit!\nNo split is currently loaded.\nRight click this window to open a split JSON file!");
     gtk_container_add(GTK_CONTAINER(self->box), self->welcome_lbl);
     gtk_container_add(GTK_CONTAINER(container), self->box);
-    g_signal_connect(self->box, "destroy", G_CALLBACK(welcome_box_destroy), NULL);
     return self;
 }
 
