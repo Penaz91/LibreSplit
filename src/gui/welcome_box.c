@@ -1,6 +1,6 @@
 #include "welcome_box.h"
-#include "glib-object.h"
 #include "utils.h"
+#include <glib-object.h>
 #include <gtk/gtk.h>
 #include <stdlib.h>
 
