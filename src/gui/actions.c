@@ -7,6 +7,7 @@
 #include "src/logging.h"
 #include "src/settings/settings.h"
 #include <gtk/gtk.h>
+#include <stdatomic.h>
 #include <sys/stat.h>
 
 /**
@@ -272,6 +273,8 @@ void quit_activated(GSimpleAction* action,
         app = parameter;
     }
 
+    atomic_store(&exit_requested, 1);
+    LOG_DEBUG("Exit request sent to threads");
     windows = gtk_application_get_windows(GTK_APPLICATION(app));
     if (windows) {
         win = LS_APP_WINDOW(windows->data);
