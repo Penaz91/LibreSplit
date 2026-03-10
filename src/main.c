@@ -13,6 +13,7 @@
 #include <linux/limits.h>
 #include <stdatomic.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/prctl.h>
 #include <sys/stat.h>
@@ -86,8 +87,10 @@ static void* ls_auto_splitter(void* arg)
             run_auto_splitter();
         }
         atomic_store(&auto_splitter_running, false);
-        if (atomic_load(&exit_requested))
+        if (atomic_load(&exit_requested)) {
+            LOG_DEBUG("Exit requested, shutting down Auto Splitter Thread");
             return 0;
+        }
         usleep(50000);
     }
     return NULL;
@@ -96,6 +99,9 @@ static void* ls_auto_splitter(void* arg)
 int main(int argc, char* argv[])
 {
     initLogQueue();
+    if (atexit(close_logger) != 0) {
+        fprintf(stderr, "Unable to register logger cleanup at exit.");
+    }
     LOG_INFOF("Starting LibreSplit - version %s", APP_VERSION);
     check_directories();
 

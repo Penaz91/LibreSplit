@@ -4,6 +4,7 @@
 #include "src/gui/timer.h"
 #include "src/lasr/auto-splitter.h"
 #include "src/lasr/utils.h"
+#include "src/logging.h"
 #include "src/settings/settings.h"
 #include <gtk/gtk.h>
 #include <sys/stat.h>
@@ -264,6 +265,7 @@ void quit_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
 {
+    LOG_INFO("Exiting LibreSplit. GG!");
     GList* windows;
     LSAppWindow* win;
     if (parameter != NULL) {

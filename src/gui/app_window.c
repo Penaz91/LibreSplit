@@ -213,6 +213,7 @@ static void ls_app_window_class_init(LSAppWindowClass* class)
  */
 void ls_app_window_destroy(GtkWidget* widget, gpointer data)
 {
+    LOG_INFO("Exiting LibreSplit. GG!");
     LSAppWindow* win = (LSAppWindow*)widget;
     if (win->timer) {
         ls_timer_release(win->timer);
@@ -224,6 +225,7 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
     }
     atomic_store(&auto_splitter_enabled, 0);
     atomic_store(&exit_requested, 1);
+    LOG_DEBUG("Exit request sent to threads");
     close_logger();
     // Close any other open application windows (settings, dialogs, etc.)
     GApplication* app = g_application_get_default();
