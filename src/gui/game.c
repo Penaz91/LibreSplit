@@ -1,6 +1,7 @@
 #include "game.h"
 #include "src/gui/component/components.h"
 #include "src/gui/theming.h"
+#include "src/logging.h"
 #include "src/settings/definitions.h"
 
 extern AppConfig cfg;
@@ -12,6 +13,7 @@ extern AppConfig cfg;
  */
 void ls_app_window_clear_game(LSAppWindow* win)
 {
+    LOG_DEBUG("Clearing Game...");
     GList* l;
 
     gtk_widget_hide(win->box);
@@ -35,6 +37,7 @@ void ls_app_window_clear_game(LSAppWindow* win)
  */
 void ls_app_window_show_game(LSAppWindow* win)
 {
+    LOG_DEBUG("Showing Game...");
     GList* l;
 
     // set dimensions
