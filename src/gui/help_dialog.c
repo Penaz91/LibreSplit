@@ -1,16 +1,32 @@
 #include "help_dialog.h"
 #include "gdk-pixbuf/gdk-pixbuf.h"
+#include "src/logging.h"
 #include <gtk/gtk.h>
 #include <stdio.h>
 
+/**
+ * Help window destructor.
+ *
+ * @param widget The GTK Help Window;
+ * @param event The Destruction event
+ * @param user_data Unused.
+ */
 static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpointer user_data)
 {
+    LOG_DEBUG("Destroying Help Window...");
     gtk_widget_destroy(widget);
     return TRUE;
 }
 
+/**
+ * Builds the help window
+ *
+ * @param app The LibreSplit GTK Application
+ * @param data Unused
+ */
 static void build_help_dialog(GtkApplication* app, gpointer data)
 {
+    LOG_DEBUG("Opening Help Window...");
     GtkWidget* window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "About LibreSplit");
     gtk_window_set_default_size(GTK_WINDOW(window), 200, 320);
@@ -30,7 +46,7 @@ static void build_help_dialog(GtkApplication* app, gpointer data)
 
     GdkPixbuf* pixbuf = gtk_icon_theme_load_icon(theme, "libresplit", 200, 0, &err);
     if (!pixbuf) {
-        g_printerr("Icon load failed: %s\n", err ? err->message : "unknown error");
+        LOG_WARNF("Icon load failed: %s", err ? err->message : "unknown error");
         if (err)
             g_error_free(err);
         return;
@@ -71,6 +87,13 @@ static void build_help_dialog(GtkApplication* app, gpointer data)
     gtk_window_present(GTK_WINDOW(window));
 }
 
+/**
+ * Action recalled by the context menu to show the help dialog.
+ *
+ * @param action Unused
+ * @param parameter The LibreSplit GTK app (if not NULL)
+ * @param app The LibreSplit GTK app (fallback)
+ */
 void show_help_dialog(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
     if (parameter != NULL) {
