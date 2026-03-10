@@ -64,7 +64,7 @@ gboolean ls_app_window_resize(GtkWidget* widget,
     GdkEvent* event,
     gpointer data)
 {
-    LOG_DEBUG("Resize signal received");
+    LOG_DEBUG("Configure signal received: size, position of stacking of the window changed...");
     LSAppWindow* win = (LSAppWindow*)widget;
     resize_window(win, event->configure.width, event->configure.height);
     return FALSE;
