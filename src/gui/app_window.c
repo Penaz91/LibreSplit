@@ -226,7 +226,6 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
     atomic_store(&auto_splitter_enabled, 0);
     atomic_store(&exit_requested, 1);
     LOG_DEBUG("Exit request sent to threads");
-    close_logger();
     // Close any other open application windows (settings, dialogs, etc.)
     GApplication* app = g_application_get_default();
     if (app) {
@@ -240,6 +239,7 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
         }
         g_list_free(snapshot);
     }
+    exit(0);
 }
 
 /**
