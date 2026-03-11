@@ -3,6 +3,7 @@
 #include "keybinds/keybinds_callbacks.h"
 #include "lasr/auto-splitter.h"
 #include "logging.h"
+#include "plugins/plugin_loading.h"
 #include "server.h"
 #include "settings/utils.h"
 #include "shared.h"
@@ -91,6 +92,7 @@ int main(int argc, char* argv[])
 {
     initLogQueue();
     check_directories();
+    load_plugins();
 
     g_app = ls_app_new();
     pthread_t t1; // Auto-splitter thread
