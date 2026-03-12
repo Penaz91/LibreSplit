@@ -6,6 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * Extracts the plugin metadata from the shared object without executing its code.
+ *
+ * @param[in] path The path to the plugin
+ * @param[out] name The name of the plugin
+ * @param[out] description The description of the plugin
+ * @param[out] version The version of the plugin
+ * @param[out] author The author of the plugin
+ *
+ * @returns 0 if everything went well. An error code otherwise.
+ */
 static int get_plugin_metadata(const char* path, char** name, char** description, char** version, char** author)
 {
     // Loads the plugin lazily, not executing any code
@@ -35,6 +46,9 @@ static int get_plugin_metadata(const char* path, char** name, char** description
     return 0;
 }
 
+/**
+ * General function that loads plugins
+ */
 void load_plugins(void)
 {
     // TODO: [Penaz] [2026-03-11] Change to use XDG_DIRS
@@ -61,12 +75,49 @@ void load_plugins(void)
         char *name = NULL, *desc = NULL, *version = NULL, *author = NULL;
         if (get_plugin_metadata(path, &name, &desc, &version, &author) == 0) {
             LOG_INFOF("Found plugin: %s (v%s) by %s - %s", name, version, author, desc);
-            // TODO: [Penaz] [2026-03-11] Really load the plugins instead of showing their metadata
             free(name);
             free(desc);
             free(version);
             free(author);
+            // TODO: [Penaz] [2026-03-12] Make this optional according to user settings
+            initialize_plugin(path);
         }
     }
     closedir(dir);
+}
+
+/**
+ * Takes a path to a .so file and calls its "plug_init" function.
+ *
+ * @param[in] path The path to the plugin.
+ *
+ * @returns 0 if everything goes well or an error code otherwise.
+ */
+int initialize_plugin(const char* path)
+{
+    void* handle = dlopen(path, RTLD_NOW);
+    if (!handle) {
+        LOG_WARNF("Unable to open plugin %s: %s", path, dlerror());
+        return -1;
+    }
+
+    void* sym = dlsym(handle, "plug_init");
+
+    union fn_ptr u;
+    u.obj = sym;
+    plugin_init_fn init_function = u.fn;
+
+    if (!init_function) {
+        LOG_WARNF("Cannot load plugin init function: %s", path);
+        dlclose(handle);
+        return -1;
+    }
+
+    if (init_function() != 0) {
+        LOG_WARNF("Plugin init function failed: %s", path);
+        dlclose(handle);
+        return -1;
+    }
+
+    return 0;
 }
