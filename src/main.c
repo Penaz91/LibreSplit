@@ -8,6 +8,7 @@
 #include "settings/utils.h"
 #include "shared.h"
 #include "src/keybinds/delayed_callbacks.h"
+#include "src/plugins/plugin_utils.h"
 
 #include <gtk/gtk.h>
 #include <jansson.h>
@@ -92,6 +93,7 @@ int main(int argc, char* argv[])
 {
     initLogQueue();
     check_directories();
+    init_external_lasr_functions();
     load_plugins();
 
     g_app = ls_app_new();

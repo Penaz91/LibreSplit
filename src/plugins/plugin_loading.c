@@ -1,10 +1,15 @@
 #include "plugin_loading.h"
 #include "../logging.h"
+#include "plugin_utils.h"
 #include <dirent.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+PlugAPI api = {
+    .register_lua_function = register_lua_function
+};
 
 /**
  * Extracts the plugin metadata from the shared object without executing its code.
@@ -113,7 +118,7 @@ int initialize_plugin(const char* path)
         return -1;
     }
 
-    if (init_function() != 0) {
+    if (init_function(&api) != 0) {
         LOG_WARNF("Plugin init function failed: %s", path);
         dlclose(handle);
         return -1;

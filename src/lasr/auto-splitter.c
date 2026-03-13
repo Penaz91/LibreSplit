@@ -6,6 +6,7 @@
 
 #include "./maps/maps.h"
 #include "functions.h"
+#include "src/logging.h"
 #include "utils.h"
 
 #include <lauxlib.h>
@@ -14,6 +15,7 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -99,7 +101,7 @@ static const luaL_Reg lj_lib_load[] = {
  *
  * Must be NULL-terminated.
  */
-static const lasr_function luac_functions[] = {
+static const lasr_function default_luac_functions[] = {
     { "process", find_process_id },
     { "getBaseAddress", getBaseAddress },
     { "readAddress", readAddress },
@@ -119,6 +121,45 @@ static const lasr_function luac_functions[] = {
     { "str2ida", str2ida },
     { NULL, NULL }
 };
+
+lasr_function* luac_functions = NULL;
+
+void init_lasr_functions(void)
+{
+    // FIXME: [Penaz] [2026-03-13] Remember to free the luac_functions array!
+    LOG_DEBUG("Malloc-ing lua_functions");
+    luac_functions = malloc(sizeof(default_luac_functions) + sizeof(*external_luac_functions) - 1);
+    if (!luac_functions) {
+        LOG_ERR("Unable to allocate memory for Lua C functions");
+        abort();
+    }
+    // Copy default functions
+    int i = 0;
+    for (i = 0; default_luac_functions[i].function_name != NULL; i++) {
+        LOG_DEBUGF("Copying over %s", default_luac_functions[i].function_name);
+        // FIXME: [Penaz] [2026-03-13] Remember to free all names!
+        luac_functions[i].function_name = strdup(default_luac_functions[i].function_name);
+        if (!luac_functions[i].function_name) {
+            LOG_ERRF("Unable to allocate memory for Lua C function name: %s", default_luac_functions[i].function_name);
+            abort();
+        }
+        luac_functions[i].function_ptr = default_luac_functions[i].function_ptr;
+        LOG_DEBUGF("Copied over %s", luac_functions[i].function_name);
+    }
+    for (int j = 0; external_luac_functions[j].function_name != NULL; j++, i++) {
+        LOG_DEBUGF("Copying over %s", external_luac_functions[j].function_name);
+        // FIXME: [Penaz] [2026-03-13] Remember to free all names!
+        luac_functions[i].function_name = strdup(external_luac_functions[j].function_name);
+        if (!luac_functions[i].function_name) {
+            LOG_ERRF("Unable to allocate memory for Lua C function name: %s", external_luac_functions[j].function_name);
+            abort();
+        }
+        luac_functions[i].function_ptr = external_luac_functions[j].function_ptr;
+        LOG_DEBUGF("Copied over %s", luac_functions[i].function_name);
+    }
+    luac_functions[i].function_name = NULL;
+    luac_functions[i].function_ptr = NULL;
+}
 
 /**
  * Registers the Lua Auto Split Runtime functions.
@@ -446,6 +487,7 @@ void run_auto_splitter(void)
     lua_State* L = luaL_newstate();
     luaL_openlibs(L);
     disable_functions(L, disabled_functions);
+    init_lasr_functions();
     push_lasr_functions(L, luac_functions);
 
     char current_file[PATH_MAX];

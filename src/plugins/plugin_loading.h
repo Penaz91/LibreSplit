@@ -1,9 +1,10 @@
 #pragma once
+#include "plugin_utils.h"
 
 /**
  * A "plugin init function" type.
  */
-typedef int (*plugin_init_fn)(void);
+typedef int (*plugin_init_fn)(PlugAPI*);
 
 /**
  * Union used to convert between void* and plugin_init_fn
