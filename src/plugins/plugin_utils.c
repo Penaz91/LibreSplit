@@ -24,6 +24,11 @@ int register_lua_function(const char* name, lua_CFunction fn)
         // Resize array if too small
         external_luac_function_size *= 2;
         external_luac_functions = realloc(external_luac_functions, external_luac_function_size * sizeof(struct lasr_function));
+        if (!external_luac_functions) {
+            LOG_ERR("Cannot reallocate external Lua C function array");
+            free(external_luac_functions);
+            abort();
+        }
     }
     // Add the new function to the array
     external_luac_functions[external_luac_function_count].function_name = strdup(name);
