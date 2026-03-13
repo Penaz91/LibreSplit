@@ -43,6 +43,7 @@ libresplit_sources = files(
 
     # Plugins
     'src/plugins/plugin_loading.c',
+    'src/plugins/plugin_utils.c',
 
     # LASR
     'src/lasr/auto-splitter.c',
