@@ -85,6 +85,8 @@ void load_plugins(void)
             free(version);
             free(author);
             // TODO: [Penaz] [2026-03-12] Make this optional according to user settings
+            // FIXME: [Penaz] [2026-03-14] Remember to dlclose at the end
+            // ^ This means keeping tabs of the loaded plugins
             initialize_plugin(path);
         }
     }
