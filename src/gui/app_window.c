@@ -127,7 +127,7 @@ void ls_app_activate(GApplication* app)
 {
     LOG_DEBUG("Initializing configuration");
     if (!config_init()) {
-        LOG_INFO("Configuration failed to load, will use defaults");
+        LOG_WARN("Configuration failed to load, will use defaults");
     }
 
     LSAppWindow* win;
