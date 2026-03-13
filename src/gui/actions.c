@@ -284,7 +284,7 @@ void quit_activated(GSimpleAction* action,
     if (win->welcome_box) {
         welcome_box_destroy(win->welcome_box);
     }
-    exit(0);
+    ls_app_window_destroy(GTK_WIDGET(win), NULL);
 }
 
 /**
