@@ -1,4 +1,5 @@
 #include "src/gui/actions.h"
+#include "gio/gio.h"
 #include "src/gui/app_window.h"
 #include "src/gui/game.h"
 #include "src/gui/timer.h"
@@ -284,7 +285,8 @@ void quit_activated(GSimpleAction* action,
     if (win->welcome_box) {
         welcome_box_destroy(win->welcome_box);
     }
-    ls_app_window_destroy(GTK_WIDGET(win), NULL);
+    gtk_widget_destroy(GTK_WIDGET(win));
+    g_application_quit(G_APPLICATION(app));
 }
 
 /**

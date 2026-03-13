@@ -1,4 +1,5 @@
 #include "app_window.h"
+#include "glib-object.h"
 #include "src/gui/actions.h"
 #include "src/gui/component/components.h"
 #include "src/gui/context_menu.h"
@@ -239,7 +240,8 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
         }
         g_list_free(snapshot);
     }
-    exit(0);
+    close_logger();
+    g_application_quit(G_APPLICATION(app));
 }
 
 /**

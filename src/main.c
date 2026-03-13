@@ -99,9 +99,6 @@ static void* ls_auto_splitter(void* arg)
 int main(int argc, char* argv[])
 {
     initLogQueue();
-    if (atexit(close_logger) != 0) {
-        fprintf(stderr, "Unable to register logger cleanup at exit.");
-    }
     LOG_INFOF("Starting LibreSplit - version %s", APP_VERSION);
     check_directories();
 
