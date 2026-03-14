@@ -126,9 +126,8 @@ lasr_function* luac_functions = NULL;
 
 void init_lasr_functions(void)
 {
-    // FIXME: [Penaz] [2026-03-13] Remember to free the luac_functions array!
     LOG_DEBUG("Malloc-ing lua_functions");
-    luac_functions = malloc(sizeof(default_luac_functions) + sizeof(*external_luac_functions) - 1);
+    luac_functions = malloc(sizeof(default_luac_functions) + sizeof(*external_luac_functions));
     if (!luac_functions) {
         LOG_ERR("Unable to allocate memory for Lua C functions");
         abort();
@@ -137,7 +136,6 @@ void init_lasr_functions(void)
     int i = 0;
     for (i = 0; default_luac_functions[i].function_name != NULL; i++) {
         LOG_DEBUGF("Copying over %s", default_luac_functions[i].function_name);
-        // FIXME: [Penaz] [2026-03-13] Remember to free all names!
         luac_functions[i].function_name = strdup(default_luac_functions[i].function_name);
         if (!luac_functions[i].function_name) {
             LOG_ERRF("Unable to allocate memory for Lua C function name: %s", default_luac_functions[i].function_name);
@@ -148,23 +146,25 @@ void init_lasr_functions(void)
     }
     for (int j = 0; external_luac_functions[j].function_name != NULL; j++, i++) {
         LOG_DEBUGF("Copying over %s", external_luac_functions[j].function_name);
-        // FIXME: [Penaz] [2026-03-13] Remember to free all names!
         luac_functions[i].function_name = strdup(external_luac_functions[j].function_name);
         if (!luac_functions[i].function_name) {
             LOG_ERRF("Unable to allocate memory for Lua C function name: %s", external_luac_functions[j].function_name);
             abort();
         }
         luac_functions[i].function_ptr = external_luac_functions[j].function_ptr;
+        // We don't need the external_luac_functions array anymore after initialization
+        free(external_luac_functions[j].function_name);
+        external_luac_functions[j].function_ptr = NULL;
         LOG_DEBUGF("Copied over %s", luac_functions[i].function_name);
     }
     luac_functions[i].function_name = NULL;
     luac_functions[i].function_ptr = NULL;
+    // We're done with the external functions
+    free(external_luac_functions);
 }
 
 /**
  * Frees memory taken by the luac_functions array.
- *
- * NOTE: Currently unused
  */
 void unregister_luac_functions(void)
 {
@@ -503,7 +503,6 @@ void run_auto_splitter(void)
     lua_State* L = luaL_newstate();
     luaL_openlibs(L);
     disable_functions(L, disabled_functions);
-    init_lasr_functions();
     push_lasr_functions(L, luac_functions);
 
     char current_file[PATH_MAX];

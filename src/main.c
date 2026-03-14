@@ -76,6 +76,7 @@ void handle_ctl_command(CTLCommand command)
 static void* ls_auto_splitter(void* arg)
 {
     prctl(PR_SET_NAME, "LS LASR", 0, 0, 0);
+    init_lasr_functions();
     while (1) {
         if (atomic_load(&auto_splitter_enabled) && auto_splitter_file[0] != '\0') {
             atomic_store(&auto_splitter_running, true);
@@ -86,6 +87,7 @@ static void* ls_auto_splitter(void* arg)
             return 0;
         usleep(50000);
     }
+    unregister_luac_functions();
     return NULL;
 }
 

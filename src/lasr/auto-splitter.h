@@ -33,6 +33,9 @@ struct lasr_function {
 
 void check_directories(void);
 void run_auto_splitter(void);
+void init_lasr_functions(void);
+void init_external_lasr_functions(void);
+void unregister_luac_functions(void);
 
 extern int external_luac_function_count;
 extern int external_luac_function_size;
