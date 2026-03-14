@@ -1,5 +1,4 @@
 #include "app_window.h"
-#include "glib-object.h"
 #include "src/gui/actions.h"
 #include "src/gui/component/components.h"
 #include "src/gui/context_menu.h"
@@ -13,6 +12,7 @@
 #include "src/settings/settings.h"
 #include "src/settings/utils.h"
 #include "src/timer.h"
+#include <glib-object.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <sys/stat.h>
