@@ -162,6 +162,22 @@ void init_lasr_functions(void)
 }
 
 /**
+ * Frees memory taken by the luac_functions array.
+ *
+ * NOTE: Currently unused
+ */
+void unregister_luac_functions(void)
+{
+    for (int i = 0; luac_functions[i].function_name != NULL; i++) {
+        LOG_DEBUGF("Unregistering Lua C function %s", luac_functions[i].function_name);
+        free(luac_functions[i].function_name);
+        luac_functions[i].function_ptr = NULL;
+    }
+    // After freeing memory, we free the array itself.
+    free(luac_functions);
+}
+
+/**
  * Registers the Lua Auto Split Runtime functions.
  *
  * @param L The lua Stack
@@ -559,6 +575,9 @@ void run_auto_splitter(void)
         clock_gettime(CLOCK_MONOTONIC, &clock_start);
 
         if (!atomic_load(&auto_splitter_enabled) || strcmp(current_file, auto_splitter_file) != 0 || !process_exists() || process.pid == 0) {
+            // NOTE: [Penaz] [2026-03-14] Here we can decide what to do when a game detaches.
+            // ^ maybe we should divide it between "process_exists()" (auto splitter active but not connected)
+            // ^ and the other cases (autosplitter disabled, process not found, changed auto splitter).
             break;
         }
 
