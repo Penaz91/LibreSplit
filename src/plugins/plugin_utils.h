@@ -32,9 +32,11 @@ typedef enum HookableEvent {
 } HookableEvent;
 
 typedef int (*register_lua_func)(const char*, lua_CFunction);
+typedef int (*register_event_func)(HookableEvent event, timer_hook_func fn);
 
 typedef struct PlugAPI {
     register_lua_func register_lua_function;
+    register_event_func register_event_hook;
 } PlugAPI;
 
 int register_lua_function(const char* name, lua_CFunction);

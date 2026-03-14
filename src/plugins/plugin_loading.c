@@ -8,7 +8,8 @@
 #include <string.h>
 
 PlugAPI api = {
-    .register_lua_function = register_lua_function
+    .register_lua_function = register_lua_function,
+    .register_event_hook = register_event_hook
 };
 
 /**

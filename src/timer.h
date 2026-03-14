@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/settings/definitions.h"
+#include "settings/definitions.h"
 #include <stdatomic.h>
 #include <stdbool.h>
 
