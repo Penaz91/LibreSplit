@@ -978,6 +978,9 @@ int ls_timer_start(ls_timer* timer)
         timer->running = true;
         atomic_store(&run_running, true);
     }
+    for (int i = 0; i < start_hooks.count; i++) {
+        start_hooks.functions[i](timer);
+    }
     return timer->running;
 }
 
@@ -1037,6 +1040,9 @@ int ls_timer_split(ls_timer* timer)
             ls_run_save(timer, "FINISHED");
         }
     }
+    for (int i = 0; i < split_hooks.count; i++) {
+        split_hooks.functions[i](timer);
+    }
     return timer->curr_split;
 }
 
@@ -1065,6 +1071,9 @@ int ls_timer_skip(ls_timer* timer)
     timer->split_info[timer->curr_split] = 0;
     timer->segment_times[timer->curr_split] = 0;
     timer->segment_deltas[timer->curr_split] = 0;
+    for (int i = 0; i < skip_hooks.count; i++) {
+        skip_hooks.functions[i](timer);
+    }
     return ++timer->curr_split;
 }
 
@@ -1092,6 +1101,9 @@ int ls_timer_unsplit(ls_timer* timer)
         timer->running = true;
         atomic_store(&run_running, true);
     }
+    for (int i = 0; i < unsplit_hooks.count; i++) {
+        unsplit_hooks.functions[i](timer);
+    }
     return timer->curr_split;
 }
 
@@ -1103,6 +1115,9 @@ int ls_timer_unsplit(ls_timer* timer)
 void ls_timer_pause(ls_timer* timer)
 {
     timer->loading = 1;
+    for (int i = 0; i < pause_hooks.count; i++) {
+        pause_hooks.functions[i](timer);
+    }
 }
 
 /**
@@ -1113,6 +1128,9 @@ void ls_timer_pause(ls_timer* timer)
 void ls_timer_unpause(ls_timer* timer)
 {
     timer->loading = 0;
+    for (int i = 0; i < unpause_hooks.count; i++) {
+        unpause_hooks.functions[i](timer);
+    }
 }
 
 /**
@@ -1124,6 +1142,9 @@ void ls_timer_stop(ls_timer* timer)
 {
     timer->running = false;
     atomic_store(&run_running, false);
+    for (int i = 0; i < stop_hooks.count; i++) {
+        stop_hooks.functions[i](timer);
+    }
 }
 
 /**
@@ -1161,6 +1182,10 @@ int ls_timer_reset(ls_timer* timer)
         }
     }
 
+    for (int i = 0; i < reset_hooks.count; i++) {
+        reset_hooks.functions[i](timer);
+    }
+
     reset_timer(timer);
     return 1;
 }
@@ -1181,6 +1206,9 @@ int ls_timer_cancel(ls_timer* timer)
         if (*timer->attempt_count > 0) {
             --*timer->attempt_count;
         }
+    }
+    for (int i = 0; i < cancel_hooks.count; i++) {
+        cancel_hooks.functions[i](timer);
     }
     reset_timer(timer);
     return 1;
