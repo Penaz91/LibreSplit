@@ -2,9 +2,7 @@
 #include "../lasr/auto-splitter.h"
 #include "lua.h"
 
-extern int external_luac_function_count;
-extern int external_luac_function_size;
-extern lasr_function* external_luac_functions;
+extern ExternalLASRFunctionRegistry external_lasr_functions;
 
 /*! \enum event
  *

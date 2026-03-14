@@ -123,11 +123,16 @@ static const lasr_function default_luac_functions[] = {
 };
 
 lasr_function* luac_functions = NULL;
+ExternalLASRFunctionRegistry external_lasr_functions = {
+    .size = 2,
+    .count = 0,
+    .functions = NULL
+};
 
 void init_lasr_functions(void)
 {
     LOG_DEBUG("Malloc-ing lua_functions");
-    luac_functions = malloc(sizeof(default_luac_functions) + sizeof(*external_luac_functions));
+    luac_functions = malloc(sizeof(default_luac_functions) + sizeof(*external_lasr_functions.functions));
     if (!luac_functions) {
         LOG_ERR("Unable to allocate memory for Lua C functions");
         abort();
@@ -144,23 +149,23 @@ void init_lasr_functions(void)
         luac_functions[i].function_ptr = default_luac_functions[i].function_ptr;
         LOG_DEBUGF("Copied over %s", luac_functions[i].function_name);
     }
-    for (int j = 0; external_luac_functions[j].function_name != NULL; j++, i++) {
-        LOG_DEBUGF("Copying over %s", external_luac_functions[j].function_name);
-        luac_functions[i].function_name = strdup(external_luac_functions[j].function_name);
+    for (int j = 0; external_lasr_functions.functions[j].function_name != NULL; j++, i++) {
+        LOG_DEBUGF("Copying over %s", external_lasr_functions.functions[j].function_name);
+        luac_functions[i].function_name = strdup(external_lasr_functions.functions[j].function_name);
         if (!luac_functions[i].function_name) {
-            LOG_ERRF("Unable to allocate memory for Lua C function name: %s", external_luac_functions[j].function_name);
+            LOG_ERRF("Unable to allocate memory for Lua C function name: %s", external_lasr_functions.functions[j].function_name);
             abort();
         }
-        luac_functions[i].function_ptr = external_luac_functions[j].function_ptr;
-        // We don't need the external_luac_functions array anymore after initialization
-        free(external_luac_functions[j].function_name);
-        external_luac_functions[j].function_ptr = NULL;
+        luac_functions[i].function_ptr = external_lasr_functions.functions[j].function_ptr;
+        // We don't need the external_lasr_functions.functions array anymore after initialization
+        free(external_lasr_functions.functions[j].function_name);
+        external_lasr_functions.functions[j].function_ptr = NULL;
         LOG_DEBUGF("Copied over %s", luac_functions[i].function_name);
     }
     luac_functions[i].function_name = NULL;
     luac_functions[i].function_ptr = NULL;
     // We're done with the external functions
-    free(external_luac_functions);
+    free(external_lasr_functions.functions);
 }
 
 /**

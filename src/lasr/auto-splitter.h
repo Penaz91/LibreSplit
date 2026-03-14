@@ -31,12 +31,16 @@ struct lasr_function {
     lua_CFunction function_ptr; /*!< C Function to be executed */
 } typedef lasr_function;
 
+typedef struct _ExternalLASRFunctionRegistry {
+    int count;
+    int size;
+    lasr_function* functions;
+} ExternalLASRFunctionRegistry;
+
 void check_directories(void);
 void run_auto_splitter(void);
 void init_lasr_functions(void);
 void init_external_lasr_functions(void);
 void unregister_luac_functions(void);
 
-extern int external_luac_function_count;
-extern int external_luac_function_size;
-extern lasr_function* external_luac_functions;
+extern ExternalLASRFunctionRegistry external_lasr_functions;
