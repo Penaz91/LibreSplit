@@ -81,7 +81,6 @@ void timer_start(LSAppWindow* win)
             component->ops->start_split(component, win->timer);
         }
     }
-    // TODO: [Penaz] [2026-03-14] "Timer Start" plugin functions for loop here
 }
 
 /**
@@ -138,7 +137,6 @@ void timer_cancel_run(LSAppWindow* win)
             component->ops->cancel_run(component, win->timer);
         }
     }
-    // TODO: [Penaz] [2026-03-14] "Run cancelled" plugin functions for loop here
 }
 
 /**
@@ -158,7 +156,6 @@ void timer_skip(LSAppWindow* win)
             component->ops->skip(component, win->timer);
         }
     }
-    // TODO: [Penaz] [2026-03-14] "Timer Skip" plugin functions for loop here
 }
 
 /**
@@ -179,7 +176,6 @@ void timer_unsplit(LSAppWindow* win)
             component->ops->unsplit(component, win->timer);
         }
     }
-    // TODO: [Penaz] [2026-03-14] Unsplit plugin functions for loop here
 }
 
 /**
@@ -200,7 +196,6 @@ void timer_split(LSAppWindow* win)
             component->ops->start_split(component, win->timer);
         }
     }
-    // TODO: [Penaz] [2026-03-14] Split plugin functions for loop here
 }
 
 /**
@@ -223,7 +218,6 @@ void timer_pause(LSAppWindow* win)
             component->ops->pause(component, win->timer);
         }
     }
-    // TODO: [Penaz] [2026-03-14] Pause plugin functions for loop here
 }
 
 /**
@@ -246,7 +240,6 @@ void timer_unpause(LSAppWindow* win)
             component->ops->unpause(component, win->timer);
         }
     }
-    // TODO: [Penaz] [2026-03-14] Unpause plugin functions for loop here
 }
 
 /**
@@ -269,5 +262,4 @@ void timer_stop(LSAppWindow* win)
             component->ops->stop_reset(component, win->timer);
         }
     }
-    // TODO: [Penaz] [2026-03-14] "Timer Stop" plugin functions for loop here
 }
