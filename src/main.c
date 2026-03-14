@@ -9,6 +9,7 @@
 #include "shared.h"
 #include "src/keybinds/delayed_callbacks.h"
 #include "src/plugins/plugin_utils.h"
+#include "src/timer.h"
 
 #include <gtk/gtk.h>
 #include <jansson.h>
@@ -96,6 +97,8 @@ int main(int argc, char* argv[])
     initLogQueue();
     check_directories();
     init_external_lasr_functions();
+    // FIXME: [Penaz] [2026-03-14] Needs the be freed at program close
+    init_timer_registries();
     load_plugins();
 
     g_app = ls_app_new();

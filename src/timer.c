@@ -7,6 +7,7 @@
 #include "settings/utils.h"
 
 #include "lasr/auto-splitter.h"
+#include "logging.h"
 
 #include <jansson.h>
 #include <limits.h>
@@ -17,13 +18,68 @@
 #include <string.h>
 #include <time.h>
 
+TimerHookRegistry start_hooks = {
+    .count = 0,
+    .size = 2,
+    .functions = NULL
+};
+
+TimerHookRegistry stop_hooks = {
+    .count = 0,
+    .size = 2,
+    .functions = NULL
+};
+
+TimerHookRegistry split_hooks = {
+    .count = 0,
+    .size = 2,
+    .functions = NULL
+};
+
+TimerHookRegistry reset_hooks = {
+    .count = 0,
+    .size = 2,
+    .functions = NULL
+};
+
+TimerHookRegistry cancel_hooks = {
+    .count = 0,
+    .size = 2,
+    .functions = NULL
+};
+
+TimerHookRegistry skip_hooks = {
+    .count = 0,
+    .size = 2,
+    .functions = NULL
+};
+
+TimerHookRegistry unsplit_hooks = {
+    .count = 0,
+    .size = 2,
+    .functions = NULL
+};
+
+TimerHookRegistry pause_hooks = {
+    .count = 0,
+    .size = 2,
+    .functions = NULL
+};
+
+TimerHookRegistry unpause_hooks = {
+    .count = 0,
+    .size = 2,
+    .functions = NULL
+};
+
 /**
  * Returns the current time, taken from a monotonic clock
  * (a clock that is not affected by leap seconds or daylight savings).
  *
  * @return The current time, in milliseconds
  */
-static long long ls_time_now(void)
+static long long
+ls_time_now(void)
 {
     struct timespec timespec;
     clock_gettime(CLOCK_MONOTONIC, &timespec);
@@ -1128,4 +1184,42 @@ int ls_timer_cancel(ls_timer* timer)
     }
     reset_timer(timer);
     return 1;
+}
+
+void init_timer_registries(void)
+{
+    LOG_DEBUG("Initializing timer hook registries");
+    start_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    start_hooks.functions[0] = NULL;
+    stop_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    stop_hooks.functions[0] = NULL;
+    split_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    split_hooks.functions[0] = NULL;
+    reset_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    reset_hooks.functions[0] = NULL;
+    cancel_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    cancel_hooks.functions[0] = NULL;
+    skip_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    skip_hooks.functions[0] = NULL;
+    unsplit_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    unsplit_hooks.functions[0] = NULL;
+    pause_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    pause_hooks.functions[0] = NULL;
+    unpause_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    unpause_hooks.functions[0] = NULL;
+}
+
+void free_timer_registries(void)
+{
+    LOG_DEBUG("Freeing timer hook registries");
+    free(start_hooks.functions);
+    free(stop_hooks.functions);
+    free(split_hooks.functions);
+    free(reset_hooks.functions);
+    free(cancel_hooks.functions);
+    free(skip_hooks.functions);
+    free(unsplit_hooks.functions);
+    free(pause_hooks.functions);
+    free(unpause_hooks.functions);
+    // XXX: [Penaz] [2026-03-14] Do I have to free the structs themselves too?
 }
