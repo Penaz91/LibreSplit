@@ -149,7 +149,7 @@ void init_lasr_functions(void)
         luac_functions[i].function_ptr = default_luac_functions[i].function_ptr;
         LOG_DEBUGF("Copied over %s", luac_functions[i].function_name);
     }
-    for (int j = 0; external_lasr_functions.functions[j].function_name != NULL; j++, i++) {
+    for (int j = 0; j < external_lasr_functions.count; j++, i++) {
         LOG_DEBUGF("Copying over %s", external_lasr_functions.functions[j].function_name);
         luac_functions[i].function_name = strdup(external_lasr_functions.functions[j].function_name);
         if (!luac_functions[i].function_name) {

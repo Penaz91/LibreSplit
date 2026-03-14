@@ -35,10 +35,6 @@ int register_lua_function(const char* name, lua_CFunction fn)
     }
     external_lasr_functions.functions[external_lasr_functions.count].function_ptr = fn;
     external_lasr_functions.count++;
-    // Null-terminate the array
-    LOG_DEBUG("Null-terminating the external lua C function array");
-    external_lasr_functions.functions[external_lasr_functions.count].function_name = NULL;
-    external_lasr_functions.functions[external_lasr_functions.count].function_ptr = NULL;
     return 0;
 }
 
