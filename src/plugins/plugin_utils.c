@@ -74,7 +74,6 @@ static int push_function(TimerHookRegistry* registry, timer_hook_func fn)
  */
 int register_event_hook(HookableEvent event, timer_hook_func fn)
 {
-    // TODO: [Penaz] [2026-03-13] STUB
     switch (event) {
         case START:
             LOG_DEBUG("Hooking new function into start event");

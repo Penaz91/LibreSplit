@@ -138,6 +138,10 @@ int initialize_plugin(const char* path)
         return -1;
     }
 
+    plugin_registry.plugins[plugin_registry.count].handle = handle;
+    plugin_registry.plugins[plugin_registry.count].path = strdup(path);
+    plugin_registry.count++;
+
     return 0;
 }
 
@@ -167,12 +171,12 @@ int initialize_plugin_registry(void)
 int unload_plugins(void)
 {
     LOG_INFO("Closing plugin handlers");
-    for (int i = 0; i < plugin_registry.size; i++) {
+    for (int i = 0; i < plugin_registry.count; i++) {
         LOG_DEBUGF("Closing handlers for plugin %s", plugin_registry.plugins[i].path);
         // Close the dynamic linking handler
         dlclose(plugin_registry.plugins[i].handle);
-        // XXX: [Penaz] [2026-03-15] Do I have to free the plugin path too?
         plugin_registry.plugins[i].handle = NULL;
+        free(plugin_registry.plugins[i].path);
     }
     free(plugin_registry.plugins);
     return 0;

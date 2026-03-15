@@ -9,6 +9,7 @@
 #include "src/keybinds/keybinds_callbacks.h"
 #include "src/lasr/auto-splitter.h"
 #include "src/logging.h"
+#include "src/plugins/plugin_loading.h"
 #include "src/settings/settings.h"
 #include "src/settings/utils.h"
 #include "src/timer.h"
@@ -213,6 +214,7 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
     }
     atomic_store(&auto_splitter_enabled, 0);
     atomic_store(&exit_requested, 1);
+    unload_plugins();
     close_logger();
     // Close any other open application windows (settings, dialogs, etc.)
     GApplication* app = g_application_get_default();
