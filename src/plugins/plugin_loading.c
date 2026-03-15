@@ -12,6 +12,12 @@ PlugAPI api = {
     .register_event_hook = register_event_hook
 };
 
+static PluginRegistry plugin_registry = {
+    .count = 0,
+    .size = 2,
+    .plugins = NULL,
+};
+
 /**
  * Extracts the plugin metadata from the shared object without executing its code.
  *
@@ -57,6 +63,7 @@ static int get_plugin_metadata(const char* path, char** name, char** description
  */
 void load_plugins(void)
 {
+    initialize_plugin_registry();
     // TODO: [Penaz] [2026-03-11] Change to use XDG_DIRS
     DIR* dir = opendir("./plugins");
     if (!dir) {
@@ -103,6 +110,10 @@ void load_plugins(void)
  */
 int initialize_plugin(const char* path)
 {
+    if (plugin_registry.count == plugin_registry.size) {
+        plugin_registry.size *= 2;
+        plugin_registry.plugins = realloc(plugin_registry.plugins, plugin_registry.size * sizeof(Plugin));
+    }
     void* handle = dlopen(path, RTLD_NOW);
     if (!handle) {
         LOG_WARNF("Unable to open plugin %s: %s", path, dlerror());
@@ -127,5 +138,42 @@ int initialize_plugin(const char* path)
         return -1;
     }
 
+    return 0;
+}
+
+/**
+ * Prepares the plugin registry to be used.
+ *
+ * @returns Zero if everything went well. An error code otherwise.
+ */
+int initialize_plugin_registry(void)
+{
+    LOG_INFO("Initializing plugin registry");
+    plugin_registry.plugins = malloc(plugin_registry.size * sizeof(Plugin));
+    if (!plugin_registry.plugins) {
+        LOG_WARN("Plugin registry initialization failed.");
+        abort();
+    }
+    return 0;
+}
+
+/**
+ * Closes the handlers for all plugins and frees memory-
+ *
+ * NOTE: Currently unused.
+ *
+ * @returns Zero if everything went well, an error code otherwise
+ */
+int unload_plugins(void)
+{
+    LOG_INFO("Closing plugin handlers");
+    for (int i = 0; i < plugin_registry.size; i++) {
+        LOG_DEBUGF("Closing handlers for plugin %s", plugin_registry.plugins[i].path);
+        // Close the dynamic linking handler
+        dlclose(plugin_registry.plugins[i].handle);
+        // XXX: [Penaz] [2026-03-15] Do I have to free the plugin path too?
+        plugin_registry.plugins[i].handle = NULL;
+    }
+    free(plugin_registry.plugins);
     return 0;
 }
