@@ -1,5 +1,6 @@
 #include "plugin_loading.h"
 #include "../logging.h"
+#include "../settings/utils.h"
 #include "plugin_utils.h"
 #include <dirent.h>
 #include <dlfcn.h>
@@ -64,8 +65,12 @@ static int get_plugin_metadata(const char* path, char** name, char** description
 void load_plugins(void)
 {
     initialize_plugin_registry();
-    // TODO: [Penaz] [2026-03-11] Change to use XDG_DIRS
-    DIR* dir = opendir("./plugins");
+    // HACK: [Penaz] [2026-03-15] Reduce the datadir size to account for the filename concat
+    // ^ and the "plugins/" addition, and some slack
+    char plugdir[PATH_MAX - 300];
+    get_libresplit_data_folder_path(plugdir);
+    strcat(plugdir, "/plugins");
+    DIR* dir = opendir(plugdir);
     if (!dir) {
         LOG_WARN("Unable to open plugins directory");
         return;
@@ -81,8 +86,9 @@ void load_plugins(void)
         }
 
         char path[PATH_MAX];
-        // TODO: [Penaz] [2026-03-11] Change to use XDG_DIRS
-        snprintf(path, sizeof(path), "./plugins/%s", ent->d_name);
+        // If we didn't reduce the plugdir buffer size, GCC would complain about
+        // possible buffer overflows here.
+        snprintf(path, sizeof(path), "%s/%s", plugdir, ent->d_name);
 
         // Initialize the metadata
         char *name = NULL, *desc = NULL, *version = NULL, *author = NULL;
@@ -94,7 +100,6 @@ void load_plugins(void)
             free(author);
             // TODO: [Penaz] [2026-03-12] Make this optional according to user settings?
             // FIXME: [Penaz] [2026-03-14] Remember to dlclose at the end
-            // ^ This means keeping tabs of the loaded plugins
             initialize_plugin(path);
         }
     }
