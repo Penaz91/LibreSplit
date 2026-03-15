@@ -122,7 +122,6 @@ void init_external_lasr_functions(void)
 {
     LOG_DEBUG("Initializing external LuaC functions array");
     // First array allocation
-    // FIXME: [Penaz] [2026-03-13] Remember to free the external luac_functions array!
     external_lasr_functions.functions = malloc(external_lasr_functions.size * sizeof(struct lasr_function));
     external_lasr_functions.functions[0].function_name = NULL;
     external_lasr_functions.functions[0].function_ptr = NULL;
