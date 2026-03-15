@@ -97,7 +97,6 @@ int main(int argc, char* argv[])
     initLogQueue();
     check_directories();
     init_external_lasr_functions();
-    // FIXME: [Penaz] [2026-03-14] Needs the be freed at program close
     init_timer_registries();
     load_plugins();
 

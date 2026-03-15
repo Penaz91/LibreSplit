@@ -214,6 +214,7 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
     }
     atomic_store(&auto_splitter_enabled, 0);
     atomic_store(&exit_requested, 1);
+    free_timer_registries();
     unload_plugins();
     close_logger();
     // Close any other open application windows (settings, dialogs, etc.)
