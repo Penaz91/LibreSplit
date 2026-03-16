@@ -1,8 +1,8 @@
 #include "game.h"
-#include "gtk/gtk.h"
 #include "src/gui/component/components.h"
 #include "src/gui/theming.h"
 #include "src/settings/definitions.h"
+#include <gtk/gtk.h>
 
 extern AppConfig cfg;
 
