@@ -44,8 +44,7 @@ void ls_app_window_show_game(LSAppWindow* win)
         gtk_widget_set_size_request(GTK_WIDGET(win),
             win->game->width,
             win->game->height);
-        // Then automatically resize the window to the
-        // preferences
+        // Then automatically resize the window to the preferences
         gtk_window_resize(GTK_WINDOW(win),
             win->game->width,
             win->game->height);
