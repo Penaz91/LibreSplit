@@ -24,14 +24,24 @@ typedef struct _PluginRegistry {
  * A "plugin init function" type.
  */
 typedef int (*plugin_init_fn)(PlugAPI*);
+typedef int (*plugin_shutdown_fn)(void);
 
 /**
  * Union used to convert between void* and plugin_init_fn
  * without violating ISO C standards.
  */
-union fn_ptr {
+union init_fn_ptr {
     void* obj; /*!< Object pointer */
     plugin_init_fn fn; /*!< Function pointer */
+};
+
+/**
+ * Union used to convert between void* and plugin_shutdown_fn
+ * without violating ISO C standards.
+ */
+union shutdown_fn_ptr {
+    void* obj; /*!< Object pointer */
+    plugin_shutdown_fn fn; /*!< Function pointer */
 };
 
 void load_plugins(void);

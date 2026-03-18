@@ -127,7 +127,7 @@ int initialize_plugin(const char* path)
 
     void* sym = dlsym(handle, "plug_init");
 
-    union fn_ptr u;
+    union init_fn_ptr u;
     u.obj = sym;
     plugin_init_fn init_function = u.fn;
 
@@ -177,6 +177,18 @@ int unload_plugins(void)
 {
     LOG_INFO("Closing plugin handlers");
     for (int i = 0; i < plugin_registry.count; i++) {
+        LOG_DEBUGF("Calling shutdown function for plugin %s", plugin_registry.plugins[i].path);
+        void* sym = dlsym(plugin_registry.plugins[i].handle, "plug_shutdown");
+        union shutdown_fn_ptr u;
+        u.obj = sym;
+        plugin_shutdown_fn shutdown_function = u.fn;
+        if (!shutdown_function) {
+            LOG_WARNF("No shutdown function defined for plugin %s", plugin_registry.plugins[i].path);
+        } else {
+            if (shutdown_function() != 0) {
+                LOG_WARNF("Shutdown function for plugin %s failed", plugin_registry.plugins[i].path);
+            }
+        }
         LOG_DEBUGF("Closing handlers for plugin %s", plugin_registry.plugins[i].path);
         // Close the dynamic linking handler
         dlclose(plugin_registry.plugins[i].handle);

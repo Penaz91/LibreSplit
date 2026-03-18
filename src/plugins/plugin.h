@@ -9,3 +9,4 @@ extern const char plugin_author[];
 
 // Functions to connect host and plugin
 int plug_init(PlugAPI* api);
+int plug_shutdown(void);
