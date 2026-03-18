@@ -96,3 +96,13 @@ Where `EVENT` can be one of the following:
 * `UNSPLIT` - Runs every time a split is undone.
 * `PAUSE` - Runs when the timer is paused.
 * `UNPAUSE` - Runs when the timer is unpaused
+
+### Closing the plugin
+
+Each plugin should have a shutdown function with the following signature:
+
+```c
+int plug_shutdown()
+```
+
+This will be executed when LibreSplit is exiting, so you should use it to clean up resources and closing everything properly.
