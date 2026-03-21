@@ -548,9 +548,8 @@ keybinder_bind_full(const char* keystring,
  */
 void keybinder_unbind(const char* keystring, KeybinderHandler handler)
 {
-    GSList* iter;
 
-    for (iter = bindings; iter != NULL; iter = iter->next) {
+    for (GSList* iter = bindings; iter != NULL; iter = iter->next) {
         struct Binding* binding = iter->data;
 
         if (strcmp(keystring, binding->keystring) != 0 || handler != binding->handler)
@@ -581,9 +580,8 @@ void keybinder_unbind(const char* keystring, KeybinderHandler handler)
  */
 void keybinder_unbind_all(const char* keystring)
 {
-    GSList* iter;
 
-    for (iter = bindings; iter != NULL; iter = iter->next) {
+    for (GSList* iter = bindings; iter != NULL; iter = iter->next) {
         struct Binding* binding = iter->data;
 
         if (strcmp(keystring, binding->keystring) != 0) {
