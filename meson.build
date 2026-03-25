@@ -119,6 +119,7 @@ shared_c_flags = [
 executable(
     'libresplit',
     libresplit_sources,
+    link_args: ['-rdynamic'],
     objects: [css_o],
     dependencies: [threads, gtk, luajit, x11, jansson],
     c_args: shared_c_flags,
