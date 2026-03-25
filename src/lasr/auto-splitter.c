@@ -6,8 +6,8 @@
 
 #include "include/lasr/functions.h"
 #include "include/lasr/maps/maps.h"
+#include "include/lasr/utils.h"
 #include "include/logging.h"
-#include "utils.h"
 
 #include <lauxlib.h>
 #include <lua.h>
