@@ -1,5 +1,5 @@
-#include "readAddress.h"
-#include "../utils.h"
+#include "include/lasr/functions/readAddress.h"
+#include "include/lasr/utils.h"
 
 #include <errno.h>
 #include <lua.h>

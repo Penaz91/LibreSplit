@@ -2,11 +2,11 @@
  *
  * Implementation of the auto splitter Lua Runtime
  */
-#include "auto-splitter.h"
+#include "include/lasr/auto-splitter.h"
 
-#include "./maps/maps.h"
-#include "functions.h"
-#include "src/logging.h"
+#include "include/lasr/functions.h"
+#include "include/lasr/maps/maps.h"
+#include "include/logging.h"
 #include "utils.h"
 
 #include <lauxlib.h>

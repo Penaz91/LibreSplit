@@ -1,7 +1,7 @@
-#include "getBaseAddress.h"
+#include "include/lasr/functions/getBaseAddress.h"
 
-#include "../maps/maps.h"
-#include "../utils.h"
+#include "include/lasr/maps/maps.h"
+#include "include/lasr/utils.h"
 
 #include <stdio.h>
 #include <string.h>

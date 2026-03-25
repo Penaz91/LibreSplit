@@ -1,6 +1,6 @@
-#include "settings_dialog.h"
-#include "src/settings/definitions.h"
-#include "src/settings/settings.h"
+#include "include/gui/settings_dialog.h"
+#include "include/settings/definitions.h"
+#include "include/settings/settings.h"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk/gdk.h>

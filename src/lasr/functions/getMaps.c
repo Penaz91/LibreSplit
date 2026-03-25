@@ -1,6 +1,6 @@
-#include "getMaps.h"
+#include "include/lasr/functions/getMaps.h"
 
-#include "../maps/maps.h"
+#include "include/lasr/maps/maps.h"
 
 #include <stdio.h>
 

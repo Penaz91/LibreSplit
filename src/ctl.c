@@ -1,7 +1,7 @@
 /** \file ctl.c
  * Implementation of the Libresplitctl executable
  */
-#include "shared.h"
+#include "include/shared.h"
 
 #include <arpa/inet.h>
 #include <endian.h>

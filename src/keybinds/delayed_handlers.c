@@ -1,6 +1,6 @@
-#include "delayed_handlers.h"
-#include "delayed_callbacks.h"
-#include "src/gui/app_window.h"
+#include "include/keybinds/delayed_handlers.h"
+#include "include/gui/app_window.h"
+#include "include/keybinds/delayed_callbacks.h"
 
 void process_delayed_handlers(LSAppWindow* win)
 {

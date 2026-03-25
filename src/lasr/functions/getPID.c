@@ -1,6 +1,6 @@
-#include "getPID.h"
+#include "include/lasr/functions/getPID.h"
 
-#include "../utils.h"
+#include "include/lasr/utils.h"
 
 /**
  * Returns the Pid of the game process to the Lua Auto Splitter.

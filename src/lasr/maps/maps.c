@@ -1,6 +1,6 @@
-#include "maps.h"
+#include "include/lasr/maps/maps.h"
 
-#include "src/lasr/utils.h"
+#include "include/lasr/utils.h"
 
 #include <fcntl.h>
 #include <linux/fs.h>

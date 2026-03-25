@@ -1,6 +1,6 @@
 #pragma once
-#include "../lasr/auto-splitter.h"
-#include "../timer.h"
+#include "include/lasr/auto-splitter.h"
+#include "include/timer.h"
 #include "lua.h"
 
 extern ExternalLASRFunctionRegistry external_lasr_functions;

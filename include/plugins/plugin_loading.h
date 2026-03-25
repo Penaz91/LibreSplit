@@ -1,5 +1,5 @@
 #pragma once
-#include "plugin_utils.h"
+#include "include/plugins/plugin_utils.h"
 
 /**
  * A plugin structure, keeps tabs on the handler

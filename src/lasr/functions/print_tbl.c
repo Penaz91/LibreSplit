@@ -1,7 +1,7 @@
 
-#include "print_tbl.h"
+#include "include/lasr/functions/print_tbl.h"
 
-#include "../utils.h"
+#include "include/lasr/utils.h"
 
 #include <stdio.h>
 

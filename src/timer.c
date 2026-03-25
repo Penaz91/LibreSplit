@@ -2,12 +2,12 @@
  *
  * Implementation of the timer
  */
-#include "timer.h"
-#include "gui/dialogs.h"
-#include "settings/utils.h"
+#include "include/timer.h"
+#include "include/gui/dialogs.h"
+#include "include/settings/utils.h"
 
-#include "lasr/auto-splitter.h"
-#include "logging.h"
+#include "include/lasr/auto-splitter.h"
+#include "include/logging.h"
 
 #include <jansson.h>
 #include <limits.h>

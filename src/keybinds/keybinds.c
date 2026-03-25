@@ -1,4 +1,4 @@
-#include "keybinds.h"
+#include "include/keybinds/keybinds.h"
 #include <gtk/gtk.h>
 
 /**

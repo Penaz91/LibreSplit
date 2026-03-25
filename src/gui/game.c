@@ -1,7 +1,7 @@
-#include "game.h"
-#include "src/gui/component/components.h"
-#include "src/gui/theming.h"
-#include "src/settings/definitions.h"
+#include "include/gui/game.h"
+#include "include/gui/component/components.h"
+#include "include/gui/theming.h"
+#include "include/settings/definitions.h"
 
 extern AppConfig cfg;
 

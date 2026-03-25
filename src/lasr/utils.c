@@ -1,7 +1,7 @@
-#include "utils.h"
-#include "../gui/dialogs.h"
-#include "./auto-splitter.h"
-#include "./maps/maps.h"
+#include "include/lasr/utils.h"
+#include "include/gui/dialogs.h"
+#include "include/lasr/auto-splitter.h"
+#include "include/lasr/maps/maps.h"
 
 #include <glib.h>
 #include <stdatomic.h>

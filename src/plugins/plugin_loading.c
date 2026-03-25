@@ -1,7 +1,7 @@
-#include "plugin_loading.h"
-#include "../logging.h"
-#include "../settings/utils.h"
-#include "plugin_utils.h"
+#include "include/plugins/plugin_loading.h"
+#include "include/logging.h"
+#include "include/plugins/plugin_utils.h"
+#include "include/settings/utils.h"
 #include <dirent.h>
 #include <dlfcn.h>
 #include <stdio.h>

@@ -1,5 +1,5 @@
-#include "src/gui/app_window.h"
-#include "src/settings/definitions.h"
+#include "include/gui/app_window.h"
+#include "include/settings/definitions.h"
 #include <gtk/gtk.h>
 
 extern void timer_start_split(LSAppWindow* win);

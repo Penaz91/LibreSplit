@@ -1,10 +1,10 @@
 #pragma once
 
-#include "src/gui/welcome_box.h"
-#include "src/keybinds/delayed_handlers.h"
-#include "src/keybinds/keybinds.h"
-#include "src/opts.h"
-#include "src/timer.h"
+#include "include/gui/welcome_box.h"
+#include "include/keybinds/delayed_handlers.h"
+#include "include/keybinds/keybinds.h"
+#include "include/opts.h"
+#include "include/timer.h"
 
 #include <glib-object.h>
 #include <gtk/gtk.h>

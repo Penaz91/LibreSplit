@@ -1,10 +1,10 @@
-#include "src/gui/actions.h"
-#include "src/gui/app_window.h"
-#include "src/gui/game.h"
-#include "src/gui/timer.h"
-#include "src/lasr/auto-splitter.h"
-#include "src/lasr/utils.h"
-#include "src/settings/settings.h"
+#include "include/gui/actions.h"
+#include "include/gui/app_window.h"
+#include "include/gui/game.h"
+#include "include/gui/timer.h"
+#include "include/lasr/auto-splitter.h"
+#include "include/lasr/utils.h"
+#include "include/settings/settings.h"
 #include <gtk/gtk.h>
 #include <sys/stat.h>
 
