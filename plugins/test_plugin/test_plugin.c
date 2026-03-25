@@ -1,6 +1,6 @@
+#include "include/plugins/plugin.h"
+#include "include/plugins/plugin_utils.h"
 #include "lua.h"
-#include "plugin.h"
-#include "plugin_utils.h"
 #include <stdio.h>
 
 const char plugin_name[] = "Test Plugin";

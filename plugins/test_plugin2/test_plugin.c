@@ -1,6 +1,6 @@
-#include "plugin.h"
-#include "plugin_utils.h"
-#include "timer.h"
+#include "include/plugins/plugin.h"
+#include "include/plugins/plugin_utils.h"
+#include "include/timer.h"
 #include <stdio.h>
 
 const char plugin_name[] = "Test Plugin 2";
