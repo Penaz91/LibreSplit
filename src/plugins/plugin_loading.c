@@ -36,6 +36,7 @@ static int get_plugin_metadata(const char* path, char** name, char** description
     void* plugin_handle = dlopen(path, RTLD_LAZY);
     if (!plugin_handle) {
         LOG_WARNF("Unable to open plugin for inspection: %s", path);
+        LOG_WARNF("%s", dlerror());
         return -1;
     }
 
