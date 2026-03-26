@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/lasr/utils.h"
+#include "lasr/utils.h"
 #include <stdbool.h>
 
 #define MAPS_CACHE_BLOCK_SIZE 256

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/gui/app_window.h"
+#include "gui/app_window.h"
 
 void timer_stop_and_reset(LSAppWindow* win);
 void timer_start_split(LSAppWindow* win);

@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "include/gui/utils.h"
-#include "include/timer.h"
+#include "gui/utils.h"
+#include "timer.h"
 
 typedef struct LSComponentOps LSComponentOps; // forward declaration
 

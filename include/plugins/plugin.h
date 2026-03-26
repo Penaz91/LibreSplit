@@ -1,5 +1,5 @@
 #pragma once
-#include "include/plugins/plugin_utils.h"
+#include "plugins/plugin_utils.h"
 
 // Plugin metadata
 extern const char plugin_name[];

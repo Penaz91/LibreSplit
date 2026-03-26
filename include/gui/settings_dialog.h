@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/settings/definitions.h"
+#include "settings/definitions.h"
 #include <gtk/gtk.h>
 
 extern AppConfig cfg;

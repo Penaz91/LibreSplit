@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/lasr/utils.h"
+#include "lasr/utils.h"
 #include <lua.h>
 
 extern ProcessMap* maps_cache;
