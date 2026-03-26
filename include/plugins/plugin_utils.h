@@ -2,6 +2,9 @@
 #include "lasr/auto-splitter.h"
 #include "lua.h"
 #include "timer.h"
+#include <stdint.h>
+
+typedef uint32_t abi_version_t;
 
 extern ExternalLASRFunctionRegistry external_lasr_functions;
 
@@ -35,6 +38,7 @@ typedef int (*register_lua_func)(const char*, lua_CFunction);
 typedef int (*register_event_func)(HookableEvent event, timer_hook_func fn);
 
 typedef struct PlugAPI {
+    abi_version_t abi_version;
     register_lua_func register_lua_function;
     register_event_func register_event_hook;
 } PlugAPI;

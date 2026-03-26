@@ -4,11 +4,13 @@
 #include "settings/utils.h"
 #include <dirent.h>
 #include <dlfcn.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 PlugAPI api = {
+    .abi_version = 1, // v0.1
     .register_lua_function = register_lua_function,
     .register_event_hook = register_event_hook
 };
@@ -18,6 +20,53 @@ static PluginRegistry plugin_registry = {
     .size = 2,
     .plugins = NULL,
 };
+
+/**
+ * Does a check for ABI compatibility against the host ABI.
+ *
+ * @param[in] plugin_version The plugin ABI version.
+ *
+ * @returns -1 if there is a major incompatibility, 1 if there is a minor incompatibility, 0 otherwise.
+ */
+static int check_abi_version(abi_version_t plugin_version)
+{
+    uint16_t plug_major = plugin_version >> 16;
+    uint16_t plug_minor = plugin_version & 0xFFFF;
+    uint16_t host_major = api.abi_version >> 16;
+    uint16_t host_minor = api.abi_version & 0xFFFF;
+    if (plug_major != host_major) {
+        LOG_WARN("Found Incompatible major ABI versions");
+        return -1;
+    }
+    if (plug_minor > host_minor) {
+        LOG_WARN("Plugin has a higher minor ABI version, some required functionality may be missing");
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * Utility function to convert a uint32 version into a readable one
+ *
+ * @param[in] ver The version to convert to string
+ * @param[out] buffer The buffer to write the version onto
+ * @param[in] buffer_size The size of the output buffer.
+ */
+static int print_version(const abi_version_t ver, char* buffer, size_t buffer_size)
+{
+    uint16_t major = ver >> 16;
+    uint16_t minor = ver & 0xFFFF;
+    if (buffer_size < 21) {
+        LOG_WARN("Buffer for writing version is too small");
+        return -1;
+    }
+    int n = snprintf(buffer, buffer_size, "%u.%u", major, minor);
+    if (n < 0 || (size_t)n >= buffer_size) {
+        // Failed allocation or truncation
+        return -1;
+    }
+    return 0;
+}
 
 /**
  * Extracts the plugin metadata from the shared object without executing its code.
@@ -37,6 +86,28 @@ static int get_plugin_metadata(const char* path, char** name, char** description
     if (!plugin_handle) {
         LOG_WARNF("Unable to open plugin for inspection: %s", path);
         LOG_WARNF("%s", dlerror());
+        return -1;
+    }
+
+    const abi_version_t* plugin_abi_version = (const abi_version_t*)dlsym(plugin_handle, "abi_version");
+
+    if (!plugin_abi_version) {
+        LOG_WARNF("Plugin missing required ABI version metadata: %s", path);
+        dlclose(plugin_handle);
+        return -1;
+    }
+
+    if (check_abi_version(*plugin_abi_version) < 0) {
+        char abi_version[21];
+        char host_version[21];
+        print_version(*plugin_abi_version, abi_version, sizeof(abi_version));
+        print_version(api.abi_version, host_version, sizeof(host_version));
+        LOG_WARNF(
+            "Plugin %s has incompatible ABI requirements: Host has %s, plugin supports %s",
+            path,
+            host_version,
+            abi_version)
+        dlclose(plugin_handle);
         return -1;
     }
 
