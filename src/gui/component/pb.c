@@ -2,7 +2,7 @@
  *
  * Implementation of the "Personal Best" component
  */
-#include "include/gui/component/components.h"
+#include "gui/component/components.h"
 
 /**
  * @brief The component representing a personal best

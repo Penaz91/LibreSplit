@@ -1,7 +1,7 @@
-#include "include/plugins/plugin_utils.h"
-#include "include/logging.h"
-#include "include/timer.h"
+#include "plugins/plugin_utils.h"
+#include "logging.h"
 #include "lua.h"
+#include "timer.h"
 #include <stdlib.h>
 #include <string.h>
 

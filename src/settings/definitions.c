@@ -1,4 +1,4 @@
-#include "include/settings/definitions.h"
+#include "settings/definitions.h"
 
 /**
  * Main configuration structure with default values.

@@ -4,8 +4,8 @@
  * Asynchronous Logging Library for LibreSplit based on threads, circular queues,
  * hopes and dreams.
  */
-#include "include/logging.h"
-#include "include/settings/utils.h"
+#include "logging.h"
+#include "settings/utils.h"
 
 #include <linux/limits.h>
 #include <linux/prctl.h>

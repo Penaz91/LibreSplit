@@ -28,6 +28,8 @@ luajit = dependency('luajit')
 x11 = dependency('x11')
 jansson = dependency('jansson')
 
+includes = include_directories('include')
+
 libresplit_sources = files(
     'src/main.c',
     'src/keybinds/bind.c',
@@ -124,6 +126,7 @@ executable(
     dependencies: [threads, gtk, luajit, x11, jansson],
     c_args: shared_c_flags,
     install: true,
+    include_directories: includes,
 )
 
 executable(
@@ -131,6 +134,7 @@ executable(
     libresplit_ctl_sources,
     c_args: shared_c_flags,
     install: true,
+    include_directories: includes,
 )
 
 message('prefix: ' + get_option('prefix')) # /usr/local by default

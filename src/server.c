@@ -1,4 +1,4 @@
-#include "include/shared.h"
+#include "shared.h"
 
 #include <arpa/inet.h>
 #include <gtk/gtk.h>

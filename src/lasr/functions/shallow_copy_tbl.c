@@ -1,4 +1,4 @@
-#include "include/lasr/functions/shallow_copy_tbl.h"
+#include "lasr/functions/shallow_copy_tbl.h"
 
 #include <stdio.h>
 

@@ -2,7 +2,7 @@
  *
  * Implementation of the clock/timer component.
  */
-#include "include/gui/component/components.h"
+#include "gui/component/components.h"
 
 /**
  * @brief The Timer component itself.

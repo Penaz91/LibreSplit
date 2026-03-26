@@ -1,6 +1,5 @@
-#include "include/lasr/functions/signature.h"
-
-#include "include/lasr/utils.h"
+#include "lasr/functions/signature.h"
+#include "lasr/utils.h"
 
 #include <fcntl.h>
 #include <inttypes.h>

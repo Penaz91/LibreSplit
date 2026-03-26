@@ -1,7 +1,6 @@
-#include "include/lasr/functions/getModuleSize.h"
-
-#include "include/lasr/maps/maps.h"
-#include "include/lasr/utils.h"
+#include "lasr/functions/getModuleSize.h"
+#include "lasr/maps/maps.h"
+#include "lasr/utils.h"
 
 #include <stdint.h>
 #include <stdio.h>

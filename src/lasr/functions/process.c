@@ -1,6 +1,5 @@
-#include "include/lasr/functions/process.h"
-
-#include "include/lasr/utils.h"
+#include "lasr/functions/process.h"
+#include "lasr/utils.h"
 
 #include <stdatomic.h>
 #include <stdio.h>

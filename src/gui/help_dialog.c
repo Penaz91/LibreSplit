@@ -1,4 +1,4 @@
-#include "include/gui/help_dialog.h"
+#include "gui/help_dialog.h"
 #include "gdk-pixbuf/gdk-pixbuf.h"
 #include <gtk/gtk.h>
 #include <stdio.h>

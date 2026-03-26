@@ -2,7 +2,7 @@
  *
  * Available Components and related utilities
  */
-#include "include/gui/component/components.h"
+#include "gui/component/components.h"
 
 LSComponent* ls_component_title_new(void);
 LSComponent* ls_component_splits_new(void);

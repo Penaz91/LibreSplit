@@ -1,8 +1,8 @@
-#include "include/gui/actions.h"
-#include "include/gui/app_window.h"
-#include "include/gui/help_dialog.h"
-#include "include/gui/settings_dialog.h"
-#include "include/lasr/auto-splitter.h"
+#include "gui/actions.h"
+#include "gui/app_window.h"
+#include "gui/help_dialog.h"
+#include "gui/settings_dialog.h"
+#include "lasr/auto-splitter.h"
 #include <gtk/gtk.h>
 
 /**
