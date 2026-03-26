@@ -3,6 +3,7 @@
 #include "timer.h"
 #include <stdio.h>
 
+const abi_version_t abi_version = 0 << 16 | 1; // v0.1
 const char plugin_name[] = "Test Plugin 2";
 const char plugin_description[] = "Does something, it exists and yells at you for splitting";
 const char plugin_version[] = "0.1";

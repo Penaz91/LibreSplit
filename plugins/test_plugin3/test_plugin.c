@@ -4,6 +4,7 @@
 #include "plugins/plugin_utils.h"
 #include <stdio.h>
 
+const abi_version_t abi_version = 1; // v0.1
 const char plugin_name[] = "Test Plugin 3";
 const char plugin_description[] = "Does something, wraps the getMaps function to demonstrate calling LS functions";
 const char plugin_version[] = "0.1";
