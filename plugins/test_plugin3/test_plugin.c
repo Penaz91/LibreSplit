@@ -1,7 +1,7 @@
-#include "include/lasr/functions/getMaps.h"
-#include "include/lasr/maps/maps.h"
-#include "include/plugins/plugin.h"
-#include "include/plugins/plugin_utils.h"
+#include "lasr/functions/getMaps.h"
+#include "lasr/maps/maps.h"
+#include "plugins/plugin.h"
+#include "plugins/plugin_utils.h"
 #include <stdio.h>
 
 const char plugin_name[] = "Test Plugin 3";
