@@ -27,6 +27,7 @@ Each plugin must have the following metadata to identify itself:
 * description
 * version
 * author
+* ABI version of reference
 
 You can just stick them in your plugin code like this:
 
@@ -35,7 +36,20 @@ const char plugin_name[] = "Test Plugin";
 const char plugin_description[] = "Does nothing, it just exists";
 const char plugin_version[] = "0.1";
 const char plugin_author[] = "The LibreSplit Core Team";
+const abi_version_t abi_version = 0 << 16 | 1; // v0.1
 ```
+
+The ABI version is a packed 32-bit integer, using 16 bits for the "major version" and the other 16 for the "minor version".
+
+Here are some examples on how you can encode the ABI version.
+
+```c
+const abi_version_t abi_version = 0 << 16 | 1; // v0.1
+const abi_version_t abi_version = 1 << 16 | 0; // v1.0
+const abi_version_t abi_version = 1 << 16 | 4; // v1.4
+```
+
+If the major version between the ABI differs, LibreSplit will refuse the plugin, if the minor version in the plugin is higher than LibreSplit's, there will be a warning (because the plugin might refer to a newer ABI's functions that are not present).
 
 ### Initializing the plugin
 
