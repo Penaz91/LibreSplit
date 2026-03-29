@@ -326,6 +326,7 @@ static void ls_app_window_init(LSAppWindow* win)
 
     win->display = gdk_display_get_default();
     win->style = NULL;
+    win->context_menu = NULL;
 
     // make data path
     win->data_path[0] = '\0';
