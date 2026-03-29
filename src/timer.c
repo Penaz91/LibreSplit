@@ -1224,22 +1224,58 @@ void init_timer_registries(void)
 {
     LOG_DEBUG("Initializing timer hook registries");
     start_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    if (!start_hooks.functions) {
+        LOG_ERR("Cannot Allocate Timer Start Hooks Registry");
+        abort();
+    }
     start_hooks.functions[0] = NULL;
-    stop_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    stop_hooks.functions = malloc(stop_hooks.size * sizeof(timer_hook_func));
+    if (!stop_hooks.functions) {
+        LOG_ERR("Cannot Allocate Timer Stop Hooks Registry");
+        abort();
+    }
     stop_hooks.functions[0] = NULL;
-    split_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    split_hooks.functions = malloc(split_hooks.size * sizeof(timer_hook_func));
+    if (!split_hooks.functions) {
+        LOG_ERR("Cannot Allocate Timer Split Hooks Registry");
+        abort();
+    }
     split_hooks.functions[0] = NULL;
-    reset_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    reset_hooks.functions = malloc(reset_hooks.size * sizeof(timer_hook_func));
+    if (!reset_hooks.functions) {
+        LOG_ERR("Cannot Allocate Timer Reset Hooks Registry");
+        abort();
+    }
     reset_hooks.functions[0] = NULL;
-    cancel_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    cancel_hooks.functions = malloc(cancel_hooks.size * sizeof(timer_hook_func));
+    if (!cancel_hooks.functions) {
+        LOG_ERR("Cannot Allocate Timer Cancel Hooks Registry");
+        abort();
+    }
     cancel_hooks.functions[0] = NULL;
-    skip_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    skip_hooks.functions = malloc(skip_hooks.size * sizeof(timer_hook_func));
+    if (!skip_hooks.functions) {
+        LOG_ERR("Cannot Allocate Timer Skip Hooks Registry");
+        abort();
+    }
     skip_hooks.functions[0] = NULL;
-    unsplit_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    unsplit_hooks.functions = malloc(unsplit_hooks.size * sizeof(timer_hook_func));
+    if (!unsplit_hooks.functions) {
+        LOG_ERR("Cannot Allocate Timer Unsplit Hooks Registry");
+        abort();
+    }
     unsplit_hooks.functions[0] = NULL;
-    pause_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    pause_hooks.functions = malloc(pause_hooks.size * sizeof(timer_hook_func));
+    if (!pause_hooks.functions) {
+        LOG_ERR("Cannot Allocate Timer Pause Hooks Registry");
+        abort();
+    }
     pause_hooks.functions[0] = NULL;
-    unpause_hooks.functions = malloc(start_hooks.size * sizeof(timer_hook_func));
+    unpause_hooks.functions = malloc(unpause_hooks.size * sizeof(timer_hook_func));
+    if (!unpause_hooks.functions) {
+        LOG_ERR("Cannot Allocate Timer Unpause Hooks Registry");
+        abort();
+    }
     unpause_hooks.functions[0] = NULL;
 }
 
