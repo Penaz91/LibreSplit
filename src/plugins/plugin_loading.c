@@ -187,14 +187,22 @@ void load_plugins(void)
  */
 int initialize_plugin(const char* path)
 {
+    char* p = NULL;
+    void* handle = NULL;
     if (plugin_registry.count == plugin_registry.size) {
-        plugin_registry.size *= 2;
-        plugin_registry.plugins = realloc(plugin_registry.plugins, plugin_registry.size * sizeof(Plugin));
+        size_t new_size = plugin_registry.size * 2;
+        Plugin* tmp = realloc(plugin_registry.plugins, new_size * sizeof(Plugin));
+        if (!tmp) {
+            LOG_ERR("Cannot reallocate memory for plugin registry");
+            goto fail;
+        }
+        plugin_registry.plugins = tmp;
+        plugin_registry.size = new_size;
     }
-    void* handle = dlopen(path, RTLD_NOW);
+    handle = dlopen(path, RTLD_NOW);
     if (!handle) {
         LOG_WARNF("Unable to open plugin %s: %s", path, dlerror());
-        return -1;
+        goto fail;
     }
 
     void* sym = dlsym(handle, "plug_init");
@@ -205,21 +213,36 @@ int initialize_plugin(const char* path)
 
     if (!init_function) {
         LOG_WARNF("Cannot load plugin init function: %s", path);
-        dlclose(handle);
-        return -1;
+        goto fail;
     }
 
     if (init_function(&api) != 0) {
         LOG_WARNF("Plugin init function failed: %s", path);
-        dlclose(handle);
-        return -1;
+        goto fail;
+    }
+
+    p = strdup(path);
+
+    if (!p) {
+        LOG_WARNF("Cannot allocate memory for plugin path: %s", path);
+        goto fail;
     }
 
     plugin_registry.plugins[plugin_registry.count].handle = handle;
-    plugin_registry.plugins[plugin_registry.count].path = strdup(path);
+    // This path is freed on application teardown, so it's probably a false positive on GCC Analyzer.
+    plugin_registry.plugins[plugin_registry.count].path = p;
     plugin_registry.count++;
 
     return 0;
+
+fail:
+    if (p) {
+        free(p);
+    }
+    if (handle) {
+        dlclose(handle);
+    }
+    return -1;
 }
 
 /**

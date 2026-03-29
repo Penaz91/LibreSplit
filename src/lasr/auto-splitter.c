@@ -141,7 +141,12 @@ void init_lasr_functions(void)
     int i = 0;
     for (i = 0; default_luac_functions[i].function_name != NULL; i++) {
         LOG_DEBUGF("Copying over %s", default_luac_functions[i].function_name);
-        luac_functions[i].function_name = strdup(default_luac_functions[i].function_name);
+        char* fname = strdup(default_luac_functions[i].function_name);
+        if (!fname) {
+            LOG_ERRF("Cannot allocate default function name: %s", default_luac_functions[i].function_name);
+            abort();
+        }
+        luac_functions[i].function_name = fname;
         if (!luac_functions[i].function_name) {
             LOG_ERRF("Unable to allocate memory for Lua C function name: %s", default_luac_functions[i].function_name);
             abort();
@@ -151,7 +156,12 @@ void init_lasr_functions(void)
     }
     for (int j = 0; j < external_lasr_functions.count; j++, i++) {
         LOG_DEBUGF("Copying over %s", external_lasr_functions.functions[j].function_name);
-        luac_functions[i].function_name = strdup(external_lasr_functions.functions[j].function_name);
+        char* fname = strdup(external_lasr_functions.functions[j].function_name);
+        if (!fname) {
+            LOG_ERRF("Cannot allocate external function name: %s", default_luac_functions[i].function_name);
+            abort();
+        }
+        luac_functions[i].function_name = fname;
         if (!luac_functions[i].function_name) {
             LOG_ERRF("Unable to allocate memory for Lua C function name: %s", external_lasr_functions.functions[j].function_name);
             abort();
