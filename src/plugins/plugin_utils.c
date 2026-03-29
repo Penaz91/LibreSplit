@@ -123,6 +123,10 @@ void init_external_lasr_functions(void)
     LOG_DEBUG("Initializing external LuaC functions array");
     // First array allocation
     external_lasr_functions.functions = malloc(external_lasr_functions.size * sizeof(struct lasr_function));
+    if (external_lasr_functions.functions == NULL) {
+        LOG_ERR("Cannot allocate memory for external LASR function pointers");
+        abort();
+    }
     external_lasr_functions.functions[0].function_name = NULL;
     external_lasr_functions.functions[0].function_ptr = NULL;
 }
