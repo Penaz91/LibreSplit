@@ -38,10 +38,14 @@ static void append_entry(ProcessMap e)
         new_block->used = 0;
         new_block->next = NULL;
 
-        if (!head)
+        if (!head) {
             head = new_block;
-        else
-            current->next = new_block;
+        } else {
+            if (current) {
+                // Guard to avoid null-dereferencing
+                current->next = new_block;
+            }
+        }
 
         current = new_block;
     }

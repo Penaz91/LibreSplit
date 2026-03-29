@@ -271,6 +271,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
 
             default:
                 printf("invalid option (%c)\n", *(sig - 1));
+                va_end(vl);
                 return false;
         }
         if (*(sig - 1) == '>')
@@ -297,6 +298,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 case 'd': /* double result */
                     if (!lua_isnumber(L, nres)) {
                         printf("function '%s' wrong result type, expected double\n", func);
+                        va_end(vl);
                         return false;
                     }
                     *va_arg(vl, double*) = lua_tonumber(L, nres);
@@ -305,6 +307,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 case 'i': /* int result */
                     if (!lua_isnumber(L, nres)) {
                         printf("function '%s' wrong result type, expected int\n", func);
+                        va_end(vl);
                         return false;
                     }
                     *va_arg(vl, int*) = lua_tointeger(L, nres);
@@ -313,6 +316,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 case 's': /* string result */
                     if (!lua_isstring(L, nres)) {
                         printf("function '%s' wrong result type, expected string\n", func);
+                        va_end(vl);
                         return false;
                     }
                     *va_arg(vl, const char**) = lua_tostring(L, nres);
@@ -321,6 +325,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 case 'b':
                     if (!lua_isboolean(L, nres)) {
                         printf("function '%s' wrong result type, expected boolean\n", func);
+                        va_end(vl);
                         return false;
                     }
                     *va_arg(vl, bool*) = lua_toboolean(L, nres);
@@ -328,6 +333,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
 
                 default:
                     printf("invalid option (%c)\n", *(sig - 1));
+                    va_end(vl);
                     return false;
             }
             nres++;

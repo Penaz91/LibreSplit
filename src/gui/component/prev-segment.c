@@ -139,7 +139,6 @@ static void prev_segment_draw(LSComponent* self_, const ls_game* game,
         ls_delta_string(str, timer->segment_deltas[curr]);
         gtk_label_set_text(GTK_LABEL(self->previous_segment), str);
     } else if (curr) {
-        prev = timer->curr_split - 1;
         // Previous segment
         if (timer->curr_split) {
             prev = timer->curr_split - 1;
