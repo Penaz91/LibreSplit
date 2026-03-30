@@ -2,6 +2,7 @@
 #include "logging.h"
 #include "plugins/plugin_utils.h"
 #include "settings/utils.h"
+#include <assert.h>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <stdint.h>
@@ -123,59 +124,44 @@ static int get_plugin_metadata(const char* path, char** name, char** description
     }
 
     *name = strdup(plugin_name);
+    if (!*name) {
+        goto fail_metadata;
+    }
     *description = strdup(plugin_desc);
+    if (!*description) {
+        goto fail_metadata;
+    }
     *version = strdup(plugin_version);
+    if (!*version) {
+        goto fail_metadata;
+    }
     *author = strdup(plugin_author);
+    if (!*author) {
+        goto fail_metadata;
+    }
 
     dlclose(plugin_handle);
     return 0;
-}
 
-/**
- * General function that loads plugins
- */
-void load_plugins(void)
-{
-    initialize_plugin_registry();
-    // HACK: [Penaz] [2026-03-15] Reduce the datadir size to account for the filename concat
-    // ^ and the "plugins/" addition, and some slack
-    char plugdir[PATH_MAX - 300];
-    get_libresplit_data_folder_path(plugdir);
-    strcat(plugdir, "/plugins");
-    DIR* dir = opendir(plugdir);
-    if (!dir) {
-        LOG_WARN("Unable to open plugins directory");
-        return;
+fail_metadata:
+    if (*name) {
+        free(*name);
+        *name = NULL;
     }
-
-    struct dirent* ent;
-
-    while ((ent = readdir(dir))) {
-        const char* extension = strrchr(ent->d_name, '.');
-        if (!extension || strcmp(extension, ".so") != 0) {
-            LOG_DEBUGF("Ignoring non-plugin %s", ent->d_name);
-            continue;
-        }
-
-        char path[PATH_MAX];
-        // If we didn't reduce the plugdir buffer size, GCC would complain about
-        // possible buffer overflows here.
-        snprintf(path, sizeof(path), "%s/%s", plugdir, ent->d_name);
-
-        // Initialize the metadata
-        char *name = NULL, *desc = NULL, *version = NULL, *author = NULL;
-        if (get_plugin_metadata(path, &name, &desc, &version, &author) == 0) {
-            LOG_INFOF("Found plugin: %s (v%s) by %s - %s", name, version, author, desc);
-            free(name);
-            free(desc);
-            free(version);
-            free(author);
-            // TODO: [Penaz] [2026-03-12] Make this optional according to user settings?
-            // FIXME: [Penaz] [2026-03-14] Remember to dlclose at the end
-            initialize_plugin(path);
-        }
+    if (*description) {
+        free(*description);
+        *description = NULL;
     }
-    closedir(dir);
+    if (*version) {
+        free(*version);
+        *version = NULL;
+    }
+    if (*author) {
+        free(*author);
+        *author = NULL;
+    }
+    dlclose(plugin_handle);
+    return -1;
 }
 
 /**
@@ -185,11 +171,16 @@ void load_plugins(void)
  *
  * @returns 0 if everything goes well or an error code otherwise.
  */
-int initialize_plugin(const char* path)
+static int initialize_plugin(const char* path)
 {
+    if (!plugin_registry.plugins) {
+        LOG_ERR("Plugin registry has not been initialized");
+        return -1;
+    }
     char* p = NULL;
     void* handle = NULL;
-    if (plugin_registry.count == plugin_registry.size) {
+    assert(plugin_registry.count <= plugin_registry.size);
+    if (plugin_registry.count >= plugin_registry.size) {
         size_t new_size = plugin_registry.size * 2;
         Plugin* tmp = realloc(plugin_registry.plugins, new_size * sizeof(Plugin));
         if (!tmp) {
@@ -205,7 +196,13 @@ int initialize_plugin(const char* path)
         goto fail;
     }
 
+    // Purge stale errors
+    dlerror();
     void* sym = dlsym(handle, "plug_init");
+    const char* err = dlerror();
+    if (err) {
+        LOG_WARNF("Error while loading plugin initialization function symbol: %s", err);
+    }
 
     union init_fn_ptr u;
     u.obj = sym;
@@ -246,6 +243,58 @@ fail:
 }
 
 /**
+ * General function that loads plugins
+ */
+void load_plugins(void)
+{
+    initialize_plugin_registry();
+    // HACK: [Penaz] [2026-03-15] Reduce the datadir size to account for the filename concat
+    // ^ and the "plugins/" addition, and some slack
+    char plugdir[PATH_MAX - 300];
+    char data_folder[PATH_MAX];
+    get_libresplit_data_folder_path(data_folder);
+    ssize_t n = snprintf(plugdir, sizeof(plugdir), "%s/plugins", data_folder);
+    if (n < 0 || (size_t)n > sizeof(plugdir)) {
+        LOG_WARN("Could not copy plugin path or buffer overflow detected.");
+        return;
+    }
+    DIR* dir = opendir(plugdir);
+    if (!dir) {
+        LOG_WARN("Unable to open plugins directory");
+        return;
+    }
+
+    struct dirent* ent;
+
+    while ((ent = readdir(dir))) {
+        const char* extension = strrchr(ent->d_name, '.');
+        if (!extension || strcmp(extension, ".so") != 0) {
+            LOG_DEBUGF("Ignoring non-plugin %s", ent->d_name);
+            continue;
+        }
+
+        char path[PATH_MAX];
+        // If we didn't reduce the plugdir buffer size, GCC would complain about
+        // possible buffer overflows here.
+        snprintf(path, sizeof(path), "%s/%s", plugdir, ent->d_name);
+
+        // Initialize the metadata
+        char *name = NULL, *desc = NULL, *version = NULL, *author = NULL;
+        if (get_plugin_metadata(path, &name, &desc, &version, &author) == 0) {
+            LOG_INFOF("Found plugin: %s (v%s) by %s - %s", name, version, author, desc);
+            free(name);
+            free(desc);
+            free(version);
+            free(author);
+            // TODO: [Penaz] [2026-03-12] Make this optional according to user settings?
+            // FIXME: [Penaz] [2026-03-14] Remember to dlclose at the end
+            initialize_plugin(path);
+        }
+    }
+    closedir(dir);
+}
+
+/**
  * Prepares the plugin registry to be used.
  *
  * @returns Zero if everything went well. An error code otherwise.
@@ -253,6 +302,10 @@ fail:
 int initialize_plugin_registry(void)
 {
     LOG_INFO("Initializing plugin registry");
+    if (plugin_registry.plugins) {
+        LOG_INFO("Plugin registry already initialized");
+        return 0;
+    }
     plugin_registry.plugins = malloc(plugin_registry.size * sizeof(Plugin));
     if (!plugin_registry.plugins) {
         LOG_WARN("Plugin registry initialization failed.");
@@ -272,24 +325,51 @@ int unload_plugins(void)
 {
     LOG_INFO("Closing plugin handlers");
     for (int i = 0; i < plugin_registry.count; i++) {
-        LOG_DEBUGF("Calling shutdown function for plugin %s", plugin_registry.plugins[i].path);
+        if (plugin_registry.plugins[i].path) {
+            LOG_DEBUGF("Calling shutdown function for plugin %s", plugin_registry.plugins[i].path);
+        } else {
+            LOG_DEBUG("Calling shutdown function for unknown plugin");
+        }
+        // Purge stale errors
+        dlerror();
         void* sym = dlsym(plugin_registry.plugins[i].handle, "plug_shutdown");
+        const char* err = dlerror();
+        if (err) {
+            LOG_WARNF("Loading plugin shutdown symbol failed: %s", err);
+        }
         union shutdown_fn_ptr u;
         u.obj = sym;
         plugin_shutdown_fn shutdown_function = u.fn;
         if (!shutdown_function) {
-            LOG_WARNF("No shutdown function defined for plugin %s", plugin_registry.plugins[i].path);
+            if (plugin_registry.plugins[i].path) {
+                LOG_WARNF("No shutdown function defined for plugin %s", plugin_registry.plugins[i].path);
+            } else {
+                LOG_WARN("No shutdown function defined for unknown plugin.")
+            }
         } else {
             if (shutdown_function() != 0) {
-                LOG_WARNF("Shutdown function for plugin %s failed", plugin_registry.plugins[i].path);
+                if (plugin_registry.plugins[i].path) {
+                    LOG_WARNF("Shutdown function for plugin %s failed", plugin_registry.plugins[i].path);
+                } else {
+                    LOG_WARN("Shutdown function failed for unknown plugin.")
+                }
             }
         }
-        LOG_DEBUGF("Closing handlers for plugin %s", plugin_registry.plugins[i].path);
+        if (plugin_registry.plugins[i].path) {
+            LOG_DEBUGF("Closing handlers for plugin %s", plugin_registry.plugins[i].path);
+        } else {
+            LOG_DEBUG("Closing handlers for unknown plugin");
+        }
         // Close the dynamic linking handler
-        dlclose(plugin_registry.plugins[i].handle);
+        if (plugin_registry.plugins[i].handle) {
+            dlclose(plugin_registry.plugins[i].handle);
+        }
         plugin_registry.plugins[i].handle = NULL;
         free(plugin_registry.plugins[i].path);
     }
     free(plugin_registry.plugins);
+    plugin_registry.size = 2;
+    plugin_registry.count = 0;
+    plugin_registry.plugins = NULL;
     return 0;
 }

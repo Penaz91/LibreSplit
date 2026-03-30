@@ -47,5 +47,4 @@ union shutdown_fn_ptr {
 void load_plugins(void);
 int unload_plugins(void);
 
-int initialize_plugin(const char* path);
 int initialize_plugin_registry(void);
