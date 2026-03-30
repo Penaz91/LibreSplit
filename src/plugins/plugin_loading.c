@@ -22,6 +22,8 @@ static PluginRegistry plugin_registry = {
     .plugins = NULL,
 };
 
+const static size_t PLUGIN_VERSION_LENGTH = 21; /*!< 10 char for major, 10 for minor + 1 for dot */
+
 /**
  * Does a check for ABI compatibility against the host ABI.
  *
@@ -57,13 +59,36 @@ static int print_version(const abi_version_t ver, char* buffer, size_t buffer_si
 {
     uint16_t major = ver >> 16;
     uint16_t minor = ver & 0xFFFF;
-    if (buffer_size < 21) {
+    if (buffer_size < PLUGIN_VERSION_LENGTH) {
         LOG_WARN("Buffer for writing version is too small");
         return -1;
     }
     int n = snprintf(buffer, buffer_size, "%u.%u", major, minor);
     if (n < 0 || (size_t)n >= buffer_size) {
         // Failed allocation or truncation
+        return -1;
+    }
+    return 0;
+}
+
+/**
+ * Does a check on the metadata passed, and eventually prints an error.
+ *
+ * @param[in] path The path of the plugin
+ * @param[in] property The property to be checked
+ * @param[in] property_name The name of the the checked property, used to print messages in logs.
+ *
+ * @returns 0 if everything is okay. -1 otherwise.
+ */
+static int check_metadata(const char* path, const char* property, const char* property_name)
+{
+    if (!property) {
+        const char* err = dlerror();
+        if (err) {
+            LOG_WARNF("Cannot load plugin %s from metadata for plugin: %s - %s", property_name, path, err);
+        } else {
+            LOG_WARNF("Cannot load plugin %s from metadata for plugin: %s", property_name, path);
+        }
         return -1;
     }
     return 0;
@@ -85,8 +110,7 @@ static int get_plugin_metadata(const char* path, char** name, char** description
     // Loads the plugin lazily, not executing any code
     void* plugin_handle = dlopen(path, RTLD_LAZY);
     if (!plugin_handle) {
-        LOG_WARNF("Unable to open plugin for inspection: %s", path);
-        LOG_WARNF("%s", dlerror());
+        LOG_WARNF("Unable to open plugin for inspection: %s - ", path, dlerror());
         return -1;
     }
 
@@ -99,8 +123,8 @@ static int get_plugin_metadata(const char* path, char** name, char** description
     }
 
     if (check_abi_version(*plugin_abi_version) < 0) {
-        char abi_version[21];
-        char host_version[21];
+        char abi_version[PLUGIN_VERSION_LENGTH];
+        char host_version[PLUGIN_VERSION_LENGTH];
         print_version(*plugin_abi_version, abi_version, sizeof(abi_version));
         print_version(api.abi_version, host_version, sizeof(host_version));
         LOG_WARNF(
@@ -113,12 +137,22 @@ static int get_plugin_metadata(const char* path, char** name, char** description
     }
 
     const char* plugin_name = (const char*)dlsym(plugin_handle, "plugin_name");
+    if (check_metadata(path, plugin_name, "name") != 0) {
+        dlclose(plugin_handle);
+        return -1;
+    }
     const char* plugin_desc = (const char*)dlsym(plugin_handle, "plugin_description");
+    if (check_metadata(path, plugin_desc, "description") != 0) {
+        dlclose(plugin_handle);
+        return -1;
+    }
     const char* plugin_version = (const char*)dlsym(plugin_handle, "plugin_version");
+    if (check_metadata(path, plugin_version, "version") != 0) {
+        dlclose(plugin_handle);
+        return -1;
+    }
     const char* plugin_author = (const char*)dlsym(plugin_handle, "plugin_author");
-
-    if (!plugin_name || !plugin_desc || !plugin_version || !plugin_author) {
-        LOG_WARNF("Plugin missing some metadata: %s", path);
+    if (check_metadata(path, plugin_author, "author") != 0) {
         dlclose(plugin_handle);
         return -1;
     }
@@ -177,7 +211,6 @@ static int initialize_plugin(const char* path)
         LOG_ERR("Plugin registry has not been initialized");
         return -1;
     }
-    char* p = NULL;
     void* handle = NULL;
     assert(plugin_registry.count <= plugin_registry.size);
     if (plugin_registry.count >= plugin_registry.size) {
@@ -218,23 +251,24 @@ static int initialize_plugin(const char* path)
         goto fail;
     }
 
-    p = strdup(path);
+    Plugin tmp = {
+        .handle = handle,
+        .path = strdup(path)
+    };
 
-    if (!p) {
+    if (!tmp.path) {
         LOG_WARNF("Cannot allocate memory for plugin path: %s", path);
         goto fail;
     }
 
-    plugin_registry.plugins[plugin_registry.count].handle = handle;
-    // This path is freed on application teardown, so it's probably a false positive on GCC Analyzer.
-    plugin_registry.plugins[plugin_registry.count].path = p;
+    plugin_registry.plugins[plugin_registry.count] = tmp;
     plugin_registry.count++;
 
     return 0;
 
 fail:
-    if (p) {
-        free(p);
+    if (tmp.path) {
+        free(tmp.path);
     }
     if (handle) {
         dlclose(handle);
@@ -248,19 +282,13 @@ fail:
 void load_plugins(void)
 {
     initialize_plugin_registry();
-    // HACK: [Penaz] [2026-03-15] Reduce the datadir size to account for the filename concat
-    // ^ and the "plugins/" addition, and some slack
-    char plugdir[PATH_MAX - 300];
-    char data_folder[PATH_MAX];
-    get_libresplit_data_folder_path(data_folder);
-    ssize_t n = snprintf(plugdir, sizeof(plugdir), "%s/plugins", data_folder);
-    if (n < 0 || (size_t)n > sizeof(plugdir)) {
-        LOG_WARN("Could not copy plugin path or buffer overflow detected.");
-        return;
-    }
+    char plugdir[PATH_MAX];
+    get_libresplit_data_folder_path(plugdir);
+    strlcat(plugdir, "/plugins/", sizeof(plugdir));
+    LOG_DEBUGF("Plugin Directory is: %s", plugdir);
     DIR* dir = opendir(plugdir);
     if (!dir) {
-        LOG_WARN("Unable to open plugins directory");
+        LOG_WARNF("Unable to open plugins directory: %s", plugdir);
         return;
     }
 
@@ -276,7 +304,15 @@ void load_plugins(void)
         char path[PATH_MAX];
         // If we didn't reduce the plugdir buffer size, GCC would complain about
         // possible buffer overflows here.
-        snprintf(path, sizeof(path), "%s/%s", plugdir, ent->d_name);
+        if (strlen(plugdir) + sizeof(ent->d_name) + 1 > PATH_MAX) {
+            LOG_WARN("Could not copy plugin path. Path may be too long.");
+            return;
+        }
+        ssize_t n = snprintf(path, sizeof(path), "%s/%s", plugdir, ent->d_name);
+        if (n < 0 || (size_t)n >= sizeof(plugdir)) {
+            LOG_WARN("Could not copy plugin path or buffer overflow detected.");
+            return;
+        }
 
         // Initialize the metadata
         char *name = NULL, *desc = NULL, *version = NULL, *author = NULL;
@@ -286,8 +322,7 @@ void load_plugins(void)
             free(desc);
             free(version);
             free(author);
-            // TODO: [Penaz] [2026-03-12] Make this optional according to user settings?
-            // FIXME: [Penaz] [2026-03-14] Remember to dlclose at the end
+            // TODO: [Penaz] [2026-03-14] Remember to dlclose at the end
             initialize_plugin(path);
         }
     }
