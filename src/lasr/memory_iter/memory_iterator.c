@@ -39,7 +39,7 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
     }
     // Reallocate buffer for reading
     *buffer = (uint8_t*)realloc(*buffer, window_size);
-    if (buffer == NULL) {
+    if (*buffer == NULL) {
         // Cannot allocate buffer, stop immediately
         LOG_WARN("Unable to allocate memory read buffer");
         *err = 1;

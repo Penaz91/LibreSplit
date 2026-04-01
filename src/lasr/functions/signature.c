@@ -253,6 +253,10 @@ int perform_sig_scan(lua_State* L)
                         free(pattern);
                         pattern = NULL;
                     }
+                    if (regions) {
+                        free(regions);
+                        regions = NULL;
+                    }
 
                     lua_pushnumber(L, result);
                     return 1;
