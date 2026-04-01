@@ -1,11 +1,15 @@
 #include "signature.h"
 
+#include "../memory_iter/memory_iterator.h"
 #include "../utils.h"
 
+#include <assert.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <lua.h>
 #include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -223,46 +227,69 @@ int perform_sig_scan(lua_State* L)
 
     for (int i = 0; i < regions_count; i++) {
         ProcessMap region = regions[i];
-        ssize_t region_size = region.end - region.start;
-        uint8_t* buffer = malloc(region_size);
-        if (!buffer) {
-            free(pattern);
-            free(regions);
-            log_error("Failed to allocate memory for region buffer");
+        MemoryIterator* mem_iter = mem_iterator_new(p_pid, region.start, region.end, pattern_length);
+        uint8_t* buffer = NULL;
+        uint8_t err = 0;
+        size_t buffer_length;
+        while (mem_next(&buffer, &buffer_length, mem_iter, &err)) {
+            // Now buffer contains the read memory chunk
+            assert(buffer_length >= pattern_length);
+            for (size_t j = 0; j <= buffer_length - pattern_length; ++j) {
+                if (match_pattern(buffer + j, pattern, pattern_length)) {
+                    // The resulting address is the start of the region
+                    // plus the index of the first byte that matches
+                    // plus the user-set offset, minus the process's base_address
+                    // or a subsequent memory read will read the wrong address or
+                    // go out of memory (due to commit 2b4417f offsetting memory reads)
+                    // So this result might be negative if the main module happens to be after
+                    // the found signature. This should be corrected by readAddress.
+                    intptr_t result = (mem_iter->cursor + j + offset) - process.base_address;
+
+                    if (buffer) {
+                        free(buffer);
+                        buffer = NULL;
+                    }
+                    if (pattern) {
+                        free(pattern);
+                        pattern = NULL;
+                    }
+
+                    lua_pushnumber(L, result);
+                    return 1;
+                }
+            }
+        }
+        if (buffer) {
+            free(buffer);
+            buffer = NULL;
+        }
+        if (mem_iter) {
+            free(mem_iter);
+            mem_iter = NULL;
+        }
+        if (err) {
+            if (pattern) {
+                free(pattern);
+                pattern = NULL;
+            }
+            if (regions) {
+                free(regions);
+                regions = NULL;
+            }
+            log_error("There has been an error in sig_scan: %d", err);
             lua_pushnil(L);
             return 1;
         }
-
-        if (!validate_process_memory(p_pid, region.start, buffer, region_size)) {
-            free(buffer);
-            continue; // Continue to next region
-        }
-
-        for (size_t j = 0; j <= region_size - pattern_length; ++j) {
-            if (match_pattern(buffer + j, pattern, pattern_length)) {
-                // The resulting address is the start of the region
-                // plus the index of the first byte that matches
-                // plus the user-set offset, minus the process's base_address
-                // or a subsequent memory read will read the wrong address or
-                // go out of memory (due to commit 2b4417f offsetting memory reads)
-                // So this result might be negative if the main module happens to be after
-                // the found signature. This should be corrected by readAddress.
-                intptr_t result = (region.start + j + offset) - process.base_address;
-
-                free(buffer);
-                free(pattern);
-                free(regions);
-
-                lua_pushnumber(L, result);
-                return 1;
-            }
-        }
-
-        free(buffer);
     }
 
-    free(pattern);
-    free(regions);
+    if (pattern) {
+        free(pattern);
+        pattern = NULL;
+    }
+    if (regions) {
+        free(regions);
+        regions = NULL;
+    }
 
     // No match found
     log_error("No match found for the given signature");
