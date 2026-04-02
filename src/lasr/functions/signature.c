@@ -188,7 +188,6 @@ int perform_sig_scan(lua_State* L)
     int ret = 1;
     MemoryIterator* mem_iter = NULL;
     uint16_t* pattern = NULL;
-    uint8_t* buffer = NULL;
     ProcessMap* regions = NULL;
     if (lua_gettop(L) != 2) {
         log_error("Invalid number of arguments: expected 2 (signature, offset)");
@@ -238,12 +237,11 @@ int perform_sig_scan(lua_State* L)
         ProcessMap region = regions[i];
         mem_iter = mem_iterator_new(p_pid, region.start, region.end, pattern_length);
         uint8_t err = 0;
-        size_t buffer_length;
-        while (mem_next(&buffer, &buffer_length, mem_iter, &err)) {
+        while (mem_next(mem_iter, &err)) {
             // Now buffer contains the read memory chunk
-            assert(buffer_length >= pattern_length);
-            for (size_t j = 0; j <= buffer_length - pattern_length; ++j) {
-                if (match_pattern(buffer + j, pattern, pattern_length)) {
+            assert(mem_iter->buffer_size >= pattern_length);
+            for (size_t j = 0; j <= mem_iter->buffer_size - pattern_length; ++j) {
+                if (match_pattern(mem_iter->buffer + j, pattern, pattern_length)) {
                     // The resulting address is the start of the region
                     // plus the index of the first byte that matches
                     // plus the user-set offset, minus the process's base_address
@@ -278,12 +276,9 @@ int perform_sig_scan(lua_State* L)
     lua_pushnil(L);
     ret = 1;
 cleanup:
-    free(buffer);
-    buffer = NULL;
     free(pattern);
     pattern = NULL;
-    free(mem_iter);
-    mem_iter = NULL;
+    mem_iterator_destroy(mem_iter);
     free(regions);
     regions = NULL;
     return ret;

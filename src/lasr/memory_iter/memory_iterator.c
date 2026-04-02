@@ -27,26 +27,30 @@ MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uint
     if (iter == NULL) {
         return NULL;
     }
+    iter->buffer = (uint8_t*)malloc(MEMORY_WINDOW_SIZE);
+    if (iter->buffer == NULL) {
+        free(iter);
+        return NULL;
+    }
     iter->pid = pid;
     iter->start = start;
     iter->end = end;
     iter->overlap = overlap;
     iter->cursor = start;
     iter->last_cursor = start;
+    iter->buffer_size = MEMORY_WINDOW_SIZE;
     return iter;
 }
 
 /**
  * Reads the next chunk of memory.
  *
- * @param[out] buffer The buffer to copy memory into.
- * @param[out] buffer_size The size of the buffer that is allocated by the iterator.
  * @param[in] iterator The pointer to the MemoryIterator used.
  * @param[out] err The error code returned to the calling function.
  *
  * @returns 1 if there has been a memory read, 0 otherwise.
  */
-int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, uint8_t* err)
+int mem_next(MemoryIterator* iterator, uint8_t* err)
 {
     assert(iterator != NULL);
     assert(iterator->cursor >= iterator->start);
@@ -65,20 +69,8 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
             return 0;
         }
     }
-    // Reallocate buffer for reading
-    // PERF: Since we now accept short reads, we may not need to realloc every time
-    // ^ just alloc the biggest accepted read once. Maybe pointer should be in the iterator struct?
-    uint8_t* tmp = realloc(*buffer, window_size);
-    if (tmp == NULL) {
-        // Cannot allocate buffer, stop immediately
-        LOG_WARN("Unable to allocate memory read buffer");
-        *err = 1;
-        return 0;
-    }
-    *buffer = tmp;
-    tmp = NULL;
     // Read memory
-    struct iovec local_iov = { *buffer, window_size };
+    struct iovec local_iov = { iterator->buffer, window_size };
     struct iovec remote_iov = { (void*)iterator->cursor, window_size };
     ssize_t nread = process_vm_readv(iterator->pid, &local_iov, 1, &remote_iov, 1, 0);
     if (nread == (ssize_t)window_size) {
@@ -90,7 +82,7 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
             // Matches between chunks
             iterator->cursor -= iterator->overlap;
         }
-        *buffer_size = window_size;
+        iterator->buffer_size = window_size;
         // There are more things to read
         return 1;
     } else {
@@ -105,7 +97,7 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
             *err = 3;
         } else if (nread == 0) {
             // No bytes read. We stop here
-            *buffer_size = 0;
+            iterator->buffer_size = 0;
             return 0;
         } else {
             // Short read
@@ -113,7 +105,7 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
             // Save the short read cursor
             iterator->last_cursor = iterator->cursor;
             // Advance by the number of bytes read
-            *buffer_size = (size_t)nread;
+            iterator->buffer_size = (size_t)nread;
             iterator->cursor += (size_t)nread;
             if (!last_iter) {
                 // If we're not done, move it backwards a little to account for
@@ -131,4 +123,12 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
     }
     // Nothing more to read or error has happened.
     return 0;
+}
+
+bool memory_iterator_destroy(MemoryIterator* iterator)
+{
+    free(iterator->buffer);
+    iterator->buffer = NULL;
+    free(iterator);
+    return true;
 }
