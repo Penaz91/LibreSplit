@@ -261,6 +261,10 @@ int perform_sig_scan(lua_State* L)
         }
         free(mem_iter);
         mem_iter = NULL;
+        if (err == 3) {
+            // Unreadable map
+            continue;
+        }
         if (err) {
             log_error("There has been an error in sig_scan: error code %d", err);
             lua_pushnil(L);

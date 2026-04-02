@@ -11,7 +11,8 @@ typedef struct _MemoryIterator {
     pid_t pid; /*!< ID of the process to be iterated over */
     uintptr_t start; /*!< Keeps the start address of the region to be read */
     uintptr_t end; /*!< Keeps the end address of the region to be read */
-    uintptr_t cursor; /*!< The pointer to the beginning of the memory region to be read*/
+    uintptr_t last_cursor; /*!< The pointer to the beginning of the memory chunk to be scanned */
+    uintptr_t cursor; /*!< The pointer to the beginning of the next memory chunk to be read */
     ptrdiff_t overlap; /*!< The overlap between two memory chunks to maintain */
 } MemoryIterator;
 

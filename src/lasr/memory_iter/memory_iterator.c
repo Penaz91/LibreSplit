@@ -32,6 +32,7 @@ MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uint
     iter->end = end;
     iter->overlap = overlap;
     iter->cursor = start;
+    iter->last_cursor = start;
     return iter;
 }
 
@@ -57,7 +58,9 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
     }
     if (iterator->cursor + window_size > iterator->end) {
         // We're at the last iteration and the window size is too big
-        window_size = iterator->end - iterator->cursor;
+        // FIXME: [Penaz] [2026-04-02] I received a short memory read while testing, this
+        // ^ might not work
+        window_size = (size_t)(iterator->end - iterator->cursor);
         last_iter = true;
     }
     // Reallocate buffer for reading
@@ -74,6 +77,7 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
     struct iovec remote_iov = { (void*)iterator->cursor, window_size };
     ssize_t nread = process_vm_readv(iterator->pid, &local_iov, 1, &remote_iov, 1, 0);
     if (nread == (ssize_t)window_size) {
+        iterator->last_cursor = iterator->cursor;
         // If read is okay, move the cursor forward
         iterator->cursor += window_size;
         if (!last_iter) {
@@ -85,7 +89,8 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
         return 1;
     } else {
         if (nread < 0) {
-            LOG_WARNF("Memory read error, errno is %d (%s)", errno, strerror(errno));
+            LOG_DEBUGF("Memory read error, errno is %d (%s)", errno, strerror(errno));
+            LOG_DEBUGF("Cursor: %x, Start: %x, End: %x, Overlap: %x", iterator->cursor, iterator->start, iterator->end, iterator->overlap);
             *err = 3;
         } else {
             // Memory read error
