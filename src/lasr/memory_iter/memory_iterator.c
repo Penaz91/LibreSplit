@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const size_t MEMORY_WINDOW_SIZE = 0x100000; /*!< The size of the memory chunks to be read*/
+const size_t MEMORY_WINDOW_SIZE = 0x10000; /*!< The size of the memory chunks to be read*/
 
 /**
  * Creates a new chunked Memory Iterator.
