@@ -249,7 +249,7 @@ int perform_sig_scan(lua_State* L)
                     // go out of memory (due to commit 2b4417f offsetting memory reads)
                     // So this result might be negative if the main module happens to be after
                     // the found signature. This should be corrected by readAddress.
-                    intptr_t result = (mem_iter->cursor + j + offset) - process.base_address;
+                    intptr_t result = (mem_iter->last_cursor + j + offset) - process.base_address;
 
                     lua_pushnumber(L, result);
                     ret = 1;
