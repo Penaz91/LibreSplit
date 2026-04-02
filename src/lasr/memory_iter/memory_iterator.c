@@ -7,8 +7,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-const ptrdiff_t MEMORY_WINDOW_SIZE = 0x100000;
+const ptrdiff_t MEMORY_WINDOW_SIZE = 0x100000; /*!< The size of the memory chunks to be read*/
 
+/**
+ * Creates a new chunked Memory Iterator.
+ *
+ * @param[in] pid The process id to scan for.
+ * @param[in] start The start address to start the scan from.
+ * @param[in] end The end address onto where to finish the scan.
+ * @param[in] overlap The amount of overlap between two successive iterations.
+ *
+ * @returns A pointer to a new memory iterator.
+ */
 MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uintptr_t overlap)
 {
     MemoryIterator* iter = malloc(sizeof(MemoryIterator));
@@ -23,6 +33,16 @@ MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uint
     return iter;
 }
 
+/**
+ * Reads the next chunk of memory.
+ *
+ * @param[out] buffer The buffer to copy memory into.
+ * @param[out] buffer_size The size of the buffer that is allocated by the iterator.
+ * @param[in] iterator The pointer to the MemoryIterator used.
+ * @param[out] err The error code returned to the calling function.
+ *
+ * @returns 1 if there has been a memory read, 0 otherwise.
+ */
 int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, uint8_t* err)
 {
     ptrdiff_t window_size = MEMORY_WINDOW_SIZE;
