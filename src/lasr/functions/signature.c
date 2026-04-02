@@ -280,7 +280,7 @@ int perform_sig_scan(lua_State* L)
                 free(regions);
                 regions = NULL;
             }
-            log_error("There has been an error in sig_scan: %d", err);
+            log_error("There has been an error in sig_scan: error code %d", err);
             lua_pushnil(L);
             return 1;
         }

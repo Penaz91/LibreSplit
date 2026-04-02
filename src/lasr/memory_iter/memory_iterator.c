@@ -62,7 +62,7 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
         return 1;
     } else {
         // Memory read error
-        // TODO: [Penaz] [2026-04-01] Change this to an enum
+        LOG_WARN("Memory read error, possible short read");
         *err = 2;
     }
     // Nothing more to read or error has happened.
