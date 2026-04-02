@@ -228,7 +228,6 @@ int perform_sig_scan(lua_State* L)
     int regions_count = 0;
     regions = get_memory_regions(p_pid, &regions_count);
     if (!regions) {
-        free(pattern);
         log_error("Failed to get memory regions");
         lua_pushnil(L);
         ret = 1;
