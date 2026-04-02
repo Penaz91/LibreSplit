@@ -185,16 +185,23 @@ bool validate_process_memory(pid_t pid, uintptr_t address, void* buffer, size_t 
  */
 int perform_sig_scan(lua_State* L)
 {
+    int ret = 1;
+    MemoryIterator* mem_iter = NULL;
+    uint16_t* pattern = NULL;
+    uint8_t* buffer = NULL;
+    ProcessMap* regions = NULL;
     if (lua_gettop(L) != 2) {
         log_error("Invalid number of arguments: expected 2 (signature, offset)");
         lua_pushnil(L);
-        return 1;
+        ret = 1;
+        goto cleanup;
     }
 
     if (!lua_isstring(L, 1) || !lua_isnumber(L, 2)) {
         log_error("Invalid argument types: expected (string, number)");
         lua_pushnil(L);
-        return 1;
+        ret = 1;
+        goto cleanup;
     }
 
     pid_t p_pid = process.pid;
@@ -205,30 +212,32 @@ int perform_sig_scan(lua_State* L)
     if (strlen(signature) == 0) {
         log_error("Signature string cannot be empty");
         lua_pushnil(L);
-        return 1;
+        ret = 1;
+        goto cleanup;
     }
 
     size_t pattern_length;
-    uint16_t* pattern = convert_signature(signature, &pattern_length);
+    pattern = convert_signature(signature, &pattern_length);
     if (!pattern) {
         log_error("Failed to convert signature");
         lua_pushnil(L);
-        return 1;
+        ret = 1;
+        goto cleanup;
     }
 
     int regions_count = 0;
-    ProcessMap* regions = get_memory_regions(p_pid, &regions_count);
+    regions = get_memory_regions(p_pid, &regions_count);
     if (!regions) {
         free(pattern);
         log_error("Failed to get memory regions");
         lua_pushnil(L);
-        return 1;
+        ret = 1;
+        goto cleanup;
     }
 
     for (int i = 0; i < regions_count; i++) {
         ProcessMap region = regions[i];
-        MemoryIterator* mem_iter = mem_iterator_new(p_pid, region.start, region.end, pattern_length);
-        uint8_t* buffer = NULL;
+        mem_iter = mem_iterator_new(p_pid, region.start, region.end, pattern_length);
         uint8_t err = 0;
         size_t buffer_length;
         while (mem_next(&buffer, &buffer_length, mem_iter, &err)) {
@@ -245,57 +254,34 @@ int perform_sig_scan(lua_State* L)
                     // the found signature. This should be corrected by readAddress.
                     intptr_t result = (mem_iter->cursor + j + offset) - process.base_address;
 
-                    if (buffer) {
-                        free(buffer);
-                        buffer = NULL;
-                    }
-                    if (pattern) {
-                        free(pattern);
-                        pattern = NULL;
-                    }
-                    if (regions) {
-                        free(regions);
-                        regions = NULL;
-                    }
                     lua_pushnumber(L, result);
-                    return 1;
+                    ret = 1;
+                    goto cleanup;
                 }
             }
         }
-        if (buffer) {
-            free(buffer);
-            buffer = NULL;
-        }
-        if (mem_iter) {
-            free(mem_iter);
-            mem_iter = NULL;
-        }
+        free(mem_iter);
+        mem_iter = NULL;
         if (err) {
-            if (pattern) {
-                free(pattern);
-                pattern = NULL;
-            }
-            if (regions) {
-                free(regions);
-                regions = NULL;
-            }
             log_error("There has been an error in sig_scan: error code %d", err);
             lua_pushnil(L);
-            return 1;
+            ret = 1;
+            goto cleanup;
         }
-    }
-
-    if (pattern) {
-        free(pattern);
-        pattern = NULL;
-    }
-    if (regions) {
-        free(regions);
-        regions = NULL;
     }
 
     // No match found
     log_error("No match found for the given signature");
     lua_pushnil(L);
-    return 1;
+    ret = 1;
+cleanup:
+    free(buffer);
+    buffer = NULL;
+    free(pattern);
+    pattern = NULL;
+    free(mem_iter);
+    mem_iter = NULL;
+    free(regions);
+    regions = NULL;
+    return ret;
 }
