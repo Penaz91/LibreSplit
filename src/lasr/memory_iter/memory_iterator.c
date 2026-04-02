@@ -2,12 +2,14 @@
 #include "src/lasr/utils.h"
 #include "src/logging.h"
 #include <assert.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
-const ptrdiff_t MEMORY_WINDOW_SIZE = 0x100000; /*!< The size of the memory chunks to be read*/
+const size_t MEMORY_WINDOW_SIZE = 0x100000; /*!< The size of the memory chunks to be read*/
 
 /**
  * Creates a new chunked Memory Iterator.
@@ -45,7 +47,7 @@ MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uint
  */
 int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, uint8_t* err)
 {
-    ptrdiff_t window_size = MEMORY_WINDOW_SIZE;
+    size_t window_size = MEMORY_WINDOW_SIZE;
     bool last_iter = false;
     assert(iterator->cursor >= iterator->start);
     if (iterator->cursor >= iterator->end) {
@@ -81,9 +83,14 @@ int mem_next(uint8_t** buffer, size_t* buffer_size, MemoryIterator* iterator, ui
         // There are more things to read
         return 1;
     } else {
-        // Memory read error
-        LOG_WARN("Memory read error, possible short read");
-        *err = 2;
+        if (nread < 0) {
+            LOG_WARNF("Memory read error, errno is %d (%s)", errno, strerror(errno));
+            *err = 3;
+        } else {
+            // Memory read error
+            LOG_WARNF("Memory read error: nread=%zd, expected=%td", nread, window_size);
+            *err = 2;
+        }
     }
     // Nothing more to read or error has happened.
     return 0;
