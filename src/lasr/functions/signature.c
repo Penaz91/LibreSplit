@@ -257,8 +257,7 @@ int perform_sig_scan(lua_State* L)
                 }
             }
         }
-        free(mem_iter);
-        mem_iter = NULL;
+        mem_iterator_destroy(&mem_iter);
         if (err == 3) {
             // Unreadable map
             continue;
@@ -278,7 +277,7 @@ int perform_sig_scan(lua_State* L)
 cleanup:
     free(pattern);
     pattern = NULL;
-    mem_iterator_destroy(mem_iter);
+    mem_iterator_destroy(&mem_iter);
     free(regions);
     regions = NULL;
     return ret;

@@ -27,11 +27,12 @@ MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uint
     if (iter == NULL) {
         return NULL;
     }
-    iter->buffer = (uint8_t*)malloc(MEMORY_WINDOW_SIZE);
-    if (iter->buffer == NULL) {
+    uint8_t* tmp = (uint8_t*)malloc(MEMORY_WINDOW_SIZE);
+    if (tmp == NULL) {
         free(iter);
         return NULL;
     }
+    iter->buffer = tmp;
     iter->pid = pid;
     iter->start = start;
     iter->end = end;
@@ -89,7 +90,7 @@ int mem_next(MemoryIterator* iterator, uint8_t* err)
         if (nread < 0) {
             if (errno == EINTR) {
                 // TODO: [Penaz] [2026-04-02] Memory read interrupted by a transitory interruption.
-                // For now we'll still bail out. but ideally we should retry.
+                // ^ For now we'll still bail out. but ideally we should retry.
                 LOG_DEBUG("Read interrupted by EINTR");
             }
             LOG_DEBUGF("Memory read error, errno is %d (%s)", errno, strerror(errno));
@@ -109,13 +110,13 @@ int mem_next(MemoryIterator* iterator, uint8_t* err)
             iterator->cursor += (size_t)nread;
             if (!last_iter) {
                 // If we're not done, move it backwards a little to account for
-                // Matches between chunks. If the nread is shorter, we accept the lost loop
-                // and hope for next loop to come and save us
+                // Matches between chunks.
                 if (nread > iterator->overlap) {
+                    // If the short read is longer than the overlap, we try to continue
                     iterator->cursor -= iterator->overlap;
                 } else {
-                    // At least advance 1 byte
-                    iterator->cursor -= nread + 1;
+                    // If it is shorter, we bail and hope for the next loop
+                    return 0;
                 }
             }
             return 1;
@@ -125,10 +126,13 @@ int mem_next(MemoryIterator* iterator, uint8_t* err)
     return 0;
 }
 
-bool mem_iterator_destroy(MemoryIterator* iterator)
+bool mem_iterator_destroy(MemoryIterator** iterator)
 {
-    free(iterator->buffer);
-    iterator->buffer = NULL;
-    free(iterator);
+    if (*iterator != NULL) {
+        free((*iterator)->buffer);
+        (*iterator)->buffer = NULL;
+        free(*iterator);
+        *iterator = NULL;
+    }
     return true;
 }
