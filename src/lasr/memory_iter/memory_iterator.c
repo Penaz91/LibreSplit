@@ -125,7 +125,7 @@ int mem_next(MemoryIterator* iterator, uint8_t* err)
     return 0;
 }
 
-bool memory_iterator_destroy(MemoryIterator* iterator)
+bool mem_iterator_destroy(MemoryIterator* iterator)
 {
     free(iterator->buffer);
     iterator->buffer = NULL;
