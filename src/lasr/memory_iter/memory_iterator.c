@@ -54,6 +54,7 @@ MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uint
 int mem_next(MemoryIterator* iterator, uint8_t* err)
 {
     assert(iterator != NULL);
+    assert(iterator->cursor != 0);
     assert(iterator->cursor >= iterator->start);
     size_t window_size = MEMORY_WINDOW_SIZE;
     bool last_iter = false;
