@@ -22,3 +22,4 @@ typedef struct _MemoryIterator {
 MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uintptr_t overlap);
 int mem_next(MemoryIterator* iterator, uint8_t* err);
 bool mem_iterator_destroy(MemoryIterator** iterator);
+bool mem_iterator_recycle(MemoryIterator** iterator, pid_t pid, uintptr_t start, uintptr_t end, uintptr_t overlap);

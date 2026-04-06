@@ -136,3 +136,36 @@ bool mem_iterator_destroy(MemoryIterator** iterator)
     }
     return true;
 }
+
+/**
+ * Reinitialies an existing MemoryIterator to avoid useless reinstantiations.
+ *
+ * This works on quite a big assumption: that the buffer inside of the MemoryIterator
+ * is MEMORY_WINDOW_SIZE big at allocation time. This should be a given if MemoryIterator
+ * was created via mem_iterator_new().
+ *
+ * @param[inout] iter The reference to the Memory Iterator to recycle.
+ * @param[in] pid The process ID to tie the MemoryIterator to.
+ * @param[in] start The start address to start the scan from.
+ * @param[in] end The end address onto where to finish the scan.
+ * @param[in] overlap The amount of overlap between two successive iterations.
+ */
+bool mem_iterator_recycle(MemoryIterator** iter, pid_t pid, uintptr_t start, uintptr_t end, uintptr_t overlap)
+{
+    if (*iter == NULL) {
+        LOG_ERR("Cannot recycle NULL pointers.");
+        return false;
+    }
+    if ((*iter)->buffer == NULL) {
+        LOG_ERR("Cannot recycle a memory iterator with a NULL buffer");
+        return false;
+    }
+    (*iter)->pid = pid;
+    (*iter)->start = start;
+    (*iter)->end = end;
+    (*iter)->overlap = overlap;
+    (*iter)->cursor = start;
+    (*iter)->last_cursor = start;
+    (*iter)->buffer_size = MEMORY_WINDOW_SIZE;
+    return true;
+}

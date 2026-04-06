@@ -1,5 +1,6 @@
 #include "signature.h"
 
+#include "../../logging.h"
 #include "../memory_iter/memory_iterator.h"
 #include "../utils.h"
 
@@ -233,9 +234,15 @@ int perform_sig_scan(lua_State* L)
         goto cleanup;
     }
 
+    // Forward initialization of the memory iterator.
+    mem_iter = mem_iterator_new(p_pid, 0, 0, pattern_length);
+
     for (int i = 0; i < regions_count; i++) {
         ProcessMap region = regions[i];
-        mem_iter = mem_iterator_new(p_pid, region.start, region.end, pattern_length);
+        if (!mem_iterator_recycle(&mem_iter, p_pid, region.start, region.end, pattern_length)) {
+            LOG_ERR("Unable to recycle memory iterator, exiting the sig_scan loop");
+            goto cleanup;
+        }
         uint8_t err = 0;
         while (mem_next(mem_iter, &err)) {
             // Now buffer contains the read memory chunk
@@ -257,7 +264,6 @@ int perform_sig_scan(lua_State* L)
                 }
             }
         }
-        mem_iterator_destroy(&mem_iter);
         if (err == 3) {
             // Unreadable map
             continue;
