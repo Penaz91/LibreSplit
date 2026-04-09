@@ -290,6 +290,11 @@ int ls_game_create(ls_game** game_ptr, const char* path, char** error_msg)
         error = 1;
         size_t msg_len = snprintf(NULL, 0, "%s (%d:%d)", json_error.text, json_error.line, json_error.column);
         *error_msg = calloc(msg_len + 1, sizeof(char));
+        if (*error_msg == NULL) {
+            LOG_ERR("Cannot allocate memory for error message");
+            error = 1;
+            goto game_create_error;
+        }
         sprintf(*error_msg, "%s (%d:%d)", json_error.text, json_error.line, json_error.column);
         goto game_create_error;
     }
