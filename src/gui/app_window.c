@@ -8,8 +8,12 @@
 #include "src/keybinds/delayed_callbacks.h"
 #include "src/keybinds/keybinds_callbacks.h"
 #include "src/lasr/auto-splitter.h"
+#include "src/logging.h"
 #include "src/settings/settings.h"
 #include "src/settings/utils.h"
+#include "src/timer.h"
+#include <stdatomic.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 extern atomic_bool exit_requested; /*!< Set to 1 when LibreSplit is exiting */
@@ -227,12 +231,15 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
     LSAppWindow* win = (LSAppWindow*)widget;
     if (win->timer) {
         ls_timer_release(win->timer);
+        win->timer = 0;
     }
     if (win->game) {
         ls_game_release(win->game);
+        win->game = 0;
     }
     atomic_store(&auto_splitter_enabled, 0);
     atomic_store(&exit_requested, 1);
+    close_logger();
     // Close any other open application windows (settings, dialogs, etc.)
     GApplication* app = g_application_get_default();
     if (app) {
@@ -256,7 +263,6 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
 gboolean ls_app_window_step(gpointer data)
 {
     LSAppWindow* win = data;
-    long long now = ls_time_now();
     static int set_cursor;
     if (win->opts.hide_cursor && !set_cursor) {
         GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(win));
@@ -266,36 +272,50 @@ gboolean ls_app_window_step(gpointer data)
             set_cursor = 1;
         }
     }
+
     if (win->timer) {
-        ls_timer_step(win->timer, now);
+        ls_timer_step(win->timer);
+
+        // printf("RTA: %llu; LT: %llu; LRT: %llu; GT: %llu; GT?: %d\n",
+        //     win->timer->realTime,
+        //     win->timer->loadingTime,
+        //     (win->timer->realTime - win->timer->loadingTime),
+        //     win->timer->gameTime,
+        //     win->timer->usingGameTime);
 
         if (atomic_load(&auto_splitter_enabled)) {
-            if (atomic_load(&call_start) && !win->timer->loading) {
-                timer_start(win, true);
+            if (atomic_load(&run_using_game_time_call)) {
+                win->timer->usingGameTime = atomic_load(&run_using_game_time);
+                atomic_store(&run_using_game_time_call, false);
+            }
+            if (atomic_load(&call_start)) {
+                timer_start(win);
                 atomic_store(&call_start, 0);
             }
             if (atomic_load(&call_split)) {
-                timer_split(win, true);
+                timer_split(win);
                 atomic_store(&call_split, 0);
             }
             if (atomic_load(&toggle_loading)) {
                 win->timer->loading = !win->timer->loading;
-                if (win->timer->running && win->timer->loading) {
-                    timer_stop(win);
-                } else if (win->timer->started && !win->timer->running && !win->timer->loading) {
-                    timer_start(win, true);
+
+                if (win->timer->running) {
+                    if (win->timer->loading) {
+                        timer_pause(win);
+                    } else {
+                        timer_unpause(win);
+                    }
                 }
                 atomic_store(&toggle_loading, 0);
             }
-            if (atomic_load(&call_reset)) {
-                timer_reset(win);
-                atomic_store(&run_started, false);
-                atomic_store(&call_reset, 0);
-            }
             if (atomic_load(&update_game_time)) {
                 // Update the timer with the game time from auto-splitter
-                win->timer->time = atomic_load(&game_time_value);
+                win->timer->gameTime = atomic_load(&game_time_value);
                 atomic_store(&update_game_time, false);
+            }
+            if (atomic_load(&call_reset)) {
+                timer_stop_and_reset(win);
+                atomic_store(&call_reset, 0);
             }
         }
     }
@@ -332,6 +352,7 @@ static void ls_app_window_init(LSAppWindow* win)
 
     win->display = gdk_display_get_default();
     win->style = NULL;
+    win->context_menu = NULL;
 
     // make data path
     win->data_path[0] = '\0';

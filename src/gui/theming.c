@@ -158,7 +158,6 @@ void ls_app_load_theme_with_fallback(LSAppWindow* win, const char* name, const c
             (gssize)fallback_css_data_len(), &gerror);
         if (gerror != NULL) {
             g_printerr("Error loading default theme CSS: %s\n", gerror->message);
-            error = true;
             g_error_free(gerror);
             gerror = NULL;
         }
