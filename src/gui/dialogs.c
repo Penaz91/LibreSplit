@@ -27,6 +27,14 @@ static void dialog_response_cb(GtkWidget* dialog, gint response_id, gpointer use
     gtk_widget_destroy(dialog);
 }
 
+/**
+ * Displays a dialog in case LibreSplit is not able to read the target
+ * process memory.
+ *
+ * @param data Unused
+ *
+ * @return Always false, to remove the function from the queue
+ */
 gboolean display_non_capable_mem_read_dialog(gpointer data)
 {
     atomic_store(&auto_splitter_enabled, 0);
@@ -63,6 +71,12 @@ gboolean display_non_capable_mem_read_dialog(gpointer data)
     return FALSE; // False removes this function from the queue
 }
 
+/**
+ * Displays a dialog asking for confirmation for a reset when
+ * there is a gold split involved.
+ *
+ * @return True or false, depending on whether on how the user answered the dialog
+ */
 bool display_confirm_reset_dialog(void)
 {
     GtkApplication* app = GTK_APPLICATION(g_application_get_default());

@@ -27,6 +27,11 @@ G_DEFINE_TYPE(LSApp, ls_app, GTK_TYPE_APPLICATION)
 
 G_DEFINE_TYPE(LSAppWindow, ls_app_window, GTK_TYPE_APPLICATION_WINDOW)
 
+/**
+ * Shows/hides the title bar and window decorations.
+ *
+ * @param win The LibreSplit Window pointer.
+ */
 void toggle_decorations(LSAppWindow* win)
 {
     LOG_DEBUG("Toggling window decorations");
@@ -36,6 +41,11 @@ void toggle_decorations(LSAppWindow* win)
     config_save();
 }
 
+/**
+ * Toggles the EWMH "Always on top" flag.
+ *
+ * @param win The LibreSplit Window pointer.
+ */
 void toggle_win_on_top(LSAppWindow* win)
 {
     LOG_DEBUG("Toggling 'Always on Top' window flag");
@@ -45,6 +55,13 @@ void toggle_win_on_top(LSAppWindow* win)
     config_save();
 }
 
+/**
+ * Resizes the LibreSplit main window to a certain width and height.
+ *
+ * @param win The LibreSplit Window pointer.
+ * @param window_width The new width of the window.
+ * @param window_height The new height of the window.
+ */
 static void resize_window(LSAppWindow* win,
     int window_width,
     int window_height)
@@ -61,6 +78,15 @@ static void resize_window(LSAppWindow* win,
     }
 }
 
+/**
+ * Resizes the LibreSplit main window when a configure-event is fired.
+ *
+ * @param widget The Application window
+ * @param event The resize event
+ * @param data Unused
+ *
+ * @return Always false.
+ */
 gboolean ls_app_window_resize(GtkWidget* widget,
     GdkEvent* event,
     gpointer data)

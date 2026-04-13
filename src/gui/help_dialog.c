@@ -7,11 +7,13 @@
 static GtkWidget* help_window_singleton = NULL;
 
 /**
- * Help window destructor.
+ * Destructor for the help dialog window.
  *
- * @param widget The GTK Help Window;
- * @param event The Destruction event
+ * @param widget The window to be destroyed.
+ * @param event The window destruction event.
  * @param user_data Unused.
+ *
+ * @returns Always true
  */
 static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpointer user_data)
 {
@@ -22,10 +24,10 @@ static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpoint
 }
 
 /**
- * Builds the help window
+ * Builds the about/help dialog.
  *
- * @param app The LibreSplit GTK Application
- * @param data Unused
+ * @param app The main LibreSplit Application.
+ * @param data Unused.
  */
 static void build_help_dialog(GtkApplication* app, gpointer data)
 {
@@ -98,11 +100,11 @@ static void build_help_dialog(GtkApplication* app, gpointer data)
 }
 
 /**
- * Action recalled by the context menu to show the help dialog.
+ * Shows the help/about dialog when the ContextMenu option is clicked.
  *
- * @param action Unused
- * @param parameter The LibreSplit GTK app (if not NULL)
- * @param app The LibreSplit GTK app (fallback)
+ * @param action The action performed.
+ * @param parameter Parameters to the action
+ * @param app The LibreSplit Application pointer.
  */
 void show_help_dialog(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
