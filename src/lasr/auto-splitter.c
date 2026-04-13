@@ -109,14 +109,9 @@ static const lasr_function luac_functions[] = {
     { "getModuleSize", getModuleSize },
     { "shallow_copy_tbl", shallow_copy_tbl },
     { "print_tbl", print_tbl },
-    { "b_and", b_and },
-    { "b_or", b_or },
-    { "b_xor", b_xor },
-    { "b_not", b_not },
-    { "b_lshift", b_lshift },
-    { "b_rshift", b_rshift },
     { "getMaps", getMaps },
     { "str2ida", str2ida },
+    { "tohex", tohex },
     { NULL, NULL }
 };
 

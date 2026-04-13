@@ -1,170 +1,34 @@
 #include "bitwise.h"
-
+#include <lua.h>
 #include <stdio.h>
 
 /**
- * Performs a binary "and" operation between two integers.
+ * Stand-in for bit.tohex, without the 8-bit limitation.
  *
- * @param L the Lua state.
- */
-int b_and(lua_State* L)
-{
-    if (lua_gettop(L) != 2) {
-        // Too few/many arguments passed
-        printf("[b_and] Two arguments are required.");
-        return 0;
-    }
-
-    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2)) {
-        // Arguments are not numbers
-        printf("[b_and] Both arguments must be integers");
-        return 0;
-    }
-
-    lua_Integer a = lua_tointeger(L, 1);
-    lua_Integer b = lua_tointeger(L, 2);
-
-    lua_Integer result = a & b;
-
-    lua_pushinteger(L, result);
-    return 1;
-}
-
-/**
- * Performs a binary "or" operation between two integers.
+ * Accepts at most 64bit-long numbers.
  *
- * @param L the Lua state.
+ * @param L The lua stack
  */
-int b_or(lua_State* L)
+int tohex(lua_State* L)
 {
-    if (lua_gettop(L) != 2) {
-        // Too few/many arguments passed
-        printf("[b_or] Two arguments are required.");
-        return 0;
+    if (lua_gettop(L) == 0 || lua_isnil(L, 1)) {
+        printf("[tohex] One argument is required.");
+        lua_pushnil(L);
+        return 1;
     }
 
-    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2)) {
-        // Arguments are not numbers
-        printf("[b_or] Both arguments must be integers");
-        return 0;
+    if (lua_gettop(L) == 1) {
+        if (!lua_isnumber(L, 1)) {
+            printf("[tohex] The argument must be a number.");
+            lua_pushnil(L);
+            return 1;
+        }
+
+        unsigned long long number = lua_tointeger(L, 1);
+        char to_return[66];
+        snprintf(to_return, 66, "0x%llx", number);
+        lua_pushstring(L, to_return);
+        return 1;
     }
-
-    lua_Integer a = lua_tointeger(L, 1);
-    lua_Integer b = lua_tointeger(L, 2);
-
-    lua_Integer result = a | b;
-
-    lua_pushinteger(L, result);
-    return 1;
-}
-
-/**
- * Performs a binary "xor" operation between two integers.
- *
- * @param L the Lua state.
- */
-int b_xor(lua_State* L)
-{
-    if (lua_gettop(L) != 2) {
-        // Too few/many arguments passed
-        printf("[b_xor] Two arguments are required.");
-        return 0;
-    }
-
-    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2)) {
-        // Arguments are not numbers
-        printf("[b_xor] Both arguments must be integers");
-        return 0;
-    }
-
-    lua_Integer a = lua_tointeger(L, 1);
-    lua_Integer b = lua_tointeger(L, 2);
-
-    lua_Integer result = a ^ b;
-
-    lua_pushinteger(L, result);
-    return 1;
-}
-
-/**
- * Performs a binary "not" operation on a single integer.
- *
- * @param L the Lua state.
- */
-int b_not(lua_State* L)
-{
-    if (lua_gettop(L) != 1) {
-        // Too few/many arguments passed
-        printf("[b_not] One argument is required.");
-        return 0;
-    }
-
-    if (!lua_isnumber(L, 1)) {
-        // Argument is not number
-        printf("[b_not] The argument must be an integer");
-        return 0;
-    }
-
-    lua_Integer a = lua_tointeger(L, 1);
-
-    lua_Integer result = ~a;
-
-    lua_pushinteger(L, result);
-    return 1;
-}
-
-/**
- * Performs a binary "left shift" operation on an integer.
- *
- * @param L the Lua state.
- */
-int b_lshift(lua_State* L)
-{
-    if (lua_gettop(L) != 2) {
-        // Too few/many arguments passed
-        printf("[b_lshift] Two arguments are required.");
-        return 0;
-    }
-
-    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2)) {
-        // Arguments are not numbers
-        printf("[b_lshift] Both arguments must be integers");
-        return 0;
-    }
-
-    lua_Integer a = lua_tointeger(L, 1);
-    lua_Integer b = lua_tointeger(L, 2);
-
-    lua_Integer result = a << b;
-
-    lua_pushinteger(L, result);
-    return 1;
-}
-
-/**
- * Performs a binary "right shift" operation on an integer.
- *
- * @param L the Lua state.
- */
-int b_rshift(lua_State* L)
-{
-    if (lua_gettop(L) != 2) {
-        // Too few/many arguments passed
-        printf("[b_rshift] Two arguments are required.");
-        return 0;
-    }
-
-    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2)) {
-        // Arguments are not numbers
-        printf("[b_rshift] Both arguments must be integers");
-        return 0;
-    }
-
-    lua_Integer a = lua_tointeger(L, 1);
-    lua_Integer b = lua_tointeger(L, 2);
-
-    lua_Integer result = a >> b;
-
-    lua_pushinteger(L, result);
     return 1;
 }
