@@ -251,7 +251,6 @@ cleanup:
     free(pattern);
     pattern = NULL;
     mem_iterator_destroy(&mem_iter);
-    free(regions);
     regions = NULL;
     return ret;
 }
