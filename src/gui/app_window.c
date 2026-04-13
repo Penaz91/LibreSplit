@@ -418,6 +418,8 @@ static void ls_app_window_init(LSAppWindow* win)
     // Create all available components (TODO: change this in the future)
     LOG_DEBUG("Creating components...");
     win->components = NULL;
+    LSComponentAvailable* ls_components = NULL;
+    initialize_components(&ls_components);
     for (i = 0; ls_components[i].name != NULL; i++) {
         LSComponent* component = ls_components[i].new();
         if (component) {
@@ -431,6 +433,7 @@ static void ls_app_window_init(LSAppWindow* win)
             win->components = g_list_append(win->components, component);
         }
     }
+    free(ls_components);
 
     // NOTE: This always creates an empty footer, no matter how many
     //  ^ "footers" are available, which may give issues with theming

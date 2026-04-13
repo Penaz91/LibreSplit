@@ -1,5 +1,4 @@
-#ifndef __COMPONENTS_H__
-#define __COMPONENTS_H__
+#pragma once
 
 #include <ctype.h>
 #include <gtk/gtk.h>
@@ -8,6 +7,7 @@
 
 #include "../../timer.h"
 #include "../utils.h"
+#include "src/settings/definitions.h"
 
 typedef struct LSComponentOps LSComponentOps; // forward declaration
 
@@ -39,6 +39,6 @@ typedef struct LSComponentAvailable {
 } LSComponentAvailable;
 
 // A NULL-terminated array of all available components
-extern LSComponentAvailable ls_components[];
+extern AppConfig cfg;
 
-#endif /* __COMPONENTS_H__ */
+void initialize_components(LSComponentAvailable** ls_components);

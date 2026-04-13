@@ -86,6 +86,7 @@ libresplit_sources = files(
     'src/gui/component/title.c',
     'src/gui/component/wr.c',
     'src/gui/component/detailed-timer.c',
+    'src/gui/component/comparison.c',
 )
 
 libresplit_ctl_sources = files(
