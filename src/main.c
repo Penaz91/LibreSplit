@@ -5,7 +5,6 @@
 #include "logging.h"
 #include "server.h"
 #include "settings/utils.h"
-#include "shared.h"
 #include "src/keybinds/delayed_callbacks.h"
 
 #include <gtk/gtk.h>
@@ -24,7 +23,7 @@ atomic_bool exit_requested = 0; /*!< Set to 1 when LibreSplit is exiting */
 static LSApp* g_app = NULL;
 
 // Function to handle CTL commands from the server thread
-void handle_ctl_command(CTLCommand command)
+void handle_ctl_command(const char* command)
 {
     GList* windows;
     LSAppWindow* win;
@@ -42,34 +41,20 @@ void handle_ctl_command(CTLCommand command)
         return;
     }
 
-    switch (command) {
-        case CTL_CMD_START_SPLIT:
-            LOG_DEBUG("Split requested via Server Command");
-            timer_start_split(win);
-            break;
-        case CTL_CMD_STOP_RESET:
-            LOG_DEBUG("Run Stop/Reset requested via Server Command");
-            timer_stop_or_reset(win);
-            break;
-        case CTL_CMD_CANCEL:
-            LOG_DEBUG("Run Cancellation requested via Server Command");
-            timer_cancel_run(win);
-            break;
-        case CTL_CMD_UNSPLIT:
-            LOG_DEBUG("Unsplit requested via Server Command");
-            timer_unsplit(win);
-            break;
-        case CTL_CMD_SKIP:
-            LOG_DEBUG("Skip requested via Server Command");
-            timer_skip(win);
-            break;
-        case CTL_CMD_EXIT:
-            LOG_DEBUG("Exit requested via Server Command");
-            exit(0);
-            break;
-        default:
-            LOG_INFOF("Unknown CTL command: %d", command);
-            break;
+    if (strcmp(command, "startorsplit") == 0) {
+        timer_start_split(win);
+    } else if (strcmp(command, "stoporreset") == 0) {
+        timer_stop_or_reset(win);
+    } else if (strcmp(command, "cancel") == 0) {
+        timer_cancel_run(win);
+    } else if (strcmp(command, "unsplit") == 0) {
+        timer_unsplit(win);
+    } else if (strcmp(command, "skipsplit") == 0) {
+        timer_skip(win);
+    } else if (strcmp(command, "exit") == 0) {
+        exit(0);
+    } else {
+        printf("Unknown CTL command: %s\n", command);
     }
 }
 
