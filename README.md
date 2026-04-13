@@ -1,7 +1,7 @@
 <p align="center">
 <img src="assets/libresplit.svg" width="100" height="100" align="top"/>
 </p>
-<h1 align="center">LibreSplit</h1>
+<h1 align="center">LibreSplit-nex</h1>
 
 <p align="center">
 <img src="https://img.shields.io/badge/Code-00599C?style=for-the-badge&logo=c&logoColor=white"</img>
@@ -24,7 +24,13 @@
 <a href="https://github.com/LibreSplit/LibreSplit/actions"><img src="https://img.shields.io/github/actions/workflow/status/LibreSplit/LibreSplit/build.yml?style=for-the-badge&logo=GitHub"</img></a>
 </p>
 
-## About
+## About This Branch
+
+This is a soft-fork of LibreSplit: everything you'll find here comes from an open PR in the LibreSplit main repository that I deem worthy of testing.
+
+This will in no way replace LibreSplit, but it is intended mostly for my personal use and for people to try new things I've been working on.
+
+## About LibreSplit
 
 LibreSplit is a speedrun timer based on [urn](https://github.com/3snowp7im/urn) that adds support for Lua-based auto splitters that are easy to port from ASL.
 
@@ -49,15 +55,7 @@ LibreSplit is a speedrun timer based on [urn](https://github.com/3snowp7im/urn) 
 
 ## Installation
 
-- Arch-based Distros
-    - `yay libresplit-git`
-    - `paru libresplit-git`
-
-    See the [libresplit-git](https://aur.archlinux.org/packages/libresplit-git) package on the Arch User Repository (AUR).
-
-- NixOS
-
-    See the [libresplit](https://search.nixos.org/packages?channel=25.05&show=libresplit&query=libresplit) package, courtesy of [@fgaz](https://github.com/fgaz).
+- Install the official [LibreSplit package](https://github.com/LibreSplit/LibreSplit?tab=readme-ov-file#installation)
 
 ## Building
 
