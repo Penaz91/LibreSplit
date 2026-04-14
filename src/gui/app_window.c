@@ -1,17 +1,18 @@
-#include "app_window.h"
-#include "src/gui/actions.h"
-#include "src/gui/component/components.h"
-#include "src/gui/context_menu.h"
-#include "src/gui/game.h"
-#include "src/gui/theming.h"
-#include "src/gui/timer.h"
-#include "src/keybinds/delayed_callbacks.h"
-#include "src/keybinds/keybinds_callbacks.h"
-#include "src/lasr/auto-splitter.h"
-#include "src/logging.h"
-#include "src/settings/settings.h"
-#include "src/settings/utils.h"
-#include "src/timer.h"
+#include "gui/app_window.h"
+#include "gui/actions.h"
+#include "gui/component/components.h"
+#include "gui/context_menu.h"
+#include "gui/game.h"
+#include "gui/theming.h"
+#include "gui/timer.h"
+#include "keybinds/delayed_callbacks.h"
+#include "keybinds/keybinds_callbacks.h"
+#include "lasr/auto-splitter.h"
+#include "logging.h"
+#include "plugins/plugin_loading.h"
+#include "settings/settings.h"
+#include "settings/utils.h"
+#include "timer.h"
 #include <glib-object.h>
 #include <stdatomic.h>
 #include <stdio.h>
@@ -253,6 +254,9 @@ void ls_app_window_destroy(GtkWidget* widget, gpointer data)
     atomic_store(&auto_splitter_enabled, 0);
     atomic_store(&exit_requested, 1);
     LOG_DEBUG("Exit request sent to threads");
+    free_timer_registries();
+    unload_plugins();
+    close_logger();
     // Close any other open application windows (settings, dialogs, etc.)
     GApplication* app = g_application_get_default();
     if (app) {

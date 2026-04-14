@@ -1,9 +1,8 @@
-#include "signature.h"
-
-#include "../../logging.h"
-#include "../memory_iter/memory_iterator.h"
-#include "../utils.h"
-#include "src/lasr/maps/maps.h"
+#include "lasr/functions/signature.h"
+#include "lasr/maps/maps.h"
+#include "lasr/memory_iter/memory_iterator.h"
+#include "lasr/utils.h"
+#include "logging.h"
 
 #include <assert.h>
 #include <fcntl.h>
@@ -101,7 +100,8 @@ uint16_t* convert_signature(const char* signature, size_t* pattern_size)
     }
     size_t size = 0;
     size_t capacity = 10;
-    uint16_t* pattern = (uint16_t*)malloc(capacity * sizeof(uint16_t));
+    // Seems the GCC analyzer freaks out if this memory is left uninitialized.
+    uint16_t* pattern = (uint16_t*)calloc(capacity, sizeof(uint16_t));
     if (!pattern) {
         free(signature_copy);
         return NULL;

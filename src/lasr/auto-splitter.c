@@ -2,11 +2,12 @@
  *
  * Implementation of the auto splitter Lua Runtime
  */
-#include "auto-splitter.h"
+#include "lasr/auto-splitter.h"
 
-#include "./maps/maps.h"
-#include "functions.h"
-#include "utils.h"
+#include "lasr/functions.h"
+#include "lasr/maps/maps.h"
+#include "lasr/utils.h"
+#include "logging.h"
 
 #include <lauxlib.h>
 #include <lua.h>
@@ -14,6 +15,7 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -99,7 +101,7 @@ static const luaL_Reg lj_lib_load[] = {
  *
  * Must be NULL-terminated.
  */
-static const lasr_function luac_functions[] = {
+static const lasr_function default_luac_functions[] = {
     { "process", find_process_id },
     { "getBaseAddress", getBaseAddress },
     { "readAddress", readAddress },
@@ -114,6 +116,76 @@ static const lasr_function luac_functions[] = {
     { "tohex", tohex },
     { NULL, NULL }
 };
+
+lasr_function* luac_functions = NULL;
+ExternalLASRFunctionRegistry external_lasr_functions = {
+    .size = 2,
+    .count = 0,
+    .functions = NULL
+};
+
+void init_lasr_functions(void)
+{
+    LOG_DEBUG("Malloc-ing lua_functions");
+    luac_functions = malloc(sizeof(default_luac_functions) + sizeof(*external_lasr_functions.functions));
+    if (!luac_functions) {
+        LOG_ERR("Unable to allocate memory for Lua C functions");
+        abort();
+    }
+    // Copy default functions
+    int i = 0;
+    for (i = 0; default_luac_functions[i].function_name != NULL; i++) {
+        LOG_DEBUGF("Copying over %s", default_luac_functions[i].function_name);
+        char* fname = strdup(default_luac_functions[i].function_name);
+        if (!fname) {
+            LOG_ERRF("Cannot allocate default function name: %s", default_luac_functions[i].function_name);
+            abort();
+        }
+        luac_functions[i].function_name = fname;
+        if (!luac_functions[i].function_name) {
+            LOG_ERRF("Unable to allocate memory for Lua C function name: %s", default_luac_functions[i].function_name);
+            abort();
+        }
+        luac_functions[i].function_ptr = default_luac_functions[i].function_ptr;
+        LOG_DEBUGF("Copied over %s", luac_functions[i].function_name);
+    }
+    for (int j = 0; j < external_lasr_functions.count; j++, i++) {
+        LOG_DEBUGF("Copying over %s", external_lasr_functions.functions[j].function_name);
+        char* fname = strdup(external_lasr_functions.functions[j].function_name);
+        if (!fname) {
+            LOG_ERRF("Cannot allocate external function name: %s", default_luac_functions[i].function_name);
+            abort();
+        }
+        luac_functions[i].function_name = fname;
+        if (!luac_functions[i].function_name) {
+            LOG_ERRF("Unable to allocate memory for Lua C function name: %s", external_lasr_functions.functions[j].function_name);
+            abort();
+        }
+        luac_functions[i].function_ptr = external_lasr_functions.functions[j].function_ptr;
+        // We don't need the external_lasr_functions.functions array anymore after initialization
+        free(external_lasr_functions.functions[j].function_name);
+        external_lasr_functions.functions[j].function_ptr = NULL;
+        LOG_DEBUGF("Copied over %s", luac_functions[i].function_name);
+    }
+    luac_functions[i].function_name = NULL;
+    luac_functions[i].function_ptr = NULL;
+    // We're done with the external functions
+    free(external_lasr_functions.functions);
+}
+
+/**
+ * Frees memory taken by the luac_functions array.
+ */
+void unregister_luac_functions(void)
+{
+    for (int i = 0; luac_functions[i].function_name != NULL; i++) {
+        LOG_DEBUGF("Unregistering Lua C function %s", luac_functions[i].function_name);
+        free(luac_functions[i].function_name);
+        luac_functions[i].function_ptr = NULL;
+    }
+    // After freeing memory, we free the array itself.
+    free(luac_functions);
+}
 
 /**
  * Registers the Lua Auto Split Runtime functions.
@@ -518,6 +590,9 @@ void run_auto_splitter(void)
         clock_gettime(CLOCK_MONOTONIC, &clock_start);
 
         if (!atomic_load(&auto_splitter_enabled) || strcmp(current_file, auto_splitter_file) != 0 || !process_exists() || process.pid == 0) {
+            // NOTE: [Penaz] [2026-03-14] Here we can decide what to do when a game detaches.
+            // ^ maybe we should divide it between "process_exists()" (auto splitter active but not connected)
+            // ^ and the other cases (autosplitter disabled, process not found, changed auto splitter).
             break;
         }
 

@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../timer.h"
-#include "../utils.h"
-#include "src/settings/definitions.h"
+#include "gui/utils.h"
+#include "settings/definitions.h"
+#include "timer.h"
 
 typedef struct LSComponentOps LSComponentOps; // forward declaration
 

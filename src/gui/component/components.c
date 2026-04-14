@@ -2,8 +2,8 @@
  *
  * Available Components and related utilities
  */
-#include "components.h"
-#include "src/settings/definitions.h"
+#include "gui/component/components.h"
+#include "settings/definitions.h"
 #include <stdlib.h>
 
 LSComponent* ls_component_title_new(void);

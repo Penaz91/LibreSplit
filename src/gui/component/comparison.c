@@ -2,7 +2,7 @@
  *
  * Implementation of the "Comparing against..." component
  */
-#include "components.h"
+#include "gui/component/components.h"
 
 /**
  * @brief The component representing the current type of comparison
