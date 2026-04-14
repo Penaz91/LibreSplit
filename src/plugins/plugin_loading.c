@@ -212,15 +212,19 @@ static int initialize_plugin(const char* path)
         return -1;
     }
     void* handle = NULL;
+    Plugin tmp = {
+        .handle = NULL,
+        .path = NULL,
+    };
     assert(plugin_registry.count <= plugin_registry.size);
     if (plugin_registry.count >= plugin_registry.size) {
         size_t new_size = plugin_registry.size * 2;
-        Plugin* tmp = realloc(plugin_registry.plugins, new_size * sizeof(Plugin));
-        if (!tmp) {
+        Plugin* tmp_registry = realloc(plugin_registry.plugins, new_size * sizeof(Plugin));
+        if (!tmp_registry) {
             LOG_ERR("Cannot reallocate memory for plugin registry");
             goto fail;
         }
-        plugin_registry.plugins = tmp;
+        plugin_registry.plugins = tmp_registry;
         plugin_registry.size = new_size;
     }
     handle = dlopen(path, RTLD_NOW);
@@ -251,17 +255,23 @@ static int initialize_plugin(const char* path)
         goto fail;
     }
 
-    Plugin tmp = {
-        .handle = handle,
-        .path = strdup(path)
-    };
+    tmp.handle = handle;
+    tmp.path = strdup(path);
 
     if (!tmp.path) {
         LOG_WARNF("Cannot allocate memory for plugin path: %s", path);
         goto fail;
     }
 
-    plugin_registry.plugins[plugin_registry.count] = tmp;
+    // NOTE: [Penaz] [2026-04-14] Inverting the following 2 lines will trigger
+    // ^ the GCC analyzer, cause it will see the handle slot being assigned
+    //  while the path may not transfer over, "leaking" the path strdup.
+    plugin_registry.plugins[plugin_registry.count].path = tmp.path;
+    plugin_registry.plugins[plugin_registry.count].handle = tmp.handle;
+    // Make sure GCC's analyzer can see the ownership transfer
+    tmp.handle = NULL;
+    tmp.path = NULL;
+
     plugin_registry.count++;
 
     return 0;
@@ -272,6 +282,7 @@ fail:
     }
     if (handle) {
         dlclose(handle);
+        tmp.handle = NULL;
     }
     return -1;
 }
