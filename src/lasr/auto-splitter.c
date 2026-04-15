@@ -132,7 +132,8 @@ ExternalLASRFunctionRegistry external_lasr_functions = {
 void init_lasr_functions(void)
 {
     LOG_DEBUG("Malloc-ing lua_functions");
-    luac_functions = malloc(sizeof(default_luac_functions) + sizeof(*external_lasr_functions.functions));
+    int to_allocate_cnt = external_lasr_functions.count + (sizeof(default_luac_functions) / sizeof(default_luac_functions[0]));
+    luac_functions = malloc(to_allocate_cnt * sizeof(lasr_function));
     if (!luac_functions) {
         LOG_ERR("Unable to allocate memory for Lua C functions");
         abort();
