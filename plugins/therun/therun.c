@@ -6,6 +6,7 @@
  * See the original implementation here: https://github.com/tepiloxtl/LibreSplit/tree/therun
  */
 #include "therun.h"
+#include "logging.h"
 #include "plugins/plugin.h"
 #include "plugins/plugin_utils.h"
 #include "timer.h"
@@ -112,7 +113,6 @@ char* build_therun_live_payload(const ls_timer* timer, int source)
         json_array_append_new(comparisons, bestsegment);
         json_object_set_new(segment, "comparisons", comparisons); // Best effort, neither Personal Best or Best Segment are 100% corrent with how LiveSplit does it, and Averages does not exist yet
         json_array_append_new(runData, segment);
-        // fprintf(stderr, "%d", i);
     }
     json_object_set_new(root, "runData", runData);
 
@@ -167,8 +167,8 @@ char* build_therun_live_payload(const ls_timer* timer, int source)
     snprintf(filename, sizeof(filename), "build/test-%s.json", time_buf);
     json_dump_file(root, filename, JSON_PRESERVE_ORDER | JSON_INDENT(2));
     json_decref(root);
-    fprintf(stderr, payload);
-    fprintf(stderr, "%d", source);
+    LOG_DEBUGF("Payload: %s", payload);
+    LOG_DEBUGF("Source: %d", source);
 
     return payload;
 }
@@ -193,9 +193,9 @@ void* therun_upload_thread(void* arg)
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_discard_response);
         CURLcode res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-            // fprintf(stderr, "[therun.gg] FAILED: %s\n", curl_easy_strerror(res));
+            LOG_WARNF("[therun.gg] FAILED: %s", curl_easy_strerror(res));
         } else {
-            // fprintf(stderr, "[therun.gg] OK!\n");
+            LOG_DEBUG("[therun.gg] OK!");
         }
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
@@ -215,7 +215,7 @@ void therun_trigger_update(const ls_timer* timer, int source)
     if (result == 0) {
         pthread_detach(thread_id);
     } else {
-        // fprintf(stderr, "[therun.gg] THREAD FAILED!\n");
+        LOG_WARN("[therun.gg] THREAD FAILED!");
         free(payload);
     }
 }
@@ -223,21 +223,25 @@ void therun_trigger_update(const ls_timer* timer, int source)
 int therun_reset(const ls_timer* timer)
 {
     therun_trigger_update(timer, 2);
+    return 0;
 }
 
 int therun_start(const ls_timer* timer)
 {
     therun_trigger_update(timer, 0);
+    return 0;
 }
 
 int therun_skip(const ls_timer* timer)
 {
     therun_trigger_update(timer, 7);
+    return 0;
 }
 
 int therun_unsplit(const ls_timer* timer)
 {
     therun_trigger_update(timer, 6);
+    return 0;
 }
 
 int plug_init(PlugAPI* api)
