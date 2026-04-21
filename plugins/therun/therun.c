@@ -1,13 +1,13 @@
 /**
  * TheRun.gg Integration Plugin.
  *
- * Original Implementation by Tepiloxitl, adapted into a plugin by Penaz.
+ * Original Implementation by Tepiloxtl, adapted into a plugin by Penaz.
  *
  * See the original implementation here: https://github.com/tepiloxtl/LibreSplit/tree/therun
  */
+#include "therun.h"
 #include "plugins/plugin.h"
 #include "plugins/plugin_utils.h"
-#include "therun.h"
 #include "timer.h"
 #include <curl/curl.h>
 #include <jansson.h>
@@ -19,11 +19,11 @@
 
 static int64_t real_epoch_start_ms = 0;
 
-const abi_version_t abi_version =  0 << 16 | 1; //v0.1
+const abi_version_t abi_version = 0 << 16 | 1; // v0.1
 const char plugin_name[] = "TheRun.gg Integration";
 const char plugin_description[] = "Allows communication between LibreSplit and TheRun.gg's live run system";
 const char plugin_version[] = "0.1";
-const char plugin_author[] = "Tepiloxitl & Penaz";
+const char plugin_author[] = "Tepiloxtl & Penaz";
 
 /**
  * Converts a time in "milliseconds" (microseconds) to a json float in milliseconds.
@@ -220,24 +220,28 @@ void therun_trigger_update(const ls_timer* timer, int source)
     }
 }
 
-int therun_reset(const ls_timer* timer){
+int therun_reset(const ls_timer* timer)
+{
     therun_trigger_update(timer, 2);
 }
 
-int therun_start(const ls_timer* timer){
+int therun_start(const ls_timer* timer)
+{
     therun_trigger_update(timer, 0);
 }
 
-int therun_skip(const ls_timer* timer){
+int therun_skip(const ls_timer* timer)
+{
     therun_trigger_update(timer, 7);
 }
 
-int therun_unsplit(const ls_timer* timer){
+int therun_unsplit(const ls_timer* timer)
+{
     therun_trigger_update(timer, 6);
 }
 
-
-int plug_init(PlugAPI* api){
+int plug_init(PlugAPI* api)
+{
     api->register_event_hook(RESET, therun_reset);
     api->register_event_hook(START, therun_start);
     api->register_event_hook(SKIP, therun_skip);
