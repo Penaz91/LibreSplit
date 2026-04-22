@@ -167,8 +167,8 @@ char* build_therun_live_payload(const ls_timer* timer, int source)
     snprintf(filename, sizeof(filename), "build/test-%s.json", time_buf);
     json_dump_file(root, filename, JSON_PRESERVE_ORDER | JSON_INDENT(2));
     json_decref(root);
-    fprintf(stderr, payload);
-    fprintf(stderr, "%d", source);
+    // fprintf(stderr, payload);
+    // fprintf(stderr, "%d", source);
 
     return payload;
 }
@@ -223,21 +223,25 @@ void therun_trigger_update(const ls_timer* timer, int source)
 int therun_reset(const ls_timer* timer)
 {
     therun_trigger_update(timer, 2);
+    return 0;
 }
 
 int therun_start(const ls_timer* timer)
 {
     therun_trigger_update(timer, 0);
+    return 0;
 }
 
 int therun_skip(const ls_timer* timer)
 {
     therun_trigger_update(timer, 7);
+    return 0;
 }
 
 int therun_unsplit(const ls_timer* timer)
 {
     therun_trigger_update(timer, 6);
+    return 0;
 }
 
 int plug_init(PlugAPI* api)
