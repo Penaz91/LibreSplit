@@ -103,6 +103,7 @@ static const luaL_Reg lj_lib_load[] = {
  */
 static const lasr_function default_luac_functions[] = {
     { "process", find_process_id },
+    { "cmdline", find_cmdline_id },
     { "getBaseAddress", getBaseAddress },
     { "readAddress", readAddress },
     { "sizeOf", size_of },

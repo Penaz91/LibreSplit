@@ -124,6 +124,11 @@ uint16_t* convert_signature(const char* signature, size_t* pattern_size)
     }
 
     char* token = strtok(signature_copy, " ");
+    if (token == NULL) {
+        // Signature is all delimiters or empty
+        free(signature_copy);
+        return NULL;
+    }
     size_t size = 0;
     size_t capacity = 10;
     // Seems the GCC analyzer freaks out if this memory is left uninitialized.
