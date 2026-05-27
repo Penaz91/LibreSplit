@@ -24,3 +24,10 @@ TheRun
 Plugin to interact with [therun.gg](https://therun.gg/)'s live race system, allowing you to compete against your friends.
 
 [Original implementation by Tepiloxtl](https://github.com/tepiloxtl/LibreSplit/tree/therun). Adapted into a plugin by Penaz.
+
+MD5
+---
+
+Adds a new lua function that allows to calculate the MD5 checksum of a file.
+
+Currently untested.
