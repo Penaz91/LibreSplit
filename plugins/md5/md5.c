@@ -26,7 +26,7 @@ int md5sum(lua_State* L)
     MD5_CTX c;
     char buffer[512];
     ssize_t bytes;
-    char output[MD5_DIGEST_LENGTH];
+    unsigned char md5_out[MD5_DIGEST_LENGTH];
     FILE* file_ptr = NULL;
     file_ptr = fopen(file_path, "r");
     if (file_ptr == NULL) {
@@ -41,7 +41,12 @@ int md5sum(lua_State* L)
         bytes = fread(buffer, 1, 512, file_ptr);
         MD5_Update(&c, buffer, bytes);
     } while (bytes > 0);
-    MD5_Final(output, &c);
+    MD5_Final(md5_out, &c);
+    int pos = 0;
+    char output[MD5_DIGEST_LENGTH * 2 + 1];
+    for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+        pos += snprintf(output + pos, sizeof(output) - pos, "%02x", md5_out[i]);
+    }
     lua_pushstring(L, output);
     fclose(file_ptr);
     return 1;
