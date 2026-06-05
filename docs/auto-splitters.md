@@ -520,3 +520,17 @@ Usage:
 ```lua
 local maps = getMaps()
 ```
+
+## Reactive Functions
+
+The following functions are event handlers that will be called on certain events, whether such events happen due to auto-splitter commands or are done manually.
+
+- `onStart()`
+- `onSplit()`
+- `onStop()`
+- `onReset()`
+- `onCancel()`
+- `onSkip()`
+- `onUnsplit()`
+- `onPause()`
+- `onUnpause()`

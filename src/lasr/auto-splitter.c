@@ -24,6 +24,7 @@ int refresh_rate = 60; /*!< The Auto Splitter's refresh rate applied */
 bool use_game_time = false; /*!< Enables IGT */
 atomic_bool update_game_time = false; /*!< True if the auto splitter is requesting the game time to be updated */
 atomic_llong game_time_value = 0; /*!< The in-game time value, in milliseconds */
+atomic_int lasr_event_requests = 0; /*!< Keeps tabs of which events we should react to */
 
 /**
  * Defines the behaviour of the map cache.
@@ -504,6 +505,16 @@ void run_auto_splitter(void)
     bool reset_exists = has_lua_function(L, "reset");
     bool update_exists = has_lua_function(L, "update");
     bool gameTime_exists = has_lua_function(L, "gameTime");
+    // Reactive Functions
+    bool onStart_exists = has_lua_function(L, "onStart");
+    bool onSplit_exists = has_lua_function(L, "onSplit");
+    bool onStop_exists = has_lua_function(L, "onStop");
+    bool onReset_exists = has_lua_function(L, "onReset");
+    bool onCancel_exists = has_lua_function(L, "onCancel");
+    bool onSkip_exists = has_lua_function(L, "onSkip");
+    bool onUnsplit_exists = has_lua_function(L, "onUnsplit");
+    bool onPause_exists = has_lua_function(L, "onPause");
+    bool onUnpause_exists = has_lua_function(L, "onUnpause");
 
     if (startup_exists) {
         startup(L);
@@ -547,6 +558,68 @@ void run_auto_splitter(void)
         if (reset_exists && atomic_load(&run_running)) {
             reset(L);
         }
+
+        // NOTE: [Penaz] [2026-06-05] Big assumption: All events can "request a reaction" but such request cannot be taken back
+
+        if (onStart_exists) {
+            if ((atomic_load(&event_requests) & TIMER_EVT_START) != 0) {
+                call_va(L, "onStart", "");
+            }
+        }
+
+        if (onSplit_exists) {
+            if ((atomic_load(&event_requests) & TIMER_EVT_SPLIT) != 0) {
+                call_va(L, "onSplit", "");
+            }
+        }
+
+        if (onStop_exists) {
+            if ((atomic_load(&event_requests) & TIMER_EVT_STOP) != 0) {
+                call_va(L, "onStop", "");
+            }
+        }
+
+        if (onReset_exists) {
+            if ((atomic_load(&event_requests) & TIMER_EVT_RESET) != 0) {
+                call_va(L, "onReset", "");
+            }
+        }
+
+        if (onCancel_exists) {
+            if ((atomic_load(&event_requests) & TIMER_EVT_CANCEL) != 0) {
+                call_va(L, "onCancel", "");
+            }
+        }
+
+        if (onSkip_exists) {
+            if ((atomic_load(&event_requests) & TIMER_EVT_SKIP) != 0) {
+                call_va(L, "onSkip", "");
+            }
+        }
+
+        if (onUnsplit_exists) {
+            if ((atomic_load(&event_requests) & TIMER_EVT_UNSPLIT) != 0) {
+                call_va(L, "onUnsplit", "");
+            }
+        }
+
+        if (onPause_exists) {
+            if ((atomic_load(&event_requests) & TIMER_EVT_PAUSE) != 0) {
+                call_va(L, "onPause", "");
+            }
+        }
+
+        if (onUnpause_exists) {
+            if ((atomic_load(&event_requests) & TIMER_EVT_UNPAUSE) != 0) {
+                call_va(L, "onUnpause", "");
+            }
+        }
+
+        // NOTE: [Penaz] [2026-06-05] Here we assume that the event_requests
+        // ^ represents a series of requests that can only be "turned on"
+        // ^ thus we can just work through all of the events and then reset at the end
+
+        atomic_store(&event_requests, 0);
 
         // Clear the memory maps cache if needed
         maps_cache_cycles_value--;
