@@ -446,6 +446,22 @@ void gameTime(lua_State* L)
 }
 
 /**
+ * Utility function to check if a Lua function is defined in an auto splitter
+ *
+ * @param L The lua state
+ * @param name The function name to look for
+ *
+ * @returns True if the function is defined in the auto splitter, false otherwise
+ */
+static bool has_lua_function(lua_State* L, const char* name)
+{
+    lua_getglobal(L, name);
+    bool exists = lua_isfunction(L, -1);
+    lua_pop(L, 1); // Remove function from the stack
+    return exists;
+}
+
+/**
  * Loads the auto splitter Lua file and executes the auto splitter.
  */
 void run_auto_splitter(void)
@@ -480,37 +496,14 @@ void run_auto_splitter(void)
         return;
     }
 
-    lua_getglobal(L, "state");
-    bool state_exists = lua_isfunction(L, -1);
-    lua_pop(L, 1); // Remove 'state' from the stack
-
-    lua_getglobal(L, "start");
-    bool start_exists = lua_isfunction(L, -1);
-    lua_pop(L, 1); // Remove 'start' from the stack
-
-    lua_getglobal(L, "split");
-    bool split_exists = lua_isfunction(L, -1);
-    lua_pop(L, 1); // Remove 'split' from the stack
-
-    lua_getglobal(L, "isLoading");
-    bool is_loading_exists = lua_isfunction(L, -1);
-    lua_pop(L, 1); // Remove 'isLoading' from the stack
-
-    lua_getglobal(L, "startup");
-    bool startup_exists = lua_isfunction(L, -1);
-    lua_pop(L, 1); // Remove 'startup' from the stack
-
-    lua_getglobal(L, "reset");
-    bool reset_exists = lua_isfunction(L, -1);
-    lua_pop(L, 1); // Remove 'reset' from the stack
-
-    lua_getglobal(L, "update");
-    bool update_exists = lua_isfunction(L, -1);
-    lua_pop(L, 1); // Remove 'update' from the stack
-
-    lua_getglobal(L, "gameTime");
-    bool gameTime_exists = lua_isfunction(L, -1);
-    lua_pop(L, 1); // Remove 'gameTime' from the stack
+    bool state_exists = has_lua_function(L, "state");
+    bool start_exists = has_lua_function(L, "start");
+    bool split_exists = has_lua_function(L, "split");
+    bool is_loading_exists = has_lua_function(L, "isLoading");
+    bool startup_exists = has_lua_function(L, "startup");
+    bool reset_exists = has_lua_function(L, "reset");
+    bool update_exists = has_lua_function(L, "update");
+    bool gameTime_exists = has_lua_function(L, "gameTime");
 
     if (startup_exists) {
         startup(L);
