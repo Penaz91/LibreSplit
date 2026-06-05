@@ -6,6 +6,7 @@
 
 #include "./maps/maps.h"
 #include "functions.h"
+#include "src/lasr/functions/md5.h"
 #include "utils.h"
 
 #include <lauxlib.h>
@@ -118,6 +119,7 @@ static const lasr_function luac_functions[] = {
     { "b_rshift", b_rshift },
     { "getMaps", getMaps },
     { "str2ida", str2ida },
+    { "md5sum", md5sum },
     { NULL, NULL }
 };
 
