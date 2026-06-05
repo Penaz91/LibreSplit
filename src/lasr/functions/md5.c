@@ -37,12 +37,14 @@ int md5sum(lua_State* L)
     md5_context = EVP_MD_CTX_new();
     if (!md5_context) {
         LOG_ERR("Cannot create EVP Digest Context");
+        fclose(file_ptr);
         lua_pushnil(L);
         return 1;
     }
     if (EVP_DigestInit_ex(md5_context, EVP_md5(), NULL) != 1) {
         LOG_ERR("Cannot initialize EVP Digest Context");
         EVP_MD_CTX_free(md5_context);
+        fclose(file_ptr);
         lua_pushnil(L);
         return 1;
     }
