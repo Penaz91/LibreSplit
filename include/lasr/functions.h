@@ -1,5 +1,6 @@
 #pragma once
 
+#include "functions/md5.h"
 #include "lasr/functions/bitwise.h"
 #include "lasr/functions/getBaseAddress.h"
 #include "lasr/functions/getMaps.h"

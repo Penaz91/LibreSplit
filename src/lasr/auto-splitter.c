@@ -115,6 +115,7 @@ static const lasr_function default_luac_functions[] = {
     { "getMaps", getMaps },
     { "str2ida", str2ida },
     { "tohex", tohex },
+    { "md5sum", md5sum },
     { NULL, NULL }
 };
 
