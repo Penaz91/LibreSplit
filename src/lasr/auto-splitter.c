@@ -6,7 +6,6 @@
 
 #include "./maps/maps.h"
 #include "functions.h"
-#include "src/lasr/functions/md5.h"
 #include "utils.h"
 
 #include <lauxlib.h>
