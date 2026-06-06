@@ -559,65 +559,59 @@ void run_auto_splitter(void)
             reset(L);
         }
 
-        // NOTE: [Penaz] [2026-06-05] Big assumption: All events can "request a reaction" but such request cannot be taken back
-
         if (onStart_exists) {
-            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_START) != 0) {
+            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_START)) {
                 call_va(L, "onStart", "");
             }
         }
 
         if (onSplit_exists) {
-            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_SPLIT) != 0) {
+            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_SPLIT)) {
                 call_va(L, "onSplit", "");
             }
         }
 
         if (onStop_exists) {
-            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_STOP) != 0) {
+            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_STOP)) {
                 call_va(L, "onStop", "");
             }
         }
 
         if (onReset_exists) {
-            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_RESET) != 0) {
+            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_RESET)) {
                 call_va(L, "onReset", "");
             }
         }
 
         if (onCancel_exists) {
-            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_CANCEL) != 0) {
+            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_CANCEL)) {
                 call_va(L, "onCancel", "");
             }
         }
 
         if (onSkip_exists) {
-            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_SKIP) != 0) {
+            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_SKIP)) {
                 call_va(L, "onSkip", "");
             }
         }
 
         if (onUnsplit_exists) {
-            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_UNSPLIT) != 0) {
+            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_UNSPLIT)) {
                 call_va(L, "onUnsplit", "");
             }
         }
 
         if (onPause_exists) {
-            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_PAUSE) != 0) {
+            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_PAUSE)) {
                 call_va(L, "onPause", "");
             }
         }
 
         if (onUnpause_exists) {
-            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_UNPAUSE) != 0) {
+            if ((atomic_load(&lasr_event_requests) & TIMER_EVT_UNPAUSE)) {
                 call_va(L, "onUnpause", "");
             }
         }
-
-        // NOTE: [Penaz] [2026-06-05] Here we assume that the lasr_event_requests
-        // ^ represents a series of requests that can only be "turned on"
-        // ^ thus we can just work through all of the events and then reset at the end
 
         atomic_store(&lasr_event_requests, 0);
 
