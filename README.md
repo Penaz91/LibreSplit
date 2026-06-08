@@ -82,7 +82,7 @@ Install the required dependencies:
 
     ```sh
     sudo apt update
-    sudo apt install build-essential libgtk-3-dev libjansson-dev meson libluajit-5.1-dev openssl
+    sudo apt install build-essential libgtk-3-dev libjansson-dev meson libluajit-5.1-dev libssl-dev
     ```
 
 - Arch-based systems
