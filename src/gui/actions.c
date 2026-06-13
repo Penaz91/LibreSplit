@@ -1,7 +1,9 @@
 #include "src/gui/actions.h"
 #include "src/gui/app_window.h"
 #include "src/gui/game.h"
+#include "src/gui/timer.h"
 #include "src/lasr/auto-splitter.h"
+#include "src/lasr/utils.h"
 #include "src/settings/settings.h"
 #include <gtk/gtk.h>
 #include <sys/stat.h>
@@ -69,7 +71,7 @@ void open_activated(GSimpleAction* action,
     } else {
         win = ls_app_window_new(LS_APP(app));
     }
-    if (is_run_started(win->timer)) {
+    if (win->timer && win->timer->running) {
         GtkWidget* warning = gtk_message_dialog_new(
             GTK_WINDOW(win),
             GTK_DIALOG_MODAL,
@@ -108,15 +110,20 @@ void open_activated(GSimpleAction* action,
 
     res = gtk_dialog_run(GTK_DIALOG(dialog));
     if (res == GTK_RESPONSE_ACCEPT) {
-        char* filename;
         GtkFileChooser* chooser = GTK_FILE_CHOOSER(dialog);
         char last_folder[PATH_MAX];
-        filename = gtk_file_chooser_get_filename(chooser);
-        strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        CFG_SET_STR(cfg.history.last_split_folder.value.s, last_folder);
-        ls_app_window_open(win, filename);
-        CFG_SET_STR(cfg.history.split_file.value.s, filename);
-        g_free(filename);
+        char* filename = gtk_file_chooser_get_filename(chooser);
+        const char* current_folder = gtk_file_chooser_get_current_folder(chooser);
+        if (current_folder) {
+            strncpy(last_folder, current_folder, sizeof(last_folder) - 1);
+            last_folder[sizeof(last_folder) - 1] = '\0';
+            CFG_SET_STR(cfg.history.last_split_folder.value.s, last_folder);
+        }
+        if (filename) {
+            ls_app_window_open(win, filename);
+            CFG_SET_STR(cfg.history.split_file.value.s, filename);
+            g_free(filename);
+        }
     }
     if (!win->game || !win->timer) {
         gtk_widget_show_all(win->welcome_box->box);
@@ -234,6 +241,9 @@ void close_activated(GSimpleAction* action,
     } else {
         win = ls_app_window_new(LS_APP(app));
     }
+
+    timer_stop_and_reset(win);
+
     if (win->game && win->timer) {
         ls_app_window_clear_game(win);
     }
@@ -345,7 +355,7 @@ void open_auto_splitter(GSimpleAction* action,
     } else {
         win = ls_app_window_new(LS_APP(app));
     }
-    if (is_run_started(win->timer)) {
+    if (win->timer && win->timer->running) {
         GtkWidget* warning = gtk_message_dialog_new(
             GTK_WINDOW(win),
             GTK_DIALOG_MODAL,
@@ -384,23 +394,21 @@ void open_auto_splitter(GSimpleAction* action,
         GtkFileChooser* chooser = GTK_FILE_CHOOSER(dialog);
         char* filename = gtk_file_chooser_get_filename(chooser);
         char last_folder[PATH_MAX];
-        strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        CFG_SET_STR(cfg.history.last_auto_splitter_folder.value.s, last_folder);
-        CFG_SET_STR(cfg.history.auto_splitter_file.value.s, filename);
-        strcpy(auto_splitter_file, filename);
+        const char* current_folder = gtk_file_chooser_get_current_folder(chooser);
+        if (current_folder) {
+            strncpy(last_folder, current_folder, sizeof(last_folder) - 1);
+            last_folder[sizeof(last_folder) - 1] = '\0';
+            CFG_SET_STR(cfg.history.last_auto_splitter_folder.value.s, last_folder);
+        }
+        if (filename) {
+            CFG_SET_STR(cfg.history.auto_splitter_file.value.s, filename);
+            strcpy(auto_splitter_file, filename);
+            g_free(filename);
+        }
         config_save();
 
         // Restart auto-splitter if it was running
-        const bool was_asl_enabled = atomic_load(&auto_splitter_enabled);
-        if (was_asl_enabled) {
-            atomic_store(&auto_splitter_enabled, false);
-            while (atomic_load(&auto_splitter_running) && was_asl_enabled) {
-                // wait, this will be very fast so its ok to just spin
-            }
-            atomic_store(&auto_splitter_enabled, true);
-        }
-
-        g_free(filename);
+        restart_auto_splitter();
     }
     gtk_widget_destroy(dialog);
 }

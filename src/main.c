@@ -2,6 +2,7 @@
 #include "gui/timer.h"
 #include "keybinds/keybinds_callbacks.h"
 #include "lasr/auto-splitter.h"
+#include "logging.h"
 #include "server.h"
 #include "settings/utils.h"
 #include "shared.h"
@@ -45,7 +46,7 @@ void handle_ctl_command(CTLCommand command)
             timer_start_split(win);
             break;
         case CTL_CMD_STOP_RESET:
-            timer_stop_reset(win);
+            timer_stop_or_reset(win);
             break;
         case CTL_CMD_CANCEL:
             timer_cancel_run(win);
@@ -88,6 +89,7 @@ static void* ls_auto_splitter(void* arg)
 
 int main(int argc, char* argv[])
 {
+    initLogQueue();
     check_directories();
 
     g_app = ls_app_new();
@@ -97,10 +99,14 @@ int main(int argc, char* argv[])
     pthread_t t2; // Control server thread
     pthread_create(&t2, NULL, &ls_ctl_server, NULL);
 
+    pthread_t t3; // Logging Thread
+    pthread_create(&t3, NULL, &loggingThread, NULL);
+
     g_application_run(G_APPLICATION(g_app), argc, argv);
 
     pthread_join(t1, NULL);
     pthread_join(t2, NULL);
+    pthread_join(t3, NULL);
 
     return 0;
 }
