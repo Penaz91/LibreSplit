@@ -520,3 +520,13 @@ Usage:
 ```lua
 local maps = getMaps()
 ```
+
+## md5sum
+
+Returns a hex-digest of the file pointed by the path passed as argument, as a string. Mostly used for detecting different game versions.
+
+Usage:
+
+```lua
+local md5_to_compare = md5sum("path/to/my/awesome/game")
+```

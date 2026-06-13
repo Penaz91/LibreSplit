@@ -120,6 +120,7 @@ static const lasr_function default_luac_functions[] = {
     { "b_rshift", b_rshift },
     { "getMaps", getMaps },
     { "str2ida", str2ida },
+    { "md5sum", md5sum },
     { NULL, NULL }
 };
 
