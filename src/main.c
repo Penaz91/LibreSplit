@@ -1,4 +1,5 @@
 #include "gui/app_window.h"
+#include "gui/dialogs.h"
 #include "gui/timer.h"
 #include "keybinds/delayed_callbacks.h"
 #include "keybinds/keybinds_callbacks.h"
@@ -9,7 +10,6 @@
 #include "server.h"
 #include "settings/utils.h"
 #include "shared.h"
-#include "timer.h"
 
 #include <gtk/gtk.h>
 #include <jansson.h>
@@ -92,8 +92,21 @@ static void* ls_auto_splitter(void* arg)
     return NULL;
 }
 
+static bool bypass_root_protection(void)
+{
+    const char* env = getenv("BYPASS_ROOT_PROTECTION_CHECKS");
+    return env != NULL && strcmp(env, "1") == 0;
+}
+
 int main(int argc, char* argv[])
 {
+    // Check if app is running as root.
+    if (geteuid() == 0 && !bypass_root_protection()) {
+        gtk_init(&argc, &argv);
+        display_root_warning_dialog();
+        return 1;
+    }
+
     initLogQueue();
     check_directories();
     init_external_lasr_functions();
