@@ -101,6 +101,7 @@ static const luaL_Reg lj_lib_load[] = {
  */
 static const lasr_function luac_functions[] = {
     { "process", find_process_id },
+    { "cmdline", find_cmdline_id },
     { "getBaseAddress", getBaseAddress },
     { "readAddress", readAddress },
     { "sizeOf", size_of },
@@ -117,6 +118,7 @@ static const lasr_function luac_functions[] = {
     { "b_rshift", b_rshift },
     { "getMaps", getMaps },
     { "str2ida", str2ida },
+    { "md5sum", md5sum },
     { NULL, NULL }
 };
 
