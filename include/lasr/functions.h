@@ -1,11 +1,11 @@
 #pragma once
 
-#include "functions/md5.h"
 #include "lasr/functions/bitwise.h"
 #include "lasr/functions/getBaseAddress.h"
 #include "lasr/functions/getMaps.h"
 #include "lasr/functions/getModuleSize.h"
 #include "lasr/functions/getPID.h"
+#include "lasr/functions/md5.h"
 #include "lasr/functions/print_tbl.h"
 #include "lasr/functions/process.h"
 #include "lasr/functions/readAddress.h"

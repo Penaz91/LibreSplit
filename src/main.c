@@ -1,4 +1,5 @@
 #include "gui/app_window.h"
+#include "gui/dialogs.h"
 #include "gui/timer.h"
 #include "keybinds/delayed_callbacks.h"
 #include "keybinds/keybinds_callbacks.h"
@@ -87,8 +88,21 @@ static void* ls_auto_splitter(void* arg)
     return NULL;
 }
 
+static bool bypass_root_protection(void)
+{
+    const char* env = getenv("BYPASS_ROOT_PROTECTION_CHECKS");
+    return env != NULL && strcmp(env, "1") == 0;
+}
+
 int main(int argc, char* argv[])
 {
+    // Check if app is running as root.
+    if (geteuid() == 0 && !bypass_root_protection()) {
+        gtk_init(&argc, &argv);
+        display_root_warning_dialog();
+        return 1;
+    }
+
     initLogQueue();
     LOG_INFOF("Starting LibreSplit - version %s", APP_VERSION);
     check_directories();
