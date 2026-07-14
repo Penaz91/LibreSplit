@@ -232,6 +232,12 @@ int therun_start(const ls_timer* timer)
     return 0;
 }
 
+int therun_split(const ls_timer* timer)
+{
+    therun_trigger_update(timer, 1);
+    return 0;
+}
+
 int therun_skip(const ls_timer* timer)
 {
     therun_trigger_update(timer, 7);
@@ -250,5 +256,6 @@ int plug_init(PlugAPI* api)
     api->register_event_hook(START, therun_start);
     api->register_event_hook(SKIP, therun_skip);
     api->register_event_hook(UNSPLIT, therun_unsplit);
+    api->register_event_hook(SPLIT, therun_split);
     return 0;
 }
