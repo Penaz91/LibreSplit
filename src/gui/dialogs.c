@@ -1,10 +1,3 @@
-/**
- * Shows a message dialog in case of a memory read error.
- *
- * @param data Unused.
- *
- * @return False, to remove the function from the queue.
- */
 #include "lasr/auto-splitter.h"
 #include <gio/gio.h>
 #include <glib.h>
