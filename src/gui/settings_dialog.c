@@ -11,6 +11,8 @@
 
 static LSGuiSetting* gui_settings = NULL;
 
+static GtkWidget* settings_window_singleton = NULL;
+
 /**
  * Takes the application config and counts how many settings are available.
  *
@@ -44,6 +46,7 @@ static size_t enumerate_settings(AppConfig cfg)
  */
 static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpointer user_data)
 {
+    settings_window_singleton = NULL;
     gtk_widget_destroy(widget);
     free(gui_settings);
     gui_settings = NULL;
@@ -162,6 +165,12 @@ static void set_widget_defaults(GtkWidget* obj)
 
 static void build_settings_dialog(GtkApplication* app, gpointer data)
 {
+    // Show already open window if another one is called.
+    if (settings_window_singleton) {
+        gtk_window_present(GTK_WINDOW(settings_window_singleton));
+        return;
+    }
+
     int settings_number = enumerate_settings(cfg);
     gui_settings = malloc(settings_number * sizeof(LSGuiSetting));
     if (gui_settings == NULL) {
@@ -170,6 +179,7 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
     }
 
     GtkWidget* window = gtk_application_window_new(app);
+    settings_window_singleton = window;
     gtk_window_set_title(GTK_WINDOW(window), "LibreSplit Settings");
     gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
