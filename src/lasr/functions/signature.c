@@ -172,6 +172,52 @@ bool validate_process_memory(pid_t pid, uintptr_t address, void* buffer, size_t 
 }
 
 /**
+ * @brief Given an initialized memory iterator, scans the region of memory between mem_iter.start and mem_iter.end
+ *
+ * @param mem_iter The memory iterator to use
+ * @param pattern Pointer to the pattern to scan for
+ * @param pattern_length The pattern length
+ * @param offset The offset to be used in the result
+ * @param scan_result Pointer to the scan result
+ * @param error Pointer to integer onto which to save the error type
+ * @return 1 if the signature was found, zero otherwise
+ */
+static int sig_scan_mem_iter(MemoryIterator* mem_iter, uint16_t* pattern, size_t pattern_length, size_t offset, intptr_t* scan_result, int* error)
+{
+    uint8_t err = 0;
+    while (mem_next(mem_iter, &err)) {
+        // Now buffer contains the read memory chunk
+        assert(mem_iter->buffer_size >= pattern_length);
+        for (size_t j = 0; j <= mem_iter->buffer_size - pattern_length; ++j) {
+            if (match_pattern(mem_iter->buffer + j, pattern, pattern_length)) {
+                // The resulting address is the start of the region
+                // plus the index of the first byte that matches
+                // plus the user-set offset, minus the process's base_address
+                // or a subsequent memory read will read the wrong address or
+                // go out of memory (due to commit 2b4417f offsetting memory reads)
+                // So this result might be negative if the main module happens to be after
+                // the found signature. This should be corrected by readAddress.
+                intptr_t result = (mem_iter->last_cursor + j + offset) - process.base_address;
+                *scan_result = result;
+                // Found
+                return 1;
+            }
+        }
+    }
+    if (err == 3) {
+        // Unreadable map
+        *error = 3;
+        return 0;
+    }
+    if (err) {
+        log_error("There has been an error in sig_scan: error code %d", err);
+        *error = 1;
+        return 0;
+    }
+    return 0;
+}
+
+/**
  * Performs the Lua Auto Splitter sig_scan function, pushing onto the Lua stack the result.
  *
  * If a pattern is found, it will be offset by the process base_address, allowing the result to
@@ -186,21 +232,18 @@ bool validate_process_memory(pid_t pid, uintptr_t address, void* buffer, size_t 
  */
 int perform_sig_scan(lua_State* L)
 {
-    int ret = 1;
     MemoryIterator* mem_iter = NULL;
     uint16_t* pattern = NULL;
     ProcessMap* regions = NULL;
     if (lua_gettop(L) != 2) {
         log_error("Invalid number of arguments: expected 2 (signature, offset)");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
     if (!lua_isstring(L, 1) || !lua_isnumber(L, 2)) {
         log_error("Invalid argument types: expected (string, number)");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
@@ -212,7 +255,6 @@ int perform_sig_scan(lua_State* L)
     if (strlen(signature) == 0) {
         log_error("Signature string cannot be empty");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
@@ -221,7 +263,6 @@ int perform_sig_scan(lua_State* L)
     if (!pattern) {
         log_error("Failed to convert signature");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
@@ -230,7 +271,6 @@ int perform_sig_scan(lua_State* L)
     if (!regions) {
         log_error("Failed to get memory regions");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
@@ -243,48 +283,134 @@ int perform_sig_scan(lua_State* L)
             LOG_ERR("Unable to recycle memory iterator, exiting the sig_scan loop");
             goto cleanup;
         }
-        uint8_t err = 0;
-        while (mem_next(mem_iter, &err)) {
-            // Now buffer contains the read memory chunk
-            assert(mem_iter->buffer_size >= pattern_length);
-            for (size_t j = 0; j <= mem_iter->buffer_size - pattern_length; ++j) {
-                if (match_pattern(mem_iter->buffer + j, pattern, pattern_length)) {
-                    // The resulting address is the start of the region
-                    // plus the index of the first byte that matches
-                    // plus the user-set offset, minus the process's base_address
-                    // or a subsequent memory read will read the wrong address or
-                    // go out of memory (due to commit 2b4417f offsetting memory reads)
-                    // So this result might be negative if the main module happens to be after
-                    // the found signature. This should be corrected by readAddress.
-                    intptr_t result = (mem_iter->last_cursor + j + offset) - process.base_address;
-
-                    lua_pushnumber(L, result);
-                    ret = 1;
-                    goto cleanup;
-                }
-            }
-        }
-        if (err == 3) {
-            // Unreadable map
-            continue;
-        }
-        if (err) {
-            log_error("There has been an error in sig_scan: error code %d", err);
-            lua_pushnil(L);
-            ret = 1;
+        intptr_t scan_result = 0;
+        int error = 0;
+        int found = sig_scan_mem_iter(mem_iter, pattern, pattern_length, offset, &scan_result, &error);
+        if (found) {
+            lua_pushnumber(L, scan_result);
             goto cleanup;
+        }
+        if (error) {
+            if (error == 3) {
+                // Unreadable map, ignore and continue
+                error = 0;
+                continue;
+            }
+            if (error == 1) {
+                // Generic sig_scan error, stop
+                lua_pushnil(L);
+                goto cleanup;
+            }
         }
     }
 
     // No match found
     log_error("No match found for the given signature");
     lua_pushnil(L);
-    ret = 1;
 cleanup:
     free(pattern);
     pattern = NULL;
     mem_iterator_destroy(&mem_iter);
     free(regions);
     regions = NULL;
-    return ret;
+    return 1;
+}
+
+/**
+ * Performs the Lua Auto Splitter sig_scan function, pushing onto the Lua stack the result.
+ * But takes into account user-set start and end addresses
+ *
+ * If a pattern is found, it will be offset by the process base_address, allowing the result to
+ * be used directly in readAddress, without any module definition.
+ *
+ * Using readAddress with a module name and an address coming from sig_scan is not supported and
+ * may result in out-of-process reads or other unforeseen consequences.
+ *
+ * @param L The lua state.
+ *
+ * @return Always 1 (one parameter is always pushed on the stack, either the address or nil)
+ */
+int perform_sig_scan_with_limits(lua_State* L)
+{
+    MemoryIterator* mem_iter = NULL;
+    uint16_t* pattern = NULL;
+    ProcessMap* regions = NULL;
+    if (lua_gettop(L) != 2) {
+        log_error("Invalid number of arguments: expected 2 (signature, offset)");
+        lua_pushnil(L);
+        goto cleanup_singleregion;
+    }
+
+    if (!lua_isstring(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3) || !lua_isnumber(L, 4)) {
+        log_error("Invalid argument types: expected (string, number, number, number)");
+        lua_pushnil(L);
+        goto cleanup_singleregion;
+    }
+
+    pid_t p_pid = process.pid;
+    const char* signature = lua_tostring(L, 1);
+    intptr_t offset = lua_tointeger(L, 2);
+    intptr_t start = lua_tointeger(L, 3);
+    intptr_t end = lua_tointeger(L, 3);
+
+    // Validate signature string
+    if (strlen(signature) == 0) {
+        log_error("Signature string cannot be empty");
+        lua_pushnil(L);
+        goto cleanup_singleregion;
+    }
+
+    // Validate start and end
+    if (start < 0) {
+        log_error("The start address must be positive");
+        lua_pushnil(L);
+        goto cleanup_singleregion;
+    }
+
+    if (end < 0) {
+        log_error("The end address must be positive");
+        lua_pushnil(L);
+        goto cleanup_singleregion;
+    }
+
+    if (start >= end) {
+        log_error("The start address must be lower than the end address");
+        lua_pushnil(L);
+        goto cleanup_singleregion;
+    }
+
+    size_t pattern_length;
+    pattern = convert_signature(signature, &pattern_length);
+    if (!pattern) {
+        log_error("Failed to convert signature");
+        lua_pushnil(L);
+        goto cleanup_singleregion;
+    }
+
+    // Forward initialization of the memory iterator.
+    mem_iter = mem_iterator_new(p_pid, start, end, pattern_length);
+
+    intptr_t scan_result = 0;
+    int error = 0;
+    int found = sig_scan_mem_iter(mem_iter, pattern, pattern_length, offset, &scan_result, &error);
+    if (found) {
+        lua_pushnumber(L, scan_result);
+        goto cleanup_singleregion;
+    }
+    if (error) {
+        // Unreadable map or generic sig_scan error, stop
+        lua_pushnil(L);
+        goto cleanup_singleregion;
+    }
+
+    // No match found
+    log_error("No match found for the given signature in the given limits");
+    lua_pushnil(L);
+cleanup_singleregion:
+    free(pattern);
+    pattern = NULL;
+    mem_iterator_destroy(&mem_iter);
+    free(regions);
+    regions = NULL;
+    return 1;
 }

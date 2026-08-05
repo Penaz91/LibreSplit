@@ -406,6 +406,23 @@ end
 * Returns the current PID
 
 # Experimental stuff
+
+## sig_scan_between
+
+Does the same job as `sig_scan` but allows the user to input the start and end of the memory region that should be read.
+
+`sig_scan_between(pattern, offset, start, end)`
+
+Example:
+
+`signature = sig_scan_between("89 5C 24 ?? 89 44 24 ?? 74 ?? 48 8D 15", 4, 0x10000, 0x20000)`
+
+This can be useful if a signature is insufficiently detailed and it might appear more than once in the game.
+
+### Notes:
+
+- The start address and end address must be in the same memory map, this scan will not jump between memory maps for you. It's suggested to be used in conjunction with `getMaps()`. Errors and crashes due to out of memory reads are your responsibility!
+
 ## `mapsCacheCycles`
 
 * When a `readAddress` that uses a memory map the biggest bottleneck is reading every line of `/proc/pid/maps` and checking if that line is the corresponding module. This option allows you to set for how many cycles the cache of that file should be used. The cache is global so it gets reset every x number of cycles.

@@ -105,6 +105,7 @@ static const lasr_function luac_functions[] = {
     { "readAddress", readAddress },
     { "sizeOf", size_of },
     { "sig_scan", perform_sig_scan },
+    { "sig_scan_between", perform_sig_scan_with_limits },
     { "getPID", getPID },
     { "getModuleSize", getModuleSize },
     { "shallow_copy_tbl", shallow_copy_tbl },
