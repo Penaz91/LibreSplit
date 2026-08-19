@@ -133,3 +133,18 @@ void init_external_lasr_functions(void)
     external_lasr_functions.functions[0].function_name = NULL;
     external_lasr_functions.functions[0].function_ptr = NULL;
 }
+
+/**
+ * @brief Registers a context menu item under the "Plugins->Plugin Name" menu
+ *
+ * @param label The label used for the newly created menu item
+ * @param fn The G_CALLBACK to connect to the new menu item
+ * @return 1 if everything went well. 0 otherwise.
+ */
+int register_context_menu_item(const char* label, GCallback fn)
+{
+    // TODO: [Penaz] [2026-08-19] Fill in. Needs an array on the context menu side
+    // ^ as well as a for loop to create and destroy them when needed.
+    // ^ It's essentially yet another registry
+    return 1;
+}

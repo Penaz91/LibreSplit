@@ -1,4 +1,5 @@
 #pragma once
+#include "glib-object.h"
 #include "lasr/auto-splitter.h"
 #include "lua.h"
 #include "timer.h"
@@ -36,11 +37,13 @@ typedef enum HookableEvent {
 
 typedef int (*register_lua_func)(const char*, lua_CFunction);
 typedef int (*register_event_func)(HookableEvent event, timer_hook_func fn);
+typedef int (*register_context_menu_item_func)(const char*, GCallback);
 
 typedef struct PlugAPI {
     abi_version_t abi_version;
     register_lua_func register_lua_function;
     register_event_func register_event_hook;
+    register_context_menu_item_func register_context_menu_item;
 } PlugAPI;
 
 int register_lua_function(const char* name, lua_CFunction);
@@ -48,3 +51,5 @@ int register_lua_function(const char* name, lua_CFunction);
 int register_event_hook(HookableEvent event, timer_hook_func fn);
 
 void init_external_lasr_functions(void);
+
+int register_context_menu_item(const char* label, GCallback fn);
