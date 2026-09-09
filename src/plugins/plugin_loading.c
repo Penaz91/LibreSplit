@@ -2,7 +2,6 @@
 #include "gtk/gtk.h"
 #include "logging.h"
 #include "plugins/plugin_utils.h"
-#include "plugins/plugin_utils_gtk.h"
 #include "settings/utils.h"
 #include <assert.h>
 #include <dirent.h>
@@ -16,10 +15,6 @@ PlugAPI api = {
     .abi_version = 1, // v0.1
     .register_lua_function = register_lua_function,
     .register_event_hook = register_event_hook,
-};
-
-PlugAPIGTK api_gtk = {
-    .core_api = &api,
     .register_component = register_plugin_component,
 };
 
