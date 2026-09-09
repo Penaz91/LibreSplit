@@ -1,5 +1,5 @@
 #include "glib-object.h"
-#include "plugins/plugin_gtk.h"
+#include "plugins/plugin.h"
 #include "plugins/plugin_utils.h"
 #include <gtk/gtk.h>
 
