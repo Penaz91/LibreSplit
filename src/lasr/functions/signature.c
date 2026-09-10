@@ -35,7 +35,7 @@ void log_error(const char* format, ...)
 }
 
 /**
- * Gets all the memory regions of a certain PID
+ * Gets all the memory regions of the monitored process
  *
  * @param[in] count A pointer to a counter onto where to store the number of regions
  *
@@ -43,7 +43,8 @@ void log_error(const char* format, ...)
  */
 ProcessMap* get_memory_regions(size_t* count)
 {
-    if (maps_cache == NULL) {
+    if (maps_cache == NULL || maps_cache_cycles == 0) {
+        // maps_getAll clears the cache automatically before fillup
         *count = maps_getAll();
     } else {
         *count = maps_cache_size;
@@ -155,14 +156,12 @@ int perform_sig_scan(lua_State* L)
 {
     if (lua_gettop(L) != 2) {
         log_error("Invalid number of arguments: expected 2 (signature, offset)");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
     if (!lua_isstring(L, 1) || !lua_isnumber(L, 2)) {
         log_error("Invalid argument types: expected (string, number)");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
     pid_t p_pid = process.pid;
@@ -172,16 +171,14 @@ int perform_sig_scan(lua_State* L)
     // Validate signature string
     if (strlen(signature) == 0) {
         log_error("Signature string cannot be empty");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
     size_t pattern_length;
     uint16_t* pattern = convert_signature(signature, &pattern_length);
     if (!pattern) {
         log_error("Failed to convert signature");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
     size_t regions_count = 0;
@@ -189,8 +186,7 @@ int perform_sig_scan(lua_State* L)
     if (!regions) {
         free(pattern);
         log_error("Failed to get memory regions");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
     for (size_t i = 0; i < regions_count; i++) {
@@ -200,8 +196,7 @@ int perform_sig_scan(lua_State* L)
         if (!buffer) {
             free(pattern);
             log_error("Failed to allocate memory for region buffer");
-            lua_pushnil(L);
-            return 1;
+            goto sigscan_fail;
         }
 
         if (!validate_process_memory(p_pid, region.start, buffer, region_size)) {
@@ -223,6 +218,9 @@ int perform_sig_scan(lua_State* L)
                 free(buffer);
                 free(pattern);
 
+                if (maps_cache_cycles == 0) {
+                    maps_clearCache();
+                }
                 lua_pushnumber(L, result);
                 return 1;
             }
@@ -235,6 +233,10 @@ int perform_sig_scan(lua_State* L)
 
     // No match found
     log_error("No match found for the given signature");
+sigscan_fail:
+    if (maps_cache_cycles == 0) {
+        maps_clearCache();
+    }
     lua_pushnil(L);
     return 1;
 }
