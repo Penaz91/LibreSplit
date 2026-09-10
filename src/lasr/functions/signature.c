@@ -41,7 +41,7 @@ void log_error(const char* format, ...)
  *
  * @return A dinamically allocated array of ProcessMap that have been found
  */
-ProcessMap* get_memory_regions(int* count)
+ProcessMap* get_memory_regions(size_t* count)
 {
     if (maps_cache == NULL) {
         *count = maps_getAll();
@@ -184,7 +184,7 @@ int perform_sig_scan(lua_State* L)
         return 1;
     }
 
-    int regions_count = 0;
+    size_t regions_count = 0;
     ProcessMap* regions = get_memory_regions(&regions_count);
     if (!regions) {
         free(pattern);
@@ -193,7 +193,7 @@ int perform_sig_scan(lua_State* L)
         return 1;
     }
 
-    for (int i = 0; i < regions_count; i++) {
+    for (size_t i = 0; i < regions_count; i++) {
         ProcessMap region = regions[i];
         ssize_t region_size = region.end - region.start;
         uint8_t* buffer = malloc(region_size);

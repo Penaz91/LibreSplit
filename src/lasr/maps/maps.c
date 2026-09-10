@@ -206,11 +206,11 @@ static bool maps_parseMapsLine(const char* line, ProcessMap* map)
 {
     uint64_t size;
     char mode[8];
-    unsigned long offset;
-    unsigned int major_id, minor_id, node_id;
+    unsigned long offset, node_id;
+    unsigned int major_id, minor_id;
 
     // Thank you kernel source code
-    int sscanf_res = sscanf(line, "%lx-%lx %7s %lx %u:%u %u %" STR(PATH_MAX) "[^\n]", &map->start,
+    int sscanf_res = sscanf(line, "%lx-%lx %7s %lx %x:%x %lu %" STR(PATH_MAX) "[^\n]", &map->start,
         &map->end, mode, &offset, &major_id,
         &minor_id, &node_id, map->name);
     if (!sscanf_res)
@@ -245,8 +245,11 @@ static size_t maps_getAll_legacy(void)
 
     char current_line[PATH_MAX + 100];
     maps_clearCache();
+    // XXX: [Penaz] [2026-09-10] Is it possible for /proc/pid/maps to generate a line longer
+    // ^ than 4096 (+ 100 chars of "padding") characters? If we ever run into buffer size issues
+    // ^ it might be worth looking into using getline()
     while (fgets(current_line, sizeof(current_line), f) != NULL) {
-        ProcessMap map;
+        ProcessMap map = { 0 };
         if (maps_parseMapsLine(current_line, &map)) {
             append_entry(map);
         } else {
