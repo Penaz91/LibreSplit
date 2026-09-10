@@ -1,16 +1,20 @@
 #include "src/gui/actions.h"
+#include "gio/gio.h"
 #include "src/gui/app_window.h"
+#include "src/gui/dialogs.h"
 #include "src/gui/game.h"
 #include "src/gui/timer.h"
 #include "src/lasr/auto-splitter.h"
 #include "src/lasr/utils.h"
+#include "src/logging.h"
 #include "src/settings/settings.h"
 #include <gtk/gtk.h>
+#include <stdatomic.h>
 #include <sys/stat.h>
 
 /**
  * Compares the current timer and the saved one to see
- * if the current one is better
+ * if the current one is better for the game's comparison method.
  *
  * Ported from paoloose/urn @7456bfe
  *
@@ -22,22 +26,29 @@
 bool ls_is_timer_better(ls_game* game, ls_timer* timer)
 {
     int i;
+    long long timer_split_time = LLONG_MAX;
+    long long game_split_time = LLONG_MAX;
+
     // Find the latest split with a time
     for (i = game->split_count - 1; i >= 0; i--) {
-        if (timer->split_times[i] != 0ll || game->split_times[i] != 0ll) {
+        timer_split_time = ls_time_get_by_method(timer->split_times[i], game->comparison_method);
+        game_split_time = ls_time_get_by_method(game->split_times[i], game->comparison_method);
+        if (timer_split_time != 0ll || game_split_time != 0ll) {
             break;
         }
     }
+
     if (i < 0) {
         return true;
     }
-    if (timer->split_times[i] == 0ll) {
+    if (timer_split_time == 0ll) {
         return false;
     }
-    if (game->split_times[i] == 0ll) {
+    if (game_split_time == 0ll) {
         return true;
     }
-    return timer->split_times[i] <= game->split_times[i];
+
+    return timer_split_time <= game_split_time;
 }
 
 /**
@@ -110,15 +121,20 @@ void open_activated(GSimpleAction* action,
 
     res = gtk_dialog_run(GTK_DIALOG(dialog));
     if (res == GTK_RESPONSE_ACCEPT) {
-        char* filename;
         GtkFileChooser* chooser = GTK_FILE_CHOOSER(dialog);
         char last_folder[PATH_MAX];
-        filename = gtk_file_chooser_get_filename(chooser);
-        strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        CFG_SET_STR(cfg.history.last_split_folder.value.s, last_folder);
-        ls_app_window_open(win, filename);
-        CFG_SET_STR(cfg.history.split_file.value.s, filename);
-        g_free(filename);
+        char* filename = gtk_file_chooser_get_filename(chooser);
+        const char* current_folder = gtk_file_chooser_get_current_folder(chooser);
+        if (current_folder) {
+            strncpy(last_folder, current_folder, sizeof(last_folder) - 1);
+            last_folder[sizeof(last_folder) - 1] = '\0';
+            CFG_SET_STR(cfg.history.last_split_folder.value.s, last_folder);
+        }
+        if (filename) {
+            ls_app_window_open(win, filename);
+            CFG_SET_STR(cfg.history.split_file.value.s, filename);
+            g_free(filename);
+        }
     }
     if (!win->game || !win->timer) {
         gtk_widget_show_all(win->welcome_box->box);
@@ -264,22 +280,39 @@ void quit_activated(GSimpleAction* action,
     GVariant* parameter,
     gpointer app)
 {
+    LOG_INFO("Exiting LibreSplit. GG!");
     GList* windows;
     LSAppWindow* win;
     if (parameter != NULL) {
         app = parameter;
     }
 
+    atomic_store(&exit_requested, 1);
+    LOG_DEBUG("Exit request sent to threads");
     windows = gtk_application_get_windows(GTK_APPLICATION(app));
     if (windows) {
         win = LS_APP_WINDOW(windows->data);
     } else {
         win = ls_app_window_new(LS_APP(app));
     }
+
+    // Warn if the reset will lose a gold split, and allow the user to cancel the reset if they want to keep it
+    if (win->timer && win->timer->running && (ls_timer_has_gold_split(win->timer) || ls_timer_has_rainbow_split(win->timer))) {
+        bool user_reset = true;
+        if (cfg.libresplit.ask_on_gold.value.b) {
+            user_reset = display_confirm_reset_dialog();
+        }
+
+        if (!user_reset) {
+            return;
+        }
+    }
+
     if (win->welcome_box) {
         welcome_box_destroy(win->welcome_box);
     }
-    exit(0);
+    gtk_widget_destroy(GTK_WIDGET(win));
+    g_application_quit(G_APPLICATION(app));
 }
 
 /**
@@ -389,16 +422,21 @@ void open_auto_splitter(GSimpleAction* action,
         GtkFileChooser* chooser = GTK_FILE_CHOOSER(dialog);
         char* filename = gtk_file_chooser_get_filename(chooser);
         char last_folder[PATH_MAX];
-        strcpy(last_folder, gtk_file_chooser_get_current_folder(chooser));
-        CFG_SET_STR(cfg.history.last_auto_splitter_folder.value.s, last_folder);
-        CFG_SET_STR(cfg.history.auto_splitter_file.value.s, filename);
-        strcpy(auto_splitter_file, filename);
+        const char* current_folder = gtk_file_chooser_get_current_folder(chooser);
+        if (current_folder) {
+            strncpy(last_folder, current_folder, sizeof(last_folder) - 1);
+            last_folder[sizeof(last_folder) - 1] = '\0';
+            CFG_SET_STR(cfg.history.last_auto_splitter_folder.value.s, last_folder);
+        }
+        if (filename) {
+            CFG_SET_STR(cfg.history.auto_splitter_file.value.s, filename);
+            strcpy(auto_splitter_file, filename);
+            g_free(filename);
+        }
         config_save();
 
         // Restart auto-splitter if it was running
         restart_auto_splitter();
-
-        g_free(filename);
     }
     gtk_widget_destroy(dialog);
 }
