@@ -213,8 +213,12 @@ static bool maps_parseMapsLine(const char* line, ProcessMap* map)
     int sscanf_res = sscanf(line, "%lx-%lx %7s %lx %x:%x %lu %" STR(PATH_MAX) "[^\n]", &map->start,
         &map->end, mode, &offset, &major_id,
         &minor_id, &node_id, map->name);
-    if (!sscanf_res)
+    // Here we only allow the map name to be empty, anything else should return show a
+    // parsing failure
+    if (sscanf_res < 7) {
+        LOG_DEBUGF("Cannot fully parse the maps line: %s", line);
         return false;
+    }
 
     // Calculate the map size
     size = map->end - map->start;
