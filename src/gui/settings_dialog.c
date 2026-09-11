@@ -1,4 +1,6 @@
 #include "settings_dialog.h"
+#include "app_window.h"
+#include "src/logging.h"
 #include "src/settings/definitions.h"
 #include "src/settings/settings.h"
 
@@ -11,6 +13,8 @@
 
 static LSGuiSetting* gui_settings = NULL;
 
+static GtkWidget* settings_window_singleton = NULL;
+
 /**
  * Takes the application config and counts how many settings are available.
  *
@@ -22,6 +26,7 @@ static LSGuiSetting* gui_settings = NULL;
  */
 static size_t enumerate_settings(AppConfig cfg)
 {
+    LOG_DEBUG("Enumerating settings to add to the GUI...");
     int settings_number = 0;
     for (size_t s = 0; s < sections_count; ++s) {
         SectionInfo section_info = sections[s];
@@ -44,6 +49,8 @@ static size_t enumerate_settings(AppConfig cfg)
  */
 static gboolean on_help_window_delete(GtkWidget* widget, GdkEvent* event, gpointer user_data)
 {
+    LOG_DEBUG("Destroying the settings window...");
+    settings_window_singleton = NULL;
     gtk_widget_destroy(widget);
     free(gui_settings);
     gui_settings = NULL;
@@ -117,8 +124,15 @@ bool on_entry_clear_press(GtkEntry* widget, GtkEntryIconPosition icon_pos, GdkEv
     return TRUE;
 }
 
-static void save_gui_settings(GSimpleAction* action, GVariant* parameter, gpointer app)
+/**
+ * Takes the values from the GUI and saves them back into the program settings.
+ * @param action The action performed (unused).
+ * @param parameter Parameters to the action (unused).
+ * @param app The LibreSplit Application pointer (unused).
+ */
+static void save_gui_settings(GtkButton* button, gpointer app)
 {
+    LOG_INFO("Saving settings from the GUI...");
     size_t settings_number = enumerate_settings(cfg);
     // Parse all values in gui_settings, assign them to the respective cfg settings
     for (size_t i = 0; i < settings_number; i++) {
@@ -147,9 +161,19 @@ static void save_gui_settings(GSimpleAction* action, GVariant* parameter, gpoint
         }
     }
     // Call the normal save_settings thing
-    config_save();
+    if (config_save()) {
+        // on success, set decorations in case the setting changed.
+        LSAppWindow* win = LS_APP_WINDOW(app);
+        win->opts.decorated = cfg.libresplit.start_decorated.value.b;
+        set_window_decorations(win);
+    }
 }
 
+/**
+ * Sets some default options used across many widgets.
+ *
+ * @param obj The widget to apply the settings to.
+ */
 static void set_widget_defaults(GtkWidget* obj)
 {
     gtk_widget_set_margin_top(obj, 8);
@@ -160,17 +184,32 @@ static void set_widget_defaults(GtkWidget* obj)
     gtk_widget_set_hexpand(obj, TRUE);
 }
 
+/**
+ * Builds the settings dialog.
+ *
+ * @param app The main LibreSplit Application.
+ * @param data Unused.
+ */
 static void build_settings_dialog(GtkApplication* app, gpointer data)
 {
-    int settings_number = enumerate_settings(cfg);
-    gui_settings = malloc(settings_number * sizeof(LSGuiSetting));
-    if (gui_settings == NULL) {
-        printf("Cannot allocate memory for the settings GUI.");
+    LOG_INFO("Creating the settings dialog...");
+    // Show already open window if another one is called.
+    if (settings_window_singleton) {
+        gtk_window_present(GTK_WINDOW(settings_window_singleton));
         return;
     }
 
-    GtkWidget* window = gtk_application_window_new(app);
-    gtk_window_set_title(GTK_WINDOW(window), "LibreSplit Settings");
+    int settings_number = enumerate_settings(cfg);
+    gui_settings = malloc(settings_number * sizeof(LSGuiSetting));
+    if (gui_settings == NULL) {
+        LOG_WARN("Cannot allocate memory for the settings GUI.");
+        return;
+    }
+
+    GtkWindow* parent = gtk_application_get_active_window(app);
+    GtkWidget* window = gtk_dialog_new_with_buttons("LibreSplit Settings", parent, GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
+    gtk_window_set_application(GTK_WINDOW(window), app);
+    settings_window_singleton = window;
     gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
     g_signal_connect(window, "delete-event", G_CALLBACK(on_help_window_delete), NULL);
@@ -205,6 +244,7 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
                     }
                 case CFG_KEYBIND:
                     {
+                        /*! TODO: Unbind logic and buttons */
                         GtkWidget* lbl_kb = gtk_label_new(entry.desc);
                         gtk_container_add(GTK_CONTAINER(box), lbl_kb);
 
@@ -242,13 +282,20 @@ static void build_settings_dialog(GtkApplication* app, gpointer data)
     }
     gtk_container_add(GTK_CONTAINER(main_box), tabs);
     GtkWidget* save_btn = gtk_button_new_with_label("Save");
-    g_signal_connect(save_btn, "clicked", G_CALLBACK(save_gui_settings), NULL);
+    g_signal_connect(save_btn, "clicked", G_CALLBACK(save_gui_settings), parent);
     gtk_container_add(GTK_CONTAINER(main_box), save_btn);
-    gtk_container_add(GTK_CONTAINER(window), main_box);
-    gtk_widget_show_all(main_box);
+    gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(window))), main_box);
+    gtk_widget_show_all(window);
     gtk_window_present(GTK_WINDOW(window));
 }
 
+/**
+ * Shows the settings dialog when the ContextMenu option is clicked.
+ *
+ * @param action The action performed.
+ * @param parameter Parameters to the action
+ * @param app The LibreSplit Application pointer.
+ */
 void show_settings_dialog(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
     if (parameter != NULL) {

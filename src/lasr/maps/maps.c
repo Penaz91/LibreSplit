@@ -1,6 +1,7 @@
 #include "maps.h"
 
 #include "src/lasr/utils.h"
+#include "src/logging.h"
 
 #include <fcntl.h>
 #include <linux/fs.h>
@@ -130,7 +131,14 @@ static bool maps_ioctlSupported(void)
     q.query_flags = PROCMAP_QUERY_COVERING_OR_NEXT_VMA;
     q.query_addr = 0;
 
-    int ret = ioctl(f, PROCMAP_QUERY, &q);
+    // https://man7.org/linux/man-pages/man2/ioctl.2.html
+    // musl uses int instead of uint like glibc
+    int ret = ioctl(f,
+#ifndef __GLIBC__
+        (int)
+#endif
+            PROCMAP_QUERY,
+        &q);
     close(f);
     return ret >= 0;
 }
@@ -158,7 +166,12 @@ static size_t maps_getAll_ioctl(void)
         for (;;) {
             q.vma_name_addr = (uintptr_t)map_name;
             q.vma_name_size = sizeof(map_name);
-            int ret = ioctl(f, PROCMAP_QUERY, &q);
+            int ret = ioctl(f,
+#ifndef __GLIBC__
+                (int)
+#endif
+                    PROCMAP_QUERY,
+                &q);
             if (ret < 0) {
                 break;
             }
@@ -193,15 +206,19 @@ static bool maps_parseMapsLine(const char* line, ProcessMap* map)
 {
     uint64_t size;
     char mode[8];
-    unsigned long offset;
-    unsigned int major_id, minor_id, node_id;
+    unsigned long offset, node_id;
+    unsigned int major_id, minor_id;
 
     // Thank you kernel source code
-    int sscanf_res = sscanf(line, "%lx-%lx %7s %lx %u:%u %u %" STR(PATH_MAX) "[^\n]", &map->start,
+    int sscanf_res = sscanf(line, "%lx-%lx %7s %lx %x:%x %lu %" STR(PATH_MAX) "[^\n]", &map->start,
         &map->end, mode, &offset, &major_id,
         &minor_id, &node_id, map->name);
-    if (!sscanf_res)
+    // Here we only allow the map name to be empty, anything else should return show a
+    // parsing failure
+    if (sscanf_res < 7) {
+        LOG_DEBUGF("Cannot fully parse the maps line: %s", line);
         return false;
+    }
 
     // Calculate the map size
     size = map->end - map->start;
@@ -218,24 +235,33 @@ static size_t maps_getAll_legacy(void)
 {
     char path[22]; // 22 is the maximum length the path can be (strlen("/proc/4294967296/maps"))
 
-    snprintf(path, sizeof(path), "/proc/%d/maps", process.pid);
+    if (snprintf(path, sizeof(path), "/proc/%d/maps", process.pid) < 0) {
+        LOG_ERR("Failed to create maps path");
+        return 0;
+    }
 
     FILE* f = fopen(path, "r");
 
-    if (f) {
-        char current_line[PATH_MAX + 100];
-        maps_clearCache();
-        while (fgets(current_line, sizeof(current_line), f) != NULL) {
-            ProcessMap map;
-            if (maps_parseMapsLine(current_line, &map)) {
-                append_entry(map);
-            } else {
-                printf("Failed to parse maps line: %s\n", current_line);
-            }
-        }
-        fclose(f);
-        maps_cache = maps_flatten(&maps_cache_size);
+    if (!f) {
+        LOG_ERR("Failed to open maps file");
+        return 0;
     }
+
+    char current_line[PATH_MAX + 100];
+    maps_clearCache();
+    // XXX: [Penaz] [2026-09-10] Is it possible for /proc/pid/maps to generate a line longer
+    // ^ than 4096 (+ 100 chars of "padding") characters? If we ever run into buffer size issues
+    // ^ it might be worth looking into using getline()
+    while (fgets(current_line, sizeof(current_line), f) != NULL) {
+        ProcessMap map = { 0 };
+        if (maps_parseMapsLine(current_line, &map)) {
+            append_entry(map);
+        } else {
+            printf("Failed to parse maps line: %s\n", current_line);
+        }
+    }
+    fclose(f);
+    maps_cache = maps_flatten(&maps_cache_size);
     return maps_cache_size;
 }
 
@@ -294,7 +320,7 @@ bool maps_findMapByName(const char* name, ProcessMap* out_map)
 
     for (uint32_t i = 0; i < maps_cache_size; i++) {
         const char* map_name = maps_cache[i].name;
-        if (strstr(map_name, name) != NULL) {
+        if (strcasestr(map_name, name) != NULL) {
             *out_map = maps_cache[i];
             return true;
         }
@@ -305,7 +331,7 @@ bool maps_findMapByName(const char* name, ProcessMap* out_map)
 
     for (uint32_t i = 0; i < maps_cache_size; i++) {
         const char* map_name = maps_cache[i].name;
-        if (strstr(map_name, name) != NULL) {
+        if (strcasestr(map_name, name) != NULL) {
             *out_map = maps_cache[i];
             if (!maps_cache_cycles) { // Cache is disabled, clear after use
                 maps_clearCache();
