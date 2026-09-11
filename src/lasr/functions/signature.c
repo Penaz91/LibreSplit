@@ -1,5 +1,6 @@
 #include "signature.h"
 
+#include "../maps/maps.h"
 #include "../utils.h"
 
 #include <fcntl.h>
@@ -34,54 +35,21 @@ void log_error(const char* format, ...)
 }
 
 /**
- * Gets all the memory regions of a certain PID
+ * Gets all the memory regions of the monitored process
  *
- * @param[in] pid The ID of the process to get the memory regions of
  * @param[in] count A pointer to a counter onto where to store the number of regions
  *
  * @return A dinamically allocated array of ProcessMap that have been found
  */
-ProcessMap* get_memory_regions(pid_t pid, int* count)
+ProcessMap* get_memory_regions(size_t* count)
 {
-    // TODO: Convert this function to use maps.c functions
-    char maps_path[256];
-    if (snprintf(maps_path, sizeof(maps_path), "/proc/%d/maps", pid) < 0) {
-        HANDLE_ERROR("Failed to create maps path");
+    if (maps_cache == NULL || maps_cache_cycles == 0) {
+        // maps_getAll clears the cache automatically before fillup
+        *count = maps_getAll();
+    } else {
+        *count = maps_cache_size;
     }
-
-    FILE* maps_file = fopen(maps_path, "r");
-    if (!maps_file) {
-        HANDLE_ERROR("Failed to open maps file");
-    }
-
-    ProcessMap* regions = NULL;
-    int capacity = 0;
-    *count = 0;
-
-    char line[256];
-    while (fgets(line, sizeof(line), maps_file)) {
-        if (*count >= capacity) {
-            capacity = capacity == 0 ? 10 : capacity * 2;
-            ProcessMap* temp = realloc(regions, capacity * sizeof(ProcessMap));
-            if (!temp) {
-                free(regions);
-                fclose(maps_file);
-                HANDLE_ERROR("Failed to allocate memory for regions");
-            }
-            regions = temp;
-        }
-
-        uintptr_t start, end;
-        if (sscanf(line, "%" SCNxPTR "-%" SCNxPTR, &start, &end) != 2) {
-            continue; // Skip lines that don't match the expected format
-        }
-        regions[*count].start = start;
-        regions[*count].end = end;
-        (*count)++;
-    }
-
-    fclose(maps_file);
-    return regions;
+    return maps_cache;
 }
 
 /**
@@ -188,14 +156,12 @@ int perform_sig_scan(lua_State* L)
 {
     if (lua_gettop(L) != 2) {
         log_error("Invalid number of arguments: expected 2 (signature, offset)");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
     if (!lua_isstring(L, 1) || !lua_isnumber(L, 2)) {
         log_error("Invalid argument types: expected (string, number)");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
     pid_t p_pid = process.pid;
@@ -205,37 +171,32 @@ int perform_sig_scan(lua_State* L)
     // Validate signature string
     if (strlen(signature) == 0) {
         log_error("Signature string cannot be empty");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
     size_t pattern_length;
     uint16_t* pattern = convert_signature(signature, &pattern_length);
     if (!pattern) {
         log_error("Failed to convert signature");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
-    int regions_count = 0;
-    ProcessMap* regions = get_memory_regions(p_pid, &regions_count);
+    size_t regions_count = 0;
+    ProcessMap* regions = get_memory_regions(&regions_count);
     if (!regions) {
         free(pattern);
         log_error("Failed to get memory regions");
-        lua_pushnil(L);
-        return 1;
+        goto sigscan_fail;
     }
 
-    for (int i = 0; i < regions_count; i++) {
+    for (size_t i = 0; i < regions_count; i++) {
         ProcessMap region = regions[i];
         ssize_t region_size = region.end - region.start;
         uint8_t* buffer = malloc(region_size);
         if (!buffer) {
             free(pattern);
-            free(regions);
             log_error("Failed to allocate memory for region buffer");
-            lua_pushnil(L);
-            return 1;
+            goto sigscan_fail;
         }
 
         if (!validate_process_memory(p_pid, region.start, buffer, region_size)) {
@@ -256,8 +217,10 @@ int perform_sig_scan(lua_State* L)
 
                 free(buffer);
                 free(pattern);
-                free(regions);
 
+                if (maps_cache_cycles == 0) {
+                    maps_clearCache();
+                }
                 lua_pushnumber(L, result);
                 return 1;
             }
@@ -267,10 +230,13 @@ int perform_sig_scan(lua_State* L)
     }
 
     free(pattern);
-    free(regions);
 
     // No match found
     log_error("No match found for the given signature");
+sigscan_fail:
+    if (maps_cache_cycles == 0) {
+        maps_clearCache();
+    }
     lua_pushnil(L);
     return 1;
 }
