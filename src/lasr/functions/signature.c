@@ -262,7 +262,6 @@ cleanup:
         // if we do a free(regions) we'll run into a double-free problem.
         maps_clearCache();
     }
-    regions = NULL;
     free(pattern);
     pattern = NULL;
     mem_iterator_destroy(&mem_iter);
