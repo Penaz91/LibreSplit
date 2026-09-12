@@ -204,6 +204,11 @@ int perform_sig_scan(lua_State* L)
     // Forward initialization of the memory iterator.
     mem_iter = mem_iterator_new(p_pid, 0, 0, pattern_length);
 
+    if (!mem_iter) {
+        LOG_ERR("Memory iterator allocation failed, exiting signature scan.");
+        goto cleanup;
+    }
+
     // By construction, the memory iterator buffer size is MEMORY_WINDOW_SIZE
     if (pattern_length >= mem_iter->buffer_size) {
         LOG_ERR("Memory signature provided is too large.");
@@ -256,8 +261,6 @@ cleanup:
         // maps_clearCache takes care of freeing regions by itself.
         // if we do a free(regions) we'll run into a double-free problem.
         maps_clearCache();
-    } else {
-        free(regions);
     }
     regions = NULL;
     free(pattern);
