@@ -24,10 +24,12 @@ MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uint
 {
     MemoryIterator* iter = malloc(sizeof(MemoryIterator));
     if (iter == NULL) {
+        LOG_ERR("Cannot allocate the memory iterator");
         return NULL;
     }
     uint8_t* tmp = (uint8_t*)malloc(MEMORY_WINDOW_SIZE);
     if (tmp == NULL) {
+        LOG_ERR("Cannot allocate the memory read buffer");
         free(iter);
         return NULL;
     }
