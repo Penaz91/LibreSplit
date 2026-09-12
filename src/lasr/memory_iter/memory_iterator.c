@@ -1,7 +1,6 @@
 #include "memory_iterator.h"
 #include "src/lasr/utils.h"
 #include "src/logging.h"
-#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -53,9 +52,21 @@ MemoryIterator* mem_iterator_new(pid_t pid, uintptr_t start, uintptr_t end, uint
  */
 int mem_next(MemoryIterator* iterator, uint8_t* err)
 {
-    assert(iterator != NULL);
-    assert(iterator->cursor != 0);
-    assert(iterator->cursor >= iterator->start);
+    if (iterator == NULL) {
+        LOG_ERR("Programming Error: Trying to use a NULL iterator");
+        return 0;
+    }
+    if (iterator->cursor == 0) {
+        LOG_ERR("Programming Error: the memory iterator cursor is pointing at address zero.");
+        return 0;
+    }
+    if (iterator->cursor < iterator->start) {
+        LOG_ERRF(
+            "Programming Error: Iterator cursor address has a lower value (%x) than its starting memory address (%x)",
+            iterator->cursor,
+            iterator->start);
+        return 0;
+    }
     size_t window_size = MEMORY_WINDOW_SIZE;
     bool last_iter = false;
     if (iterator->cursor >= iterator->end) {

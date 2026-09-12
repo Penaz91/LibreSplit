@@ -5,7 +5,6 @@
 #include "../memory_iter/memory_iterator.h"
 #include "../utils.h"
 
-#include <assert.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <lua.h>
@@ -166,14 +165,12 @@ int perform_sig_scan(lua_State* L)
     if (lua_gettop(L) != 2) {
         log_error("Invalid number of arguments: expected 2 (signature, offset)");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
     if (!lua_isstring(L, 1) || !lua_isnumber(L, 2)) {
         log_error("Invalid argument types: expected (string, number)");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
@@ -185,7 +182,6 @@ int perform_sig_scan(lua_State* L)
     if (strlen(signature) == 0) {
         log_error("Signature string cannot be empty");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
@@ -194,7 +190,6 @@ int perform_sig_scan(lua_State* L)
     if (!pattern) {
         log_error("Failed to convert signature");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
@@ -203,23 +198,29 @@ int perform_sig_scan(lua_State* L)
     if (!regions) {
         log_error("Failed to get memory regions");
         lua_pushnil(L);
-        ret = 1;
         goto cleanup;
     }
 
     // Forward initialization of the memory iterator.
     mem_iter = mem_iterator_new(p_pid, 0, 0, pattern_length);
 
+    // By construction, the memory iterator buffer size is MEMORY_WINDOW_SIZE
+    if (pattern_length >= mem_iter->buffer_size) {
+        LOG_ERR("Memory signature provided is too large.");
+        lua_pushnil(L);
+        goto cleanup;
+    }
+
     for (size_t i = 0; i < regions_count; i++) {
         ProcessMap region = regions[i];
         if (!mem_iterator_recycle(&mem_iter, p_pid, region.start, region.end, pattern_length)) {
             LOG_ERR("Unable to recycle memory iterator, exiting the sig_scan loop");
+            lua_pushnil(L);
             goto cleanup;
         }
         uint8_t err = 0;
         while (mem_next(mem_iter, &err)) {
             // Now buffer contains the read memory chunk
-            assert(mem_iter->buffer_size >= pattern_length);
             for (size_t j = 0; j <= mem_iter->buffer_size - pattern_length; ++j) {
                 if (match_pattern(mem_iter->buffer + j, pattern, pattern_length)) {
                     // The resulting address is the start of the region
@@ -232,7 +233,6 @@ int perform_sig_scan(lua_State* L)
                     intptr_t result = (mem_iter->last_cursor + j + offset) - process.base_address;
 
                     lua_pushnumber(L, result);
-                    ret = 1;
                     goto cleanup;
                 }
             }
@@ -244,22 +244,24 @@ int perform_sig_scan(lua_State* L)
         if (err) {
             log_error("There has been an error in sig_scan: error code %d", err);
             lua_pushnil(L);
-            ret = 1;
             goto cleanup;
         }
     }
 
     // No match found
     log_error("No match found for the given signature");
-    ret = 1;
+    lua_pushnil(L);
 cleanup:
     if (maps_cache_cycles == 0) {
+        // maps_clearCache takes care of freeing regions by itself.
+        // if we do a free(regions) we'll run into a double-free problem.
         maps_clearCache();
+    } else {
+        free(regions);
     }
+    regions = NULL;
     free(pattern);
     pattern = NULL;
     mem_iterator_destroy(&mem_iter);
-    free(regions);
-    regions = NULL;
     return ret;
 }
