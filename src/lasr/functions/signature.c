@@ -227,6 +227,11 @@ int perform_sig_scan(lua_State* L)
         while (mem_next(mem_iter, &err)) {
             // Now buffer contains the read memory chunk
             for (size_t j = 0; j <= mem_iter->buffer_size - pattern_length; ++j) {
+                // Since buffer_size and pattern_length are both size_t, the for loop condition
+                // may underflow and not trigger if buffer_size < pattern_length
+                if (mem_iter->buffer_size < pattern_length) {
+                    continue;
+                }
                 if (match_pattern(mem_iter->buffer + j, pattern, pattern_length)) {
                     // The resulting address is the start of the region
                     // plus the index of the first byte that matches
