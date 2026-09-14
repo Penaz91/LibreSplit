@@ -219,6 +219,24 @@ static GtkWidget* new_setting_label(const char* text)
 }
 
 /**
+ * @brief Hides a setting row at the specified position.
+ * A row for some setting consists of 2 columns, one
+ * for the label, and the other for the setting itself.
+ *
+ * @param grid The settings grid from which to fetch the widgets to hide.
+ * @param row The row that is being hidden.
+ */
+static void hide_setting_row(GtkGrid* grid, int row)
+{
+    for (int col = 0; col < 2; ++col) {
+        GtkWidget* child = gtk_grid_get_child_at(grid, col, row);
+        if (child != NULL) {
+            gtk_widget_set_visible(child, FALSE);
+        }
+    }
+}
+
+/**
  * Builds the settings dialog.
  *
  * @param data The LibreSplit GTK Application
@@ -305,10 +323,6 @@ static gboolean build_settings_dialog(gpointer data)
         for (size_t i = 0; i < section_info.count; ++i) {
             ConfigEntry entry = ((ConfigEntry*)section_info.entries)[i];
             gui_settings[settings_idx].settings_entry = &((ConfigEntry*)section_info.entries)[i];
-            if (entry.hide) {
-                continue;
-            }
-
             switch (entry.type) {
                 case CFG_STRING:
                     {
@@ -379,6 +393,11 @@ static gboolean build_settings_dialog(gpointer data)
                         break;
                     }
             }
+
+            if (entry.hide) {
+                hide_setting_row(GTK_GRID(grid), row);
+            }
+
             settings_idx++;
             row++;
         }
