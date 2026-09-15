@@ -1,5 +1,6 @@
 #include "src/gui/actions.h"
 #include "src/gui/app_window.h"
+#include "src/gui/backends/x11.h"
 #include "src/gui/widgets/help_dialog.h"
 #include "src/gui/widgets/settings_dialog.h"
 #include "src/lasr/auto-splitter.h"
@@ -142,7 +143,7 @@ void button_left_click(GtkGestureClick* gesture, double x, double y)
  * Applies default unchecked checkbox border.
  */
 static const char context_menu_styles[] = "popover.libresplit-context-menu viewport { padding: 1px; }\n"
-                                          ".libresplit-context-menu contents { padding: 4px }\n"
+                                          ".libresplit-context-menu contents { padding: 4px; }\n"
                                           ".libresplit-context-menu modelbutton:selected:not(:hover):not(:focus-visible):not(:disabled) { background-color: transparent; color: inherit; }\n"
                                           ".libresplit-context-menu check { border: 1px solid alpha(currentColor, 0.5); }";
 
@@ -199,7 +200,10 @@ static void create_context_menu(LSAppWindow* win, gpointer app)
     g_object_unref(section);
 
     section = g_menu_new();
-    g_menu_append(section, "Always on Top", "win.always-on-top");
+    if (is_x11_display()) {
+        g_menu_append(section, "Always on Top", "win.always-on-top");
+    }
+
     g_menu_append(section, "Settings", "win.settings");
     g_menu_append(section, "About and help", "win.about-and-help");
     g_menu_append_section(menu, NULL, G_MENU_MODEL(section));

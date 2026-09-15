@@ -30,7 +30,7 @@ See the [GTK 4 CSS properties documentation](https://docs.gtk.org/gtk4/css-prope
 | `.timer-container`            | Container for both the detailed and normal timer                                                                                                         |
 | `.detailed-timer`             | Container for the `segment-pb` and `segment-best` classes                                                                                                |
 | `.timer-seconds`              | Large main timer seconds                                                                                                                                 |
-| `.timer-millis`               | Large main timer milli(seconds)                                                                                                                          |
+| `.timer-millis`               | Large main timer fractional seconds                                                                                                                      |
 | `.delay`                      | Timer not running/in negative time                                                                                                                       |
 | `.splits`                     | Container of the splits                                                                                                                                  |
 | `.split`                      | The splits themselves                                                                                                                                    |
@@ -57,7 +57,7 @@ See the [GTK 4 CSS properties documentation](https://docs.gtk.org/gtk4/css-prope
 | `.segment-best`               | Best text within .detailed-timer                                                                                                                         |
 | `.segment-pb`                 | PB text within .detailed-timer                                                                                                                           |
 | `.segment-seconds`            | Smaller detailed timer seconds                                                                                                                           |
-| `.segment-millis`             | Smaller detailed timer milli(seconds)                                                                                                                    |
+| `.segment-millis`             | Smaller detailed timer fractional seconds                                                                                                                |
 | `.sum-of-bests-label`         | Text that says "Sum of Bests"                                                                                                                            |
 | `.sum-of-bests`               | Time for Sum of Bests                                                                                                                                    |
 | `.personal-best-label`        | Text that says "Personal Best"                                                                                                                           |
@@ -72,6 +72,14 @@ Specifically, the title is lowercase and all non-alphanumeric characters are rep
 For instance, if your split is titled "First split", it can be styled by targeting the CSS class `.split-title-first-split`.
 
 A more complex example: if your split is named "Space Station (Part 1)", the CSS class will be `.split-title-space-station--part-1-` (because the parentheses will become hyphens).
+
+## Theme Variants
+
+As hinted at above, themes can also supply variants in your themes directory by providing another css file named `<theme>-<variant>.css`.
+The theming system applies your base theme css, and then your variant on top of it taking precedence so you can apply overrides to anything
+your variant needs to provide the slightly different look/feel over the base theme without having to redefine the entire theme for each variant.
+A theme variant must supplement a base theme. Which means a base `<theme>.css` file must exist alongside your `<theme>-<variant>.css` so that
+the variant works alongside the theme.
 
 ## FAQ
 
@@ -97,13 +105,13 @@ If you run LibreSplit from a terminal like this:
 GTK_DEBUG=interactive libresplit
 ```
 
-LiveSplit will be started together with another window: the interactive GTK debugger. Like the one you see below:
+LibreSplit will be started together with another window: the interactive GTK debugger. Like the one you see below:
 
 ![The GTK Debug window](./images/gtk_debugger.png)
 
-Make sure that both LibreSplit and this window are visible, because when you click on one row in the GTK debugger (`Objects` tab), the corresponding section in LiveSplit will flash 3 times, letting you know what you selected.
+Make sure that both LibreSplit and this window are visible, because when you click on one row in the GTK debugger (`Objects` tab), the corresponding section in LibreSplit will flash 3 times, letting you know what you selected.
 
-Once you found what you want to edit, take a note of its `style class` (See [Creating your own theme](#creating-your-own-theme) for a list) and head to the `CSS` tab: there you can edit in real time LiveSplit's aspect. These edits are temporary, but they can help you developing your own CSS theme.
+Once you found what you want to edit, take a note of its `style class` (See [Creating your own theme](#creating-your-own-theme) for a list) and head to the `CSS` tab: there you can edit in real time LibreSplit's aspect. These edits are temporary, but they can help you developing your own CSS theme.
 
 Once you're done developing your theme, feel free to share it with the community!
 

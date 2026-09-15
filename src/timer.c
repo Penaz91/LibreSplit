@@ -8,7 +8,6 @@
 
 #include "lasr/auto-splitter.h"
 
-#include <assert.h>
 #include <glib/gstdio.h>
 #include <limits.h>
 #include <stdatomic.h>
@@ -22,7 +21,7 @@
  * Returns the current time, taken from a monotonic clock
  * (a clock that is not affected by leap seconds or daylight savings).
  *
- * @return The current time, in milliseconds
+ * @return The current time, in microseconds
  */
 static long long ls_time_now(void)
 {
@@ -47,13 +46,13 @@ inline ls_time ls_timer_get_time(const ls_timer* timer, bool load_removed)
 }
 
 /**
- * Converts a time string into milliseconds
+ * Converts a time string into microseconds
  *
  * Takes a HH:MM:SS.mmmmmm formatted time string and converts it into
- * milliseconds.
+ * microseconds.
  *
  * @param string The time string to convert, in HH:MM:SS.mmmmmm format
- * @return The time string converted to milliseconds
+ * @return The time string converted to microseconds
  */
 long long ls_time_value(const char* string)
 {
@@ -232,15 +231,20 @@ bool ls_time_lte_zero(ls_time time)
  */
 void ls_time_clear(ls_time* time)
 {
-    assert(time != NULL);
+    if (time == NULL) {
+        // This should never happen. If we ever receive a report of this we can add debug info to this warning.
+        LOG_WARN("NULL time passed to `ls_time_clear`");
+        return;
+    }
+
     time->game_time = 0;
     time->real_time = 0;
 }
 
 /**
- * Converts a time in milliseconds to a formatted string.
+ * Converts a time in microseconds to a formatted string.
  *
- * Takes a time in milliseconds and converts it into a human-readable format
+ * Takes a time in microseconds and converts it into a human-readable format
  * copying it via side-effect into the first and second argument, a bit
  * like strcpy would do.
  *
@@ -1469,7 +1473,12 @@ void ls_timer_cancel(ls_timer* timer)
  */
 void json_time_get(const json_t* ref, ls_time* time)
 {
-    assert(time && ref);
+    if (ref == NULL || time == NULL) {
+        // This should never happen. If we ever receive a report of this we can add debug info to this warning.
+        LOG_WARN("NULL ref or time passed to `json_time_get`");
+        return;
+    }
+
     time->game_time = 0;
     time->real_time = 0;
     if (!json_is_object(ref)) {
@@ -1498,7 +1507,12 @@ void json_time_get(const json_t* ref, ls_time* time)
  */
 void json_time_set(json_t* ref, const ls_time* time)
 {
-    assert(time && ref);
+    if (ref == NULL || time == NULL) {
+        // This should never happen. If we ever receive a report of this we can add debug info to this warning.
+        LOG_WARN("NULL ref or time passed to `json_time_set`");
+        return;
+    }
+
     char str[256];
     ls_time_string_serialized(str, time->real_time);
     json_object_set_new(ref, "real_time", json_string(str));
