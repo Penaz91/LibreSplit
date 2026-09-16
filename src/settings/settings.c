@@ -3,8 +3,12 @@
  * Implementation of the settings management
  */
 #include "settings/settings.h"
+#include "gui/backends/x11.h"
 #include "settings/definitions.h"
+#include "settings/settings.h"
 #include "settings/utils.h"
+
+#include "utils.h"
 
 #include <linux/limits.h>
 #include <pwd.h>
@@ -38,6 +42,16 @@ static bool set_entry_from_json(ConfigEntry* e, json_t* v)
                 return false;
             e->value.b = json_is_true(v);
             return true;
+        case CFG_CHOICE:
+            if (!json_is_integer(v))
+                return false;
+            for (int i = 0; e->choices[i] != NULL; ++i) {
+                if (json_integer_value(v) == i) {
+                    e->value.i = i;
+                    return true;
+                }
+            }
+            return false;
         case CFG_INT:
             if (!json_is_integer(v))
                 return false;
@@ -71,6 +85,7 @@ static json_t* json_from_entry(const ConfigEntry* e)
     switch (e->type) {
         case CFG_BOOL:
             return json_pack("b", e->value.b);
+        case CFG_CHOICE:
         case CFG_INT:
             return json_pack("i", e->value.i);
         case CFG_STRING:
@@ -82,6 +97,14 @@ static json_t* json_from_entry(const ConfigEntry* e)
             break;
     }
     return json_null();
+}
+
+/**
+ * @brief Perform actions on the cfg after initialization successfully completes.
+ */
+static void post_init(void)
+{
+    cfg.libresplit.start_on_top.hide = !is_x11_display();
 }
 
 /**
@@ -130,6 +153,7 @@ bool config_init(void)
     }
 
     json_decref(root);
+    post_init();
     return true;
 }
 

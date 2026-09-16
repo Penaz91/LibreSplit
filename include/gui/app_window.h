@@ -5,7 +5,6 @@
 // ^ instead of the "include" root
 #include "../timer.h"
 #include "gui/welcome_box.h"
-#include "keybinds/delayed_handlers.h"
 #include "keybinds/keybinds.h"
 #include "opts.h"
 
@@ -51,13 +50,16 @@ typedef struct _LSAppWindow {
     GtkWidget* box;
     GtkWidget* context_menu; /*!< The context menu */
     bool resize_cursor_hover; /*!< True when the user is mousing over the resize edge of an undecorated window */
-    GdkWindowEdge resize_cursor_edge; /*!< The edge the user is mousing over */
+    GdkSurfaceEdge resize_cursor_edge; /*!< The edge the user is mousing over */
     GList* components;
     GtkWidget* footer;
     GtkCssProvider* reset_style; /*!< The "reset rules" provider, will remove desktop theme rules */
     GtkCssProvider* style; /*!< Current style provider, there can be only one */
+    GtkCssProvider* style_variant; /*!< Current style variant provider based on the main style, there can only be one*/
+    guint step_source_id; /*!< Source ID for the run clock callback */
+    guint draw_source_id; /*!< Source ID for the gui draw callback */
+    bool global_hotkeys_initialized; /*!< Whether global hotkeys have been binded */
     LSKeybinds keybinds; /*!< The keybinds related to this application window */
-    DelayedHandlers delayed_handlers; /*!< Handlers due for the next window step */
     LSOpts opts; /*!< The window options */
 } LSAppWindow;
 
@@ -65,9 +67,9 @@ void set_window_decorations(LSAppWindow* win);
 void toggle_decorations(LSAppWindow* win);
 void toggle_win_on_top(LSAppWindow* win);
 
-gboolean ls_app_window_resize(GtkWidget* widget, GdkEvent* event, gpointer data);
-
+LSAppWindow* ls_get_main_app_window(GtkApplication* app);
 LSAppWindow* ls_app_window_new(LSApp* app);
+void ls_app_startup(GApplication* app);
 void ls_app_activate(GApplication* app);
 void ls_app_open(GApplication* app, GFile** files, gint n_files, const gchar* hint);
 LSApp* ls_app_new(void);

@@ -3,14 +3,13 @@
  * Implementation of the timer
  */
 #include "timer.h"
-#include "gui/dialogs.h"
 #include "logging.h"
 #include "settings/utils.h"
 
 #include "lasr/auto-splitter.h"
 #include "logging.h"
 
-#include <assert.h>
+#include <glib/gstdio.h>
 #include <limits.h>
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -86,7 +85,7 @@ TimerHookRegistry unpause_hooks = {
  * Returns the current time, taken from a monotonic clock
  * (a clock that is not affected by leap seconds or daylight savings).
  *
- * @return The current time, in milliseconds
+ * @return The current time, in microseconds
  */
 static long long ls_time_now(void)
 {
@@ -111,23 +110,30 @@ inline ls_time ls_timer_get_time(const ls_timer* timer, bool load_removed)
 }
 
 /**
- * Converts a time string into milliseconds
+ * Converts a time string into microseconds
  *
  * Takes a HH:MM:SS.mmmmmm formatted time string and converts it into
- * milliseconds.
+ * microseconds.
  *
  * @param string The time string to convert, in HH:MM:SS.mmmmmm format
- * @return The time string converted to milliseconds
+ * @return The time string converted to microseconds
  */
 long long ls_time_value(const char* string)
 {
-    char seconds_part[256];
+    if (!string) {
+        return 0;
+    }
+
+    char seconds_part[MAX_TIMESTAMP_LENGTH];
     double subseconds_part = 0.;
     int hours = 0;
     int minutes = 0;
     int seconds = 0;
     int sign = 1;
-    if (!string || !strlen(string)) {
+    size_t time_str_len = strlen(string);
+
+    // It's unreasonable for a time string to be larger than this.
+    if (!time_str_len || time_str_len >= MAX_TIMESTAMP_LENGTH) {
         return 0;
     }
 
@@ -289,15 +295,20 @@ bool ls_time_lte_zero(ls_time time)
  */
 void ls_time_clear(ls_time* time)
 {
-    assert(time != NULL);
+    if (time == NULL) {
+        // This should never happen. If we ever receive a report of this we can add debug info to this warning.
+        LOG_WARN("NULL time passed to `ls_time_clear`");
+        return;
+    }
+
     time->game_time = 0;
     time->real_time = 0;
 }
 
 /**
- * Converts a time in milliseconds to a formatted string.
+ * Converts a time in microseconds to a formatted string.
  *
- * Takes a time in milliseconds and converts it into a human-readable format
+ * Takes a time in microseconds and converts it into a human-readable format
  * copying it via side-effect into the first and second argument, a bit
  * like strcpy would do.
  *
@@ -335,8 +346,8 @@ static void ls_time_string_format(char* string,
     minutes = (time / (1000000LL * 60)) % 60;
     seconds = (time / 1000000LL) % 60;
     sprintf(dot_subsecs, ".%06lld", time % 1000000LL);
-    int display_decimals = cfg.libresplit.decimals.value.i;
     if (!serialized) {
+        int display_decimals = cfg.libresplit.decimals.value.i;
         int subsec_idx = 0;
         if (display_decimals <= 0) {
             subsec_idx = 0;
@@ -404,6 +415,10 @@ void ls_delta_string(char* string, long long time)
  */
 void ls_game_release(ls_game* game)
 {
+    if (game == NULL) {
+        return;
+    }
+
     LOG_DEBUG("Releasing game...");
     if (game->title) {
         free(game->title);
@@ -432,7 +447,14 @@ void ls_game_release(ls_game* game)
         game->split_times = 0;
     }
     if (game->split_icon_paths) {
+        for (unsigned int i = 0; i < game->split_count; ++i) {
+            if (game->split_icon_paths[i]) {
+                free(game->split_icon_paths[i]);
+                game->split_icon_paths[i] = 0;
+            }
+        }
         free(game->split_icon_paths);
+        game->split_icon_paths = 0;
     }
     if (game->segment_times) {
         free(game->segment_times);
@@ -790,6 +812,79 @@ bool ls_timer_has_rainbow_split(const ls_timer* timer)
 }
 
 /**
+ * @brief Atomically writes the splits file json to disk.
+ *
+ * @param json The full splits file json root.
+ * @param path The path to the splits file.
+ * @return bool save result
+ */
+static bool ls_write_save(json_t* json, const char* path)
+{
+    char* contents = json_dumps(json, JSON_PRESERVE_ORDER | JSON_INDENT(2));
+    if (!contents) {
+        LOG_ERR("save game: unable to create the json string");
+        return false;
+    }
+
+    bool result = false;
+    GStatBuf path_info;
+    char* real_path = NULL;
+    if (g_lstat(path, &path_info) != 0) {
+        int error = errno;
+        if (error != ENOENT) {
+            LOG_ERRF("save game: unable to inspect path '%s': %s", path, g_strerror(error));
+            goto ls_write_save_failed;
+        }
+
+        // file doesn't exist so it cannot be a symlink
+        // duplicate path so the call to free is always valid.
+        real_path = strdup(path);
+        if (real_path == NULL) {
+            LOG_ERR("save game: failed to duplicate path string");
+            goto ls_write_save_failed;
+        }
+    } else {
+        // resolve symlinks
+        real_path = realpath(path, NULL);
+        if (real_path == NULL) {
+            LOG_ERRF("save game: failed to resolve path '%s': %s", path, g_strerror(errno));
+            goto ls_write_save_failed;
+        }
+
+        if (access(real_path, W_OK) != 0) {
+            LOG_ERRF("save game: file is not writable '%s': %s", real_path, g_strerror(errno));
+            goto ls_write_save_failed;
+        }
+
+        GStatBuf file_info;
+        if (g_stat(real_path, &file_info) != 0) {
+            LOG_ERRF("save game: unable to inspect file '%s': %s", real_path, g_strerror(errno));
+            goto ls_write_save_failed;
+        }
+
+        // reject irregular files or hard links
+        if (!S_ISREG(file_info.st_mode) || file_info.st_nlink > 1) {
+            LOG_ERRF("save game: irregular file at '%s'", real_path);
+            goto ls_write_save_failed;
+        }
+    }
+
+    GError* error = NULL;
+    if (!g_file_set_contents_full(real_path, contents, -1, G_FILE_SET_CONTENTS_CONSISTENT | G_FILE_SET_CONTENTS_DURABLE, 0666, &error)) {
+        LOG_ERRF("save game: failed to write splits to '%s': %s", path, error->message);
+        g_clear_error(&error);
+        goto ls_write_save_failed;
+    }
+
+    result = true;
+
+ls_write_save_failed:
+    free(real_path);
+    free(contents);
+    return result;
+}
+
+/**
  * Save the current game state to the splits file.
  *
  * @param game The ls_game object
@@ -860,13 +955,11 @@ int ls_game_save(const ls_game* game)
     if (game->height) {
         json_object_set_new(json, "height", json_integer(game->height));
     }
-    const int json_dump_result = json_dump_file(json, game->path, JSON_PRESERVE_ORDER | JSON_INDENT(2));
-    if (json_dump_result) {
-        LOG_WARNF("Error dumping JSON:\n%s", json_dumps(json, JSON_PRESERVE_ORDER | JSON_INDENT(2)));
-        LOG_WARNF("Error: '%d'", json_dump_result);
-        LOG_WARNF("Path: %s", game->path);
+
+    if (!ls_write_save(json, game->path)) {
         error = 1;
     }
+
     json_decref(json);
     return error;
 }
@@ -954,15 +1047,21 @@ int ls_run_save(ls_timer* timer, const char* reason)
     int ret = snprintf(filename, sizeof(filename), "%s/run_%s.json", path, time_buf);
     if (ret < 0 || (size_t)ret >= sizeof(filename)) {
         LOG_WARN("Error creating run filename. The path may be too long, aborting save.");
+        json_decref(json);
         return 1;
     }
 
     const int json_dump_result = json_dump_file(json, filename, JSON_PRESERVE_ORDER | JSON_INDENT(2));
     if (json_dump_result) {
-        LOG_WARNF("Error dumping JSON:\n%s", json_dumps(json, JSON_PRESERVE_ORDER | JSON_INDENT(2)));
+        char* json_dump = json_dumps(json, JSON_PRESERVE_ORDER | JSON_INDENT(2));
+        LOG_WARNF("Error dumping JSON:\n%s", json_dump != NULL ? json_dump : "");
         LOG_WARNF("Error: '%d'", json_dump_result);
         LOG_WARNF("Path: %s", filename);
         error = 1;
+
+        if (json_dump != NULL) {
+            free(json_dump);
+        }
     }
 
     json_decref(json);
@@ -1018,6 +1117,7 @@ static void reset_timer(ls_timer* timer)
     timer->realTime = -timer->game->start_delay; // Start delay only applies to real time only
     timer->gameTime = 0;
     timer->usingGameTime = false;
+    atomic_store(&run_using_game_time_call, true);
     timer->loading = false;
     timer->loadingTime = 0;
     timer->last_tick = 0;
@@ -1399,7 +1499,7 @@ void ls_timer_stop(ls_timer* timer)
  * Also saves run
  *
  * @param timer The timer instance
- * @return Whether the reset was successful, will fail if the timer is currently running/reset cancelled
+ * @return Whether the reset was successful, will fail if the timer is currently running
  */
 int ls_timer_reset(ls_timer* timer, ls_game* game)
 {
@@ -1411,7 +1511,9 @@ int ls_timer_reset(ls_timer* timer, ls_game* game)
     }
 
     if (timer->started && ls_time_lte_zero(ls_timer_get_time(timer, true))) {
-        return ls_timer_cancel(timer);
+        // There will be no time improvements via this path to preserve, so no need to warn the user
+        ls_timer_cancel(timer);
+        return 1;
     }
 
     if (timer->curr_split < timer->game->split_count) {
@@ -1434,29 +1536,18 @@ int ls_timer_reset(ls_timer* timer, ls_game* game)
 
 /**
  * Cancels the current run, ignoring attempt and resetting timer
+ * This function MUST ONLY be called when the timer is NOT running.
  *
  * @param timer The timer instance
- * @return Whether the cancel was successful, will fail if the timer is currently running
  */
-int ls_timer_cancel(ls_timer* timer)
+void ls_timer_cancel(ls_timer* timer)
 {
     LOG_DEBUG("Cancelling run...");
     // Disallow resets while running
     if (timer->running) {
-        LOG_DEBUG("Timer is running, cannot cancel run.")
-        return 0;
-    }
-
-    // Warn if the reset will lose a gold split, and allow the user to cancel the reset if they want to keep it
-    if (ls_timer_has_gold_split(timer) || ls_timer_has_rainbow_split(timer)) {
-        bool user_reset = true;
-        if (cfg.libresplit.ask_on_gold.value.b) {
-            user_reset = display_confirm_reset_dialog();
-        }
-
-        if (!user_reset) {
-            return 0;
-        }
+        // Sanity check, but this check MUST have happened before `ls_timer_cancel` is called.
+        LOG_DEBUG("Timer is running, cannot cancel run.");
+        return;
     }
 
     if (timer->started) {
@@ -1470,7 +1561,6 @@ int ls_timer_cancel(ls_timer* timer)
         }
     }
     reset_timer(timer);
-    return 1;
 }
 
 /**
@@ -1555,7 +1645,12 @@ void free_timer_registries(void)
  */
 void json_time_get(const json_t* ref, ls_time* time)
 {
-    assert(time && ref);
+    if (ref == NULL || time == NULL) {
+        // This should never happen. If we ever receive a report of this we can add debug info to this warning.
+        LOG_WARN("NULL ref or time passed to `json_time_get`");
+        return;
+    }
+
     time->game_time = 0;
     time->real_time = 0;
     if (!json_is_object(ref)) {
@@ -1584,7 +1679,12 @@ void json_time_get(const json_t* ref, ls_time* time)
  */
 void json_time_set(json_t* ref, const ls_time* time)
 {
-    assert(time && ref);
+    if (ref == NULL || time == NULL) {
+        // This should never happen. If we ever receive a report of this we can add debug info to this warning.
+        LOG_WARN("NULL ref or time passed to `json_time_set`");
+        return;
+    }
+
     char str[256];
     ls_time_string_serialized(str, time->real_time);
     json_object_set_new(ref, "real_time", json_string(str));

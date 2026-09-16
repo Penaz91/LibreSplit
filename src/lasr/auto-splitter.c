@@ -9,7 +9,6 @@
 #include "lasr/utils.h"
 #include "logging.h"
 
-#include <assert.h>
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
@@ -26,7 +25,7 @@ char auto_splitter_file[PATH_MAX]; /*!< The loaded auto splitter file path */
 int refresh_rate = 60; /*!< The Auto Splitter's refresh rate applied */
 bool use_game_time = false; /*!< Enables IGT */
 atomic_bool update_game_time = false; /*!< True if the auto splitter is requesting the game time to be updated */
-atomic_llong game_time_value = 0; /*!< The in-game time value, in milliseconds */
+atomic_llong game_time_value = 0; /*!< The in-game time value, in microseconds */
 
 /**
  * Defines the behaviour of the map cache.
@@ -249,16 +248,28 @@ static int traceback(lua_State* L)
  */
 static void pcall_fix_traceback(lua_State* L, const char* func)
 {
-    if (!lua_isstring(L, -1))
+    if (!lua_isstring(L, -1)) {
         return;
+    }
+
     const char* trace = lua_tostring(L, -1);
     const char* last_line = strrchr(trace, '\n');
-    assert(last_line != NULL && "all stacktraces have at least one newline: the one following the error message");
-    // "\t/path/to/script.lua:line: in function </path/to/script.lua:line>"
-    assert(strlen(last_line) > strlen(auto_splitter_file) + 1);
-    const char* path = strchr(last_line + 1 + strlen(auto_splitter_file), '<'); // auto splitter path may contain a `<` character
-    if (path == NULL)
+    if (last_line == NULL) {
+        LOG_WARN("lua traceback: invalid trace, traceback should have at least one new line");
         return;
+    }
+
+    // "\t/path/to/script.lua:line: in function </path/to/script.lua:line>"
+    if (strlen(last_line) <= strlen(auto_splitter_file) + 1) {
+        // the trace should include the path and therefore be bigger.
+        return;
+    }
+
+    const char* path = strchr(last_line + 1 + strlen(auto_splitter_file), '<'); // auto splitter path may contain a `<` character
+    if (path == NULL) {
+        return;
+    }
+
     lua_pushlstring(L, trace, path - trace);
     lua_pushfstring(L, "'%s'", func);
     lua_concat(L, 2);
@@ -409,6 +420,10 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
 void startup(lua_State* L)
 {
     call_va(L, "startup", "");
+
+    if (!atomic_load(&auto_splitter_enabled)) {
+        return;
+    }
 
     lua_getglobal(L, "refreshRate");
     if (lua_isnumber(L, -1)) {
@@ -580,6 +595,7 @@ void run_auto_splitter(void)
         fprintf(stderr, "Lua syntax error: %s\n", error_msg);
         lua_pop(L, 1); // Remove the error message from the stack
         lua_close(L);
+        maps_clearCache();
         atomic_store(&auto_splitter_enabled, false);
         return;
     }
@@ -595,6 +611,7 @@ void run_auto_splitter(void)
         }
         lua_pop(L, 1);
         lua_close(L);
+        maps_clearCache();
         atomic_store(&auto_splitter_enabled, false);
         return;
     }
@@ -696,4 +713,5 @@ void run_auto_splitter(void)
     }
 
     lua_close(L);
+    maps_clearCache();
 }
