@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "settings/utils.h"
 #include "gui/widgets/alert.h"
 #include "logging.h"
 #include <linux/limits.h>
