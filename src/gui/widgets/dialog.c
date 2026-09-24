@@ -1,4 +1,4 @@
-#include "dialog.h"
+#include "gui/widgets/dialog.h"
 #include "gui/app_window.h"
 #include "gui/backends/x11.h"
 #include "gui/widgets/dialog.h"
