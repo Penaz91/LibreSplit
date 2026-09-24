@@ -5,10 +5,7 @@
 #include "settings/settings.h"
 #include "gui/backends/x11.h"
 #include "settings/definitions.h"
-#include "settings/settings.h"
 #include "settings/utils.h"
-
-#include "utils.h"
 
 #include <linux/limits.h>
 #include <pwd.h>
