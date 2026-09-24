@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <gio/gmenu.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -434,12 +435,13 @@ int unload_plugins(void)
  * @param parent The Plugins submenu.
  * @returns 0 if everything went well. An error code otherwise.
  */
-int create_plugin_context_menus(GtkWidget* parent)
+int create_plugin_context_menus(GMenu* parent)
 {
     // XXX: [Penaz] [2026-08-23] As things are now, each plugin has full control
     // ^ over the "Plugins" submenu. Ideally we would want to isolate each plugin
     // ^ into its own submenu to reduce interactions.
-    GtkWidget* submenu = gtk_menu_new();
+    GMenu* submenu = g_menu_new();
+    unsigned int submenus = 0;
     if (plugin_registry.enabled) {
         for (int i = 0; i < plugin_registry.count; i++) {
             // Purge stale errors
@@ -466,17 +468,16 @@ int create_plugin_context_menus(GtkWidget* parent)
             if (result != 0) {
                 LOG_WARNF("Plugin context menu registration function returned exit code %s", result);
             }
+            submenus++;
         }
     }
-    GList* submenu_children = gtk_container_get_children(GTK_CONTAINER(submenu));
-    if (submenu_children == NULL) {
+    if (submenus == 0) {
         // If, by the end of the registration, there are no items in the "Plugins"
         // submenu, just fill it with a placeholder entry.
-        GtkWidget* placeholder = gtk_menu_item_new_with_label("No plugin entries.");
-        gtk_widget_set_sensitive(placeholder, FALSE);
-        gtk_menu_shell_append(GTK_MENU_SHELL(submenu), placeholder);
+        g_menu_append(submenu, "No plugin entries.", NULL);
     }
     // Set the newly created submenu to the "Plugins" entry in the context menu
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(parent), submenu);
+    g_menu_append_submenu(parent, "Plugins", G_MENU_MODEL(submenu));
+    g_object_unref(submenu);
     return 0;
 }

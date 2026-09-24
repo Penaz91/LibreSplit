@@ -5,6 +5,7 @@
 #include "gui/settings_dialog.h"
 #include "lasr/auto-splitter.h"
 #include "plugins/plugin_loading.h"
+#include <gio/gmenumodel.h>
 #include <gtk/gtk.h>
 
 // standardized cross-platform cursor names
@@ -213,7 +214,14 @@ static void create_context_menu(LSAppWindow* win, gpointer app)
     if (is_x11_display()) {
         g_menu_append(section, "Always on Top", "win.always-on-top");
     }
+    g_object_unref(section);
 
+    section = g_menu_new();
+    create_plugin_context_menus(section);
+    g_menu_append_section(menu, NULL, G_MENU_MODEL(section));
+    g_object_unref(section);
+
+    section = g_menu_new();
     g_menu_append(section, "Settings", "win.settings");
     g_menu_append(section, "About and help", "win.about-and-help");
     g_menu_append_section(menu, NULL, G_MENU_MODEL(section));
