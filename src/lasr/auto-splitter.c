@@ -3,9 +3,9 @@
  * Implementation of the auto splitter Lua Runtime
  */
 #include "lasr/auto-splitter.h"
-
 #include "lasr/functions.h"
 #include "lasr/maps/maps.h"
+#include "lasr/settings.h"
 #include "lasr/utils.h"
 #include "logging.h"
 
@@ -73,6 +73,31 @@ static const char* disabled_functions[] = {
     "newproxy",
     NULL
 };
+
+/**
+ * @brief Initializes all auto_splitter values to their defaults
+ * Call this when opening a new game.
+ */
+void init_auto_splitter(void)
+{
+    // don't init auto_splitter_enabled, or auto_splitter_running here
+    atomic_store(&call_start, false);
+    atomic_store(&call_split, false);
+    atomic_store(&call_reset, false);
+    atomic_store(&toggle_loading, false);
+    atomic_store(&run_using_game_time, false);
+    atomic_store(&run_using_game_time_call, false);
+    atomic_store(&lasr_event_requests, 0);
+    atomic_store(&game_time_value, 0);
+    atomic_store(&update_game_time, false);
+    use_game_time = false;
+    prev_is_loading = false;
+
+    // lasr initial values
+    refresh_rate = 60;
+    maps_cache_cycles = 1;
+    maps_cache_cycles_value = 1;
+}
 
 /**
  * Check if the game process exists and is running.
@@ -599,6 +624,7 @@ void run_auto_splitter(void)
     disable_functions(L, disabled_functions);
     push_default_lasr_functions(L);
     push_external_lasr_functions(L);
+    lasr_settings_register(L);
 
     char current_file[PATH_MAX];
     strcpy(current_file, auto_splitter_file);
@@ -613,12 +639,13 @@ void run_auto_splitter(void)
         lua_pop(L, 1); // Remove the error message from the stack
         lua_close(L);
         maps_clearCache();
+        lasr_settings_clear();
         atomic_store(&auto_splitter_enabled, false);
         return;
     }
 
     // Execute the Lua file
-    if (lua_pcall(L, 0, LUA_MULTRET, base) != LUA_OK) {
+    if (lua_pcall(L, 0, LUA_MULTRET, base) != LUA_OK || lasr_settings_load(L) != LUA_OK) {
         // Error executing the file
         if (!lua_isnil(L, -1)) {
             const char* err = lua_tostring(L, -1);
@@ -629,9 +656,11 @@ void run_auto_splitter(void)
         lua_pop(L, 1);
         lua_close(L);
         maps_clearCache();
+        lasr_settings_clear();
         atomic_store(&auto_splitter_enabled, false);
         return;
     }
+
     lua_remove(L, base); /* remove traceback function */
 
     bool state_exists = has_lua_function(L, "state");
@@ -774,4 +803,19 @@ void run_auto_splitter(void)
 
     lua_close(L);
     maps_clearCache();
+    lasr_settings_clear();
+}
+
+/**
+ * @brief Stops the auto splitter and waits for the process to end.
+ * The wait is very quick so doing it on another thread should be fine.
+ *
+ * If auto splitter wasn't running, does nothing
+ */
+void stop_auto_splitter(void)
+{
+    atomic_store(&auto_splitter_enabled, false);
+    while (atomic_load(&auto_splitter_running)) {
+        // wait, this will be very fast so its ok to just spin
+    }
 }

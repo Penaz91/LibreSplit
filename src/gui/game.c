@@ -1,9 +1,12 @@
 #include "gui/game.h"
 #include "gui/component/components.h"
 #include "gui/theming.h"
+#include "gui/widgets/alert.h"
 #include "logging.h"
+#include "runs.h"
 #include "settings/definitions.h"
 #include <gtk/gtk.h>
+#include <unistd.h>
 
 extern AppConfig cfg;
 
@@ -11,6 +14,16 @@ static GThread* save_thread;
 static atomic_bool saving;
 static GMutex save_mutex;
 static bool saving_enabled = true;
+
+// start as true to symbolize there has not yet been any failure
+static atomic_bool last_game_save_result = true;
+static atomic_bool last_runs_save_result = true;
+
+typedef struct save_data {
+    ls_game* game;
+    ls_runs* runs;
+    GWeakRef main_win;
+} save_data;
 
 /**
  * @brief Duplicates the ls_game as snapshot. This is useful
@@ -40,10 +53,26 @@ static ls_game* create_snapshot(const ls_game* game)
     snapshot->contains_icons = game->contains_icons;
     snapshot->split_count = game->split_count;
 
-    if (game->title) {
-        snapshot->title = strdup(game->title);
-        if (!snapshot->title) {
-            LOG_ERR("snapshot creation: unable to duplicate `title` in memory");
+    if (game->name) {
+        snapshot->name = strdup(game->name);
+        if (!snapshot->name) {
+            LOG_ERR("snapshot creation: unable to duplicate `name` in memory");
+            goto create_snapshot_failed;
+        }
+    }
+
+    if (game->category) {
+        snapshot->category = strdup(game->category);
+        if (!snapshot->category) {
+            LOG_ERR("snapshot creation: unable to duplicate `category` in memory");
+            goto create_snapshot_failed;
+        }
+    }
+
+    if (game->icon_path) {
+        snapshot->icon_path = strdup(game->icon_path);
+        if (!snapshot->icon_path) {
+            LOG_ERR("snapshot creation: unable to duplicate `icon_path` in memory");
             goto create_snapshot_failed;
         }
     }
@@ -62,6 +91,54 @@ static ls_game* create_snapshot(const ls_game* game)
             LOG_ERR("snapshot creation: unable to duplicate `theme_variant` in memory");
             goto create_snapshot_failed;
         }
+    }
+
+    if (game->auto_splitter_file) {
+        snapshot->auto_splitter_file = strdup(game->auto_splitter_file);
+        if (!snapshot->auto_splitter_file) {
+            LOG_ERR("snapshot creation: unable to duplicate `auto_splitter_file` in memory");
+            goto create_snapshot_failed;
+        }
+    }
+
+    if (game->auto_splitter_settings_count) {
+        lock_user_settings();
+        snapshot->auto_splitter_settings = calloc(game->auto_splitter_settings_count, sizeof(UserSetting*));
+        if (!snapshot->auto_splitter_settings) {
+            LOG_ERR("snapshot creation: unable to allocate memory for `auto_splitter_settings`");
+            unlock_user_settings();
+            goto create_snapshot_failed;
+        }
+
+        for (size_t i = 0; i < game->auto_splitter_settings_count; ++i) {
+            snapshot->auto_splitter_settings[i] = calloc(1, sizeof(UserSetting));
+            if (!snapshot->auto_splitter_settings[i]) {
+                LOG_ERRF("snapshot creation: unable to allocate memory for setting[%zu]", i);
+                unlock_user_settings();
+                goto create_snapshot_failed;
+            }
+
+            snapshot->auto_splitter_settings_count++;
+            snapshot->auto_splitter_settings[i]->key = strdup(game->auto_splitter_settings[i]->key);
+            if (!snapshot->auto_splitter_settings[i]->key) {
+                LOG_ERRF("snapshot creation: unable to duplicate setting[%zu].key", i);
+                unlock_user_settings();
+                goto create_snapshot_failed;
+            }
+
+            snapshot->auto_splitter_settings[i]->type = game->auto_splitter_settings[i]->type;
+            snapshot->auto_splitter_settings[i]->val = game->auto_splitter_settings[i]->val;
+            if (snapshot->auto_splitter_settings[i]->type == SETTING_STRING) {
+                snapshot->auto_splitter_settings[i]->val.string_val = strdup(game->auto_splitter_settings[i]->val.string_val);
+                if (!snapshot->auto_splitter_settings[i]->val.string_val) {
+                    LOG_ERRF("snapshot creation: unable to duplicate setting[%zu] string value", i);
+                    unlock_user_settings();
+                    goto create_snapshot_failed;
+                }
+            }
+        }
+
+        unlock_user_settings();
     }
 
     if (!game->split_count) {
@@ -209,16 +286,68 @@ void ls_app_window_show_game(LSAppWindow* win)
  * @brief saves the game to the user's splits file. This function
  * should be asynchronous and run in its own thread.
  *
- * @param data A valid snapshot from `create_snapshot` of the current game state to save.
+ * @param data save_data containing a valid snapshot from `create_snapshot` of the current game state to save
+ *              along with an optional (live) pointer to unsaved runs history.
  * @return gpointer unused
  */
 static gpointer save_game_thread(gpointer data)
 {
-    ls_game* snapshot = data;
-    ls_game_save(snapshot);
-    ls_game_release(snapshot);
+    save_data* snapshot = data;
+    GObject* main_win = g_weak_ref_get(&snapshot->main_win);
+    GtkWindow* win = main_win ? GTK_WINDOW(main_win) : NULL;
+
+    bool runs_save_result = true;
+    int game_save_result = ls_game_save(snapshot->game);
+    if (game_save_result) {
+        ls_alert_warning(win, "Save Failed", "Save Failed", "We were unable to save your game.\nIf this continues check your logs for errors.");
+        goto save_game_thread_finished;
+    }
+
+    if (snapshot->runs) {
+        runs_save_result = ls_runs_save(snapshot->runs, snapshot->game, win);
+        if (!runs_save_result) {
+            ls_alert_warning(win, "Save Failed", "Save Failed", "We were unable to save your runs history.\nIf this continues check your logs for errors.");
+            goto save_game_thread_finished;
+        }
+
+        // This should not be possible to fail, if it does we end up with a broken state so close LibreSplit
+        if (!ls_runs_clear(snapshot->runs)) {
+            ls_runs_clear_failed(win);
+        }
+    }
+
+save_game_thread_finished:
+    atomic_store(&last_game_save_result, game_save_result == 0);
+    atomic_store(&last_runs_save_result, runs_save_result);
+
+    // if the game saved successfully, call ls_game_saved event.
+    if (game_save_result == 0 && main_win) {
+        ls_game_saved(LS_APP_WINDOW(main_win)->game);
+    }
+
+    g_clear_object(&main_win);
+    g_weak_ref_clear(&snapshot->main_win);
+    ls_game_release(snapshot->game);
+    free(snapshot);
+
     atomic_store(&saving, false);
+    ls_app_window_set_blocked(FALSE);
     return NULL;
+}
+
+bool is_saving(void)
+{
+    return atomic_load(&saving);
+}
+
+bool get_last_game_save_result(void)
+{
+    return atomic_load(&last_game_save_result);
+}
+
+bool get_last_runs_save_result(void)
+{
+    return atomic_load(&last_runs_save_result);
 }
 
 /**
@@ -248,31 +377,51 @@ void save_game(ls_game* game)
         save_thread = NULL;
     }
 
-    ls_game* snapshot = create_snapshot(game);
-    if (!snapshot) {
+    save_data* snapshot = calloc(1, sizeof(save_data));
+    if (snapshot == NULL) {
+        LOG_WARN("unable to allocate memory for the save_data wrapper struct");
         atomic_store(&saving, false);
         g_mutex_unlock(&save_mutex);
         return;
     }
 
+    snapshot->game = create_snapshot(game);
+    if (snapshot->game == NULL) {
+        free(snapshot);
+        atomic_store(&saving, false);
+        g_mutex_unlock(&save_mutex);
+        return;
+    }
+
+    LSAppWindow* win = ls_get_main_app_window();
+    g_weak_ref_init(&snapshot->main_win, G_OBJECT(win));
+
+    if (win && cfg.libresplit.save_run_history.value.b) {
+        snapshot->runs = win->runs;
+    }
+
+    // This should be imperceivable but block on save in case the user's machine is slow.
+    ls_app_window_set_blocked(TRUE);
     save_thread = g_thread_new("save_game", save_game_thread, snapshot);
     g_mutex_unlock(&save_mutex);
 }
 
 /**
- * @brief Join the game save thread on exit.
+ * @brief Join the game save thread.
  */
-void save_game_join(void)
+void save_game_join(bool exiting)
 {
     g_mutex_lock(&save_mutex);
 
-    // once we are exiting, prevent saves.
-    saving_enabled = false;
+    if (exiting) {
+        // once we are exiting, prevent saves.
+        saving_enabled = false;
+    }
+
     if (save_thread) {
         g_thread_join(save_thread);
         save_thread = NULL;
     }
 
-    atomic_store(&saving, false);
     g_mutex_unlock(&save_mutex);
 }

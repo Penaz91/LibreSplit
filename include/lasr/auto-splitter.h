@@ -56,9 +56,11 @@ typedef struct _ExternalLASRFunctionRegistry {
     bool enabled;
 } ExternalLASRFunctionRegistry;
 
+void init_auto_splitter(void);
 void check_directories(void);
 void run_auto_splitter(void);
-int init_external_lasr_functions(void);
+void stop_auto_splitter(void);
 void unregister_luac_functions(void);
+int init_external_lasr_functions(void);
 
 extern ExternalLASRFunctionRegistry external_lasr_functions;

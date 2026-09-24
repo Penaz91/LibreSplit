@@ -11,7 +11,11 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
+#define LIBRESPLIT_RESOURCES_PREFIX "/org/libresplit/LibreSplit/"
 #define WINDOW_PAD (8)
+
+/** forward declaration of ls_run from timer.h */
+typedef struct ls_runs ls_runs;
 
 G_DECLARE_FINAL_TYPE(LSApp, ls_app, LS, APP, GtkApplication)
 #define LS_APP_TYPE (ls_app_get_type())
@@ -44,6 +48,7 @@ typedef struct _LSAppWindow {
     char data_path[PATH_MAX]; /*!< The path to the libresplit user config directory */
     ls_game* game;
     ls_timer* timer;
+    ls_runs* runs;
     GdkDisplay* display;
     GtkWidget* container;
     LSWelcomeBox* welcome_box;
@@ -67,8 +72,8 @@ void set_window_decorations(LSAppWindow* win);
 void toggle_decorations(LSAppWindow* win);
 void toggle_win_on_top(LSAppWindow* win);
 
-LSAppWindow* ls_get_main_app_window(GtkApplication* app);
-LSAppWindow* ls_app_window_new(LSApp* app);
+LSAppWindow* ls_get_main_app_window(void);
+LSAppWindow* ls_app_window_get_default(LSApp* app);
 void ls_app_startup(GApplication* app);
 void ls_app_activate(GApplication* app);
 void ls_app_open(GApplication* app, GFile** files, gint n_files, const gchar* hint);
@@ -77,5 +82,7 @@ LSApp* ls_app_new(void);
 void ls_app_window_open(LSAppWindow* win, const char* file);
 
 gboolean ls_app_window_step(gpointer data);
+gboolean ls_app_window_quit(gpointer window);
 void ls_app_window_destroy(GtkWidget* widget, gpointer data);
+void ls_app_window_set_blocked(gboolean block_window);
 gboolean ls_app_window_draw(gpointer data);

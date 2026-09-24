@@ -33,7 +33,7 @@ void handle_ctl_command(CTLCommand command)
         return;
     }
 
-    LSAppWindow* win = ls_get_main_app_window(GTK_APPLICATION(g_app));
+    LSAppWindow* win = ls_get_main_app_window();
     if (!win) {
         LOG_INFO("No window available to handle commands");
         return;
@@ -62,7 +62,7 @@ void handle_ctl_command(CTLCommand command)
             break;
         case CTL_CMD_EXIT:
             LOG_DEBUG("Exit requested via Server Command");
-            gtk_window_destroy(GTK_WINDOW(win));
+            ls_app_window_quit(win);
             break;
         default:
             LOG_INFOF("Unknown CTL command: %d", command);
@@ -79,8 +79,8 @@ static void* ls_auto_splitter(void* arg)
 {
     prctl(PR_SET_NAME, "LS LASR", 0, 0, 0);
     while (1) {
+        atomic_store(&auto_splitter_running, true);
         if (atomic_load(&auto_splitter_enabled) && auto_splitter_file[0] != '\0') {
-            atomic_store(&auto_splitter_running, true);
             run_auto_splitter();
         }
         atomic_store(&auto_splitter_running, false);
@@ -117,6 +117,24 @@ int main(int argc, char* argv[])
     load_plugins();
 
     g_app = ls_app_new();
+
+    // Register the application to prevent it being open more than once
+    // TODO: This is a temporary measure because LibreSplit currently doesn't
+    // Work well with multiple instances running.
+    GError* error = NULL;
+    if (!g_application_register(G_APPLICATION(g_app), NULL, &error)) {
+        g_printerr("Unable to register LibreSplit: %s\n", error->message);
+        g_clear_error(&error);
+        g_clear_object(&g_app);
+        return EXIT_FAILURE;
+    }
+
+    // LibreSplit is already running
+    if (g_application_get_is_remote(G_APPLICATION(g_app))) {
+        g_print("LibreSplit is already running.\n");
+        return EXIT_SUCCESS;
+    }
+
     LOG_INFO("Creating Auto-Splitter Thread");
     pthread_t t1; // Auto-splitter thread
     pthread_create(&t1, NULL, &ls_auto_splitter, NULL);
