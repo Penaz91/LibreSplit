@@ -3,12 +3,19 @@
 #include "timer.h"
 #include <stdio.h>
 
+/* =======================================
+ * Metadata section
+ * ---------------------------------------
+ * Here we write all the metadata of the plugin, as well as
+ * the supported ABI version
+ */
 const abi_version_t abi_version = 0 << 16 | 1; // v0.1
 const char plugin_name[] = "Test Plugin 2";
 const char plugin_description[] = "Does something, it exists and yells at you for splitting";
 const char plugin_version[] = "0.1";
 const char plugin_author[] = "The LibreSplit Core Team";
 
+// An event handler for the "split" event
 int do_something_split(const ls_timer* timer)
 {
     printf("Message from a plugin: you have successfully split!\n");
@@ -17,6 +24,7 @@ int do_something_split(const ls_timer* timer)
     return 0;
 }
 
+// An event handler for the "stop timer" event
 int do_something_stop(const ls_timer* timer)
 {
     printf("Message from a plugin: why have you stopped?\n");
@@ -25,6 +33,7 @@ int do_something_stop(const ls_timer* timer)
     return 0;
 }
 
+// You get the gist now...
 int do_something_start(const ls_timer* timer)
 {
     printf("Message from a plugin: Here we go!\n");
@@ -83,6 +92,7 @@ int do_something_unpause(const ls_timer* timer)
 
 int plug_init(PlugAPI* api)
 {
+    // Now we register each function to its own event.
     api->register_event_hook(START, do_something_start);
     api->register_event_hook(STOP, do_something_stop);
     api->register_event_hook(SPLIT, do_something_split);

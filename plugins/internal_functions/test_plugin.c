@@ -4,6 +4,12 @@
 #include "plugins/plugin_utils.h"
 #include <stdio.h>
 
+/* =======================================
+ * Metadata section
+ * ---------------------------------------
+ * Here we write all the metadata of the plugin, as well as
+ * the supported ABI version
+ */
 const abi_version_t abi_version = 1; // v0.1
 const char plugin_name[] = "Test Plugin 3";
 const char plugin_description[] = "Does something, wraps the getMaps function to demonstrate calling LS functions";
@@ -61,6 +67,7 @@ int getmaps_external(lua_State* L)
 
 int plug_init(PlugAPI* api)
 {
+    // Register the getMapsExternal Lua function, using getmaps_external as its C function
     api->register_lua_function("getMapsExternal", getmaps_external);
     return 0;
 }
