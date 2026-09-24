@@ -31,7 +31,7 @@ static gboolean launch_file_manager(const char* path, GError** error)
  */
 void launch_fm_splits(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
-
+    LOG_INFO("Opening the default File Manager for the splits folder");
     char libresplit_path[PATH_MAX];
     get_libresplit_folder_path(libresplit_path);
     char path[PATH_MAX];
@@ -62,7 +62,7 @@ void launch_fm_splits(GSimpleAction* action, GVariant* parameter, gpointer app)
  */
 void launch_fm_autosplitters(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
-
+    LOG_INFO("Opening the default File Manager for the auto splitters folder");
     char libresplit_path[PATH_MAX];
     get_libresplit_folder_path(libresplit_path);
     char path[PATH_MAX];
@@ -93,7 +93,7 @@ void launch_fm_autosplitters(GSimpleAction* action, GVariant* parameter, gpointe
  */
 void launch_fm_themes(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
-
+    LOG_INFO("Opening the default File Manager for the themes folder");
     char libresplit_path[PATH_MAX];
     get_libresplit_folder_path(libresplit_path);
     char path[PATH_MAX];
@@ -124,11 +124,11 @@ void launch_fm_themes(GSimpleAction* action, GVariant* parameter, gpointer app)
  */
 void launch_fm_logs(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
-
+    LOG_INFO("Opening the default File Manager for the logs folder");
     char libresplit_path[PATH_MAX];
     get_libresplit_data_folder_path(libresplit_path);
     // TODO: [Penaz] [2026-09-23] Keeping this useless snprintf because
-    // ^ I want logs to be in a subfolder (and have them rotate).
+    // ^ I want logs to be in a subfolder (and have them rotate) in the near future.
     char path[PATH_MAX];
     int written = snprintf(path, PATH_MAX, "%s", libresplit_path);
     if (written < 0 || written >= PATH_MAX) {
