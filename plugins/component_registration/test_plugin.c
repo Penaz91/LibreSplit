@@ -26,11 +26,8 @@ LSComponent* ls_component_string_new(void)
     }
     self->base.ops = &ls_string_operations;
     self->box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    add_class(self->box, "footer");
-    gtk_widget_show(self->box);
     self->text = gtk_label_new("This is a test string from a plugin");
-    gtk_container_add(GTK_CONTAINER(self->box), self->text);
-    gtk_widget_show(self->text);
+    gtk_box_append(GTK_BOX(self->box), self->text);
     return (LSComponent*)self;
 }
 
