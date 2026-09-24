@@ -2,7 +2,10 @@
 
 #include "../utils.h"
 #include "src/lasr/maps/maps.h"
+#include "src/logging.h"
 
+#include <ctype.h>
+#include <dirent.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +13,148 @@
 #include <unistd.h>
 
 extern atomic_bool auto_splitter_enabled; /*!< Defines if the auto splitter is enabled */
+
+static int get_all_pids_by_name(const char* mode, const char* name, pid_t** output, size_t* output_count)
+{
+    if (strcmp(mode, "comm") != 0 && strcmp(mode, "cmdline") != 0) {
+        LOG_ERRF("Search mode %s not supported", mode);
+        return -1;
+    }
+    *output = NULL;
+    *output_count = 0;
+
+    DIR* proc = opendir("/proc");
+    if (!proc) {
+        LOG_ERR("Cannot open /proc directory");
+        return -1;
+    }
+
+    pid_t* pids = NULL;
+    size_t count = 0;
+
+    struct dirent* entry;
+
+    while ((entry = readdir(proc)) != NULL) {
+        const char* dirname = entry->d_name;
+
+        if (*dirname == '\0') {
+            // Dirname is just the null terminator, skip
+            continue;
+        }
+
+        while (*dirname) {
+            if (!isdigit((unsigned char)*dirname)) {
+                // We found a non-numeric directory name
+                break;
+            }
+            dirname++;
+        }
+
+        if (*dirname != '\0') {
+            // Dirname didn't reach the null terminator -> non-numeric name -> skip
+            continue;
+        }
+
+        pid_t pid = (pid_t)strtoul(entry->d_name, NULL, 10);
+
+        char path[256];
+        snprintf(path, sizeof(path), "/proc/%u/%s", pid, mode);
+
+        FILE* file = fopen(path, "r");
+        if (!file) {
+            // The process may have exited during the scan
+            continue;
+        }
+
+        char comm[256];
+
+        if (fgets(comm, sizeof(comm), file)) {
+            // Replace \n with a NUL
+            comm[strcspn(comm, "\n")] = '\0';
+
+            if (strcmp(comm, name) == 0) {
+                pid_t* new_pids = realloc(pids, (count + 1) * sizeof(*output));
+                if (!new_pids) {
+                    // Malloc fail, bail out
+                    free(pids);
+                    free(file);
+                    closedir(proc);
+                    return -1;
+                }
+
+                // Malloc ok, switchover time
+                output = &new_pids;
+                pids[count++] = pid;
+            }
+        }
+        fclose(file);
+    }
+    closedir(proc);
+    *output = pids;
+    *output_count = count;
+
+    return 0;
+}
+
+static int compare_pids_ascending(const void* a, const void* b)
+{
+    const pid_t pid_a = *(const pid_t*)a;
+    const pid_t pid_b = *(const pid_t*)b;
+    if (pid_a < pid_b) {
+        return -1;
+    }
+    if (pid_a > pid_b) {
+        return 1;
+    }
+    return 0;
+}
+
+static int compare_pids_descending(const void* a, const void* b)
+{
+    const pid_t pid_a = *(const pid_t*)a;
+    const pid_t pid_b = *(const pid_t*)b;
+    if (pid_a < pid_b) {
+        return -1;
+    }
+    if (pid_a > pid_b) {
+        return 1;
+    }
+    return 0;
+}
+
+static pid_t get_pid(const char* mode, const char* sort, const char* name)
+{
+    if (strcmp(mode, "comm") != 0 && strcmp(mode, "cmdline") != 0) {
+        LOG_ERRF("Search mode %s not supported", mode);
+        return NULL;
+    }
+    if (strcmp(sort, "first") != 0 && strcmp(sort, "last") != 0) {
+        LOG_ERRF("Search mode %s not supported", mode);
+        printf("[process] Invalid sort argument '%s'. Use 'first' or 'last'. Falling back to first\n", sort);
+        sort = "first";
+    }
+
+    pid_t* pids = NULL;
+    size_t count = 0;
+    get_all_pids_by_name(mode, name, &pids, &count);
+
+    if (!pids) {
+        return 0;
+    }
+
+    if (strcmp(sort, "first") == 0) {
+        qsort(pids, count, sizeof(pids[0]), compare_pids_ascending);
+    }
+    if (strcmp(sort, "last") == 0) {
+        qsort(pids, count, sizeof(pids[0]), compare_pids_descending);
+    }
+
+    pid_t result = pids[0];
+    free(pids);
+    pids = NULL;
+    count = 0;
+    return result;
+}
 
 /**
  * Executes a command, piping its output into an output string.
