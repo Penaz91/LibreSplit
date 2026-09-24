@@ -27,7 +27,7 @@ typedef struct _PluginRegistry {
  */
 typedef int (*plugin_init_fn)(PlugAPI*);
 typedef int (*plugin_shutdown_fn)(void);
-typedef int (*context_menu_reg_fn)(GMenu*);
+typedef int (*context_menu_reg_fn)(GMenu*, GtkWidget*);
 
 /**
  * Union used to convert between void* and plugin_init_fn
@@ -58,6 +58,6 @@ union context_menu_fn_ptr {
 
 void load_plugins(void);
 int unload_plugins(void);
-int create_plugin_context_menus(GMenu* parent);
+int create_plugin_context_menus(GMenu* parent, GtkWidget* window);
 
 int initialize_plugin_registry(void);

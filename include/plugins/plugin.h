@@ -12,4 +12,4 @@ extern const abi_version_t abi_version;
 // Functions to connect host and plugin
 int plug_init(PlugAPI* api);
 int plug_shutdown(void);
-int register_context_menu(GtkWidget* parent);
+int register_context_menu(GMenu* parent, GtkWidget* window);

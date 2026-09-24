@@ -435,7 +435,7 @@ int unload_plugins(void)
  * @param parent The Plugins submenu.
  * @returns 0 if everything went well. An error code otherwise.
  */
-int create_plugin_context_menus(GMenu* parent)
+int create_plugin_context_menus(GMenu* parent, GtkWidget* window)
 {
     // XXX: [Penaz] [2026-08-23] As things are now, each plugin has full control
     // ^ over the "Plugins" submenu. Ideally we would want to isolate each plugin
@@ -463,7 +463,7 @@ int create_plugin_context_menus(GMenu* parent)
             }
 
             // Register the submenu item
-            int result = registration_function(submenu);
+            int result = registration_function(submenu, window);
 
             if (result != 0) {
                 LOG_WARNF("Plugin context menu registration function returned exit code %s", result);
