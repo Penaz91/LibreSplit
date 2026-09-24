@@ -1,8 +1,8 @@
 #include "gui/actions.h"
 #include "gui/app_window.h"
 #include "gui/backends/x11.h"
-#include "gui/help_dialog.h"
-#include "gui/settings_dialog.h"
+#include "gui/widgets/help_dialog.h"
+#include "gui/widgets/settings_dialog.h"
 #include "lasr/auto-splitter.h"
 #include "plugins/plugin_loading.h"
 #include <gio/gmenumodel.h>

@@ -1,4 +1,4 @@
-#include "gui/settings_dialog.h"
+#include "gui/widgets/settings_dialog.h"
 #include "gui/app_window.h"
 #include "gui/theming.h"
 #include "gui/widgets/alert.h"
