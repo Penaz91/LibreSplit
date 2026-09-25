@@ -84,9 +84,8 @@ static int get_all_pids_by_name(const char* mode, const char* name, pid_t** outp
             // Replace \n with a NUL
             comm[strcspn(comm, "\n")] = '\0';
 
-            // XXX: [Penaz] [2026-09-25] This does a pure string comparison, it would be better
-            // ^ if it was more grep-like.
-            if (strcmp(comm, name) == 0) {
+            // We use a "contains" check to accept the new PID
+            if (strstr(comm, name) != NULL) {
                 pid_t* new_pids = realloc(pids, (count + 1) * sizeof(*output));
                 if (!new_pids) {
                     // Malloc fail, bail out
