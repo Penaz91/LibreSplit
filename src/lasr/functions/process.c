@@ -14,6 +14,18 @@
 
 extern atomic_bool auto_splitter_enabled; /*!< Defines if the auto splitter is enabled */
 
+/**
+ * Reads the /proc/ directory for all process IDs and tries to identify the searched
+ * process by name, depending on the mode.
+ *
+ * @param[in] mode Can only be "comm" or "cmdline", searches for the /proc/pid/comm or
+ *             /proc/pid/cmdline for a match.
+ * @param[in] name The name of the process to look for
+ * @param[out] output A pointer to an array, to fill with possible PIDs.
+ * @param[out] output_count A pointer to a counter, to determine how many PIDs were found.
+ *
+ * @returns Zero if all goes well, an error code otherwise
+ */
 static int get_all_pids_by_name(const char* mode, const char* name, pid_t** output, size_t* output_count)
 {
     if (strcmp(mode, "comm") != 0 && strcmp(mode, "cmdline") != 0) {
@@ -44,7 +56,7 @@ static int get_all_pids_by_name(const char* mode, const char* name, pid_t** outp
 
         while (*dirname) {
             if (!isdigit((unsigned char)*dirname)) {
-                // We found a non-numeric directory name
+                // We found a non-numeric char in the directory name, that's enough
                 break;
             }
             dirname++;
@@ -62,7 +74,7 @@ static int get_all_pids_by_name(const char* mode, const char* name, pid_t** outp
 
         FILE* file = fopen(path, "r");
         if (!file) {
-            // The process may have exited during the scan
+            // The process may have exited during the scan, skip
             continue;
         }
 
@@ -72,18 +84,20 @@ static int get_all_pids_by_name(const char* mode, const char* name, pid_t** outp
             // Replace \n with a NUL
             comm[strcspn(comm, "\n")] = '\0';
 
+            // XXX: [Penaz] [2026-09-25] This does a pure string comparison, it would be better
+            // ^ if it was more grep-like.
             if (strcmp(comm, name) == 0) {
                 pid_t* new_pids = realloc(pids, (count + 1) * sizeof(*output));
                 if (!new_pids) {
                     // Malloc fail, bail out
                     free(pids);
-                    free(file);
+                    fclose(file);
                     closedir(proc);
                     return -1;
                 }
 
                 // Malloc ok, switchover time
-                output = &new_pids;
+                pids = new_pids;
                 pids[count++] = pid;
             }
         }
@@ -96,6 +110,14 @@ static int get_all_pids_by_name(const char* mode, const char* name, pid_t** outp
     return 0;
 }
 
+/**
+ * Comparison function for the "first" sorting method, used in qsort
+ *
+ * @param a The first comparison operator
+ * @param b The second comparison operator
+ *
+ * @returns -1,0,1 according to the relative ordering of a and b
+ */
 static int compare_pids_ascending(const void* a, const void* b)
 {
     const pid_t pid_a = *(const pid_t*)a;
@@ -109,6 +131,14 @@ static int compare_pids_ascending(const void* a, const void* b)
     return 0;
 }
 
+/**
+ * Comparison function for the "last" sorting method, used in qsort
+ *
+ * @param a The first comparison operator
+ * @param b The second comparison operator
+ *
+ * @returns -1,0,1 according to the relative ordering of a and b
+ */
 static int compare_pids_descending(const void* a, const void* b)
 {
     const pid_t pid_a = *(const pid_t*)a;
@@ -122,11 +152,22 @@ static int compare_pids_descending(const void* a, const void* b)
     return 0;
 }
 
+/**
+ * Searches for the pid of a certain process.
+ *
+ * @param mode The search mode, can be only "comm" (limited to 15 char) and
+ *             "cmdline" (the full command)
+ * @param sort The sorting method used to extract the PID, can only be "first"
+ *             or "last"
+ * @param name The name of the process to look for
+ *
+ * @returns The PID of the process that is searched for (zero if no process is found)
+ */
 static pid_t get_pid(const char* mode, const char* sort, const char* name)
 {
     if (strcmp(mode, "comm") != 0 && strcmp(mode, "cmdline") != 0) {
         LOG_ERRF("Search mode %s not supported", mode);
-        return NULL;
+        return 0;
     }
     if (strcmp(sort, "first") != 0 && strcmp(sort, "last") != 0) {
         LOG_ERRF("Search mode %s not supported", mode);
@@ -156,48 +197,18 @@ static pid_t get_pid(const char* mode, const char* sort, const char* name)
     return result;
 }
 
-/**
- * Executes a command, piping its output into an output string.
- *
- * @param command The command to execute.
- * @param output Pointer to a string that will contain the command output.
- */
-void execute_command(const char* command, char* output)
+void stock_process_id(const char* mode, const char* sort, const char* name)
 {
-    char buffer[4096];
-    FILE* pipe = popen(command, "r");
-    if (!pipe) {
-        fprintf(stderr, "Error executing command: %s\n", command);
-        exit(1);
-    }
-
-    while (fgets(buffer, 128, pipe) != NULL) {
-        strcat(output, buffer);
-    }
-
-    pclose(pipe);
-}
-
-void stock_process_id(const char* pid_command)
-{
-    char pid_output[PATH_MAX + 100];
-    pid_output[0] = '\0';
-
     // We just started a new process monitoring, we may want to clean up a stale cache
     maps_clearCache();
 
     while (atomic_load(&auto_splitter_enabled)) {
-        execute_command(pid_command, pid_output);
-        process.pid = strtoul(pid_output, NULL, 10);
-        if (process.pid) {
-            size_t newlinePos = strcspn(pid_output, "\n");
-            if (newlinePos != strlen(pid_output) - 1 && pid_output[0] != '\0') {
-                printf("Multiple PID's found for process: %s\n", process.name);
-            }
-            break;
-        } else {
+        process.pid = get_pid(mode, sort, name);
+        if (!process.pid) {
             printf("%s isn't running.\n", process.name);
             usleep(100000); // Sleep for 100ms
+        } else {
+            break;
         }
     }
 
@@ -220,7 +231,6 @@ int find_process_id(lua_State* L)
 
     process.name = lua_tostring(L, 1);
     const char* sort = lua_tostring(L, 2);
-    char sortCmd[16] = "";
 
     if (!sort) {
         sort = "first";
@@ -231,17 +241,7 @@ int find_process_id(lua_State* L)
         }
     }
 
-    if (strcmp(sort, "first") == 0) {
-        sortCmd[0] = '\0'; // No sorting
-    }
-    if (strcmp(sort, "last") == 0) {
-        strcpy(sortCmd, " | sort -r"); // Reverse the sorting to get latest PID
-    }
-
-    char command[256];
-    snprintf(command, sizeof(command), "pgrep \"%.*s\"%s", (int)strnlen(process.name, sizeof(command) - strlen(sortCmd) - 1), process.name, sortCmd);
-
-    stock_process_id(command);
+    stock_process_id("comm", sort, process.name);
 
     return 0;
 }
@@ -262,7 +262,6 @@ int find_cmdline_id(lua_State* L)
 
     process.name = lua_tostring(L, 1);
     const char* sort = lua_tostring(L, 2);
-    char sortCmd[16] = "";
 
     if (!sort) {
         sort = "first";
@@ -273,17 +272,7 @@ int find_cmdline_id(lua_State* L)
         }
     }
 
-    if (strcmp(sort, "first") == 0) {
-        sortCmd[0] = '\0'; // No sorting
-    }
-    if (strcmp(sort, "last") == 0) {
-        strcpy(sortCmd, " | sort -r"); // Reverse the sorting to get latest PID
-    }
-
-    char command[256];
-    snprintf(command, sizeof(command), "pgrep -f \"%.*s\"%s", (int)strnlen(process.name, sizeof(command) - strlen(sortCmd) - 1), process.name, sortCmd);
-
-    stock_process_id(command);
+    stock_process_id("cmdline", sort, process.name);
 
     return 0;
 }
