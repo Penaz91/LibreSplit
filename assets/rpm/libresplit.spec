@@ -24,7 +24,7 @@ BuildRequires:  gcc
 BuildRequires:  gtk4-devel >= 4.16
 BuildRequires:  jansson-devel
 BuildRequires:  libX11-devel
-BuildRequires:  luajit-devel
+BuildRequires:  lua-devel
 BuildRequires:  meson
 BuildRequires:  openssl-devel
 

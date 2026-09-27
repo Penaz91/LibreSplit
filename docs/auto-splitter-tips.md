@@ -50,14 +50,14 @@ current.minutes = readAddress(...)
 
 ### Bitwise Binary Operators
 
-LuaJIT doesn't yet support bitwise binary operators, in the meantime we implemented some functions that will bring such features into LibreSplit:
+Lua 5.4 and newer support bitwise binary operators, here's how to use them:
 
-- `b_and(a, b)`: Performs a bitwise "and" between the integers `a` and `b`;
-- `b_or(a, b)`: Performs a bitwise "or" between the integers `a` and `b`;
-- `b_xor(a, b)`: Performs a bitwise "exclusive or" between the integers `a` and `b`;
-- `b_not(a)`: Performs a bitwise "not" on the integer `a`;
-- `b_lshift(a, b)`: Performs a bitwise "left shift" on the integer `a` by `b`;
-- `b_rshift(a, b)`: Performs a bitwise "right shift" on the integer `a` by `b`;
+- `a & b`: Performs a bitwise "and" between the integers `a` and `b`;
+- `a | b`: Performs a bitwise "or" between the integers `a` and `b`;
+- `a ~ b`: Performs a bitwise "exclusive or" between the integers `a` and `b`;
+- `~a`: Performs a bitwise "not" on the integer `a`;
+- `a << b`: Performs a bitwise "left shift" on the integer `a` by `b`;
+- `a >> b`: Performs a bitwise "right shift" on the integer `a` by `b`;
 
 ## A small trick to find items in table
 

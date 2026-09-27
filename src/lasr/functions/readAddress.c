@@ -168,11 +168,11 @@ int readAddress(lua_State* L)
         uint32_t value = read_memory_uint32_t(address, &error);
         lua_pushinteger(L, value);
     } else if (strcmp(value_type, "long") == 0) {
-        // TODO: Fix 64 bit numbers, luajit 5.1 doesnt support 64 bit numbers natively
+        // TODO: Check if 64 bit numbers work well now that we switched to Lua 5.4
         int64_t value = read_memory_int64_t(address, &error);
         lua_pushinteger(L, value);
     } else if (strcmp(value_type, "ulong") == 0) {
-        // TODO: Fix 64 bit numbers, luajit 5.1 doesnt support 64 bit numbers natively
+        // TODO: Check if 64 bit numbers work well now that we switched to Lua 5.4
         uint64_t value = read_memory_uint64_t(address, &error);
         lua_pushinteger(L, value);
     } else if (strcmp(value_type, "float") == 0) {
