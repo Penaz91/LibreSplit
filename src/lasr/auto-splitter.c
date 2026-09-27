@@ -117,8 +117,6 @@ static const luaL_Reg lj_lib_load[] = {
     { "", luaopen_base },
     { LUA_STRLIBNAME, luaopen_string },
     { LUA_MATHLIBNAME, luaopen_math },
-    { LUA_BITLIBNAME, luaopen_bit },
-    { LUA_JITLIBNAME, luaopen_jit },
     { NULL, NULL }
 };
 
@@ -165,12 +163,12 @@ void push_lasr_functions(lua_State* L, const lasr_function* functions)
 }
 
 /**
- * Override of the standard openlibs functions to open only a subset
+ * A sandboxed variant standard openlibs functions to open only a subset
  * of libraries in the Lua Runtime.
  *
  * @param L The lua Stack
  */
-LUALIB_API void luaL_openlibs(lua_State* L)
+LUALIB_API void sanboxed_openlibs(lua_State* L)
 {
     const luaL_Reg* lib;
     for (lib = lj_lib_load; lib->func; lib++) {
@@ -584,7 +582,7 @@ static bool has_lua_function(lua_State* L, const char* name)
 void run_auto_splitter(void)
 {
     lua_State* L = luaL_newstate();
-    luaL_openlibs(L);
+    sanboxed_openlibs(L);
     disable_functions(L, disabled_functions);
     push_lasr_functions(L, luac_functions);
     lasr_settings_register(L);

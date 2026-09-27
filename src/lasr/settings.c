@@ -350,7 +350,7 @@ void lasr_settings_register(lua_State* L)
     };
 
     lua_newtable(L);
-    luaL_register(L, NULL, functions);
+    luaL_setfuncs(L, functions, 0);
     if (!settings) {
         lua_pushvalue(L, -1);
         lua_pushcclosure(L, define_setting, 1);
