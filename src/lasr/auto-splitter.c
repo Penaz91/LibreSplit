@@ -168,7 +168,7 @@ void push_lasr_functions(lua_State* L, const lasr_function* functions)
  *
  * @param L The lua Stack
  */
-LUALIB_API void sanboxed_openlibs(lua_State* L)
+LUALIB_API void sandboxed_openlibs(lua_State* L)
 {
     const luaL_Reg* lib;
     for (lib = lj_lib_load; lib->func; lib++) {
@@ -582,7 +582,7 @@ static bool has_lua_function(lua_State* L, const char* name)
 void run_auto_splitter(void)
 {
     lua_State* L = luaL_newstate();
-    sanboxed_openlibs(L);
+    sandboxed_openlibs(L);
     disable_functions(L, disabled_functions);
     push_lasr_functions(L, luac_functions);
     lasr_settings_register(L);
