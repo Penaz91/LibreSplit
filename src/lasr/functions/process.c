@@ -142,10 +142,10 @@ static int compare_pids_descending(const void* a, const void* b)
 {
     const pid_t pid_a = *(const pid_t*)a;
     const pid_t pid_b = *(const pid_t*)b;
-    if (pid_a < pid_b) {
+    if (pid_a > pid_b) {
         return -1;
     }
-    if (pid_a > pid_b) {
+    if (pid_a < pid_b) {
         return 1;
     }
     return 0;
@@ -184,8 +184,7 @@ static pid_t get_pid(const char* mode, const char* sort, const char* name)
 
     if (strcmp(sort, "first") == 0) {
         qsort(pids, count, sizeof(pids[0]), compare_pids_ascending);
-    }
-    if (strcmp(sort, "last") == 0) {
+    } else if (strcmp(sort, "last") == 0) {
         qsort(pids, count, sizeof(pids[0]), compare_pids_descending);
     }
 
