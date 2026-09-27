@@ -4,6 +4,26 @@
 #include <glib.h>
 #include <stdio.h>
 
+typedef enum DirectoryType {
+    Config,
+    Data,
+} DirectoryType;
+
+typedef struct DirectoryTypeMap {
+    const char* dir;
+    enum DirectoryType type;
+} DirectoryTypeMap;
+
+/**
+ * @brief A map of default directories to the default path type
+ */
+static const struct DirectoryTypeMap type_map[] = {
+    { FOLDERS_SPLITS_DIR, Config },
+    { FOLDERS_AUTO_SPLITTERS_DIR, Config },
+    { FOLDERS_THEMES_DIR, Config },
+    { FOLDERS_LOGS_DIR, Data },
+};
+
 /**
  * Launches the default file manager for a certain path.
  *
@@ -23,123 +43,78 @@ static gboolean launch_file_manager(const char* path, GError** error)
 }
 
 /**
- * Launches the default file manager for the splits folder
+ * @brief Get the default dir path for type of directory requested.
  *
- * @param action Unused
- * @param parameter unused
- * @param app Unused
+ * @param dir The requested directory, must be one of the defined dirs in folders.h.
+ * @param path The string to store the directory path for.
+ * @return bool Whether or not the directory was written to path.
  */
-void launch_fm_splits(GSimpleAction* action, GVariant* parameter, gpointer app)
+static bool get_dir_path_for_type(const char* dir, char* path)
 {
-    LOG_INFO("Opening the default File Manager for the splits folder");
-    char libresplit_path[PATH_MAX];
-    get_libresplit_folder_path(libresplit_path);
-    char path[PATH_MAX];
-    int written = snprintf(path, PATH_MAX, "%s/splits", libresplit_path);
-    if (written < 0 || written >= PATH_MAX) {
-        if (written < 0) {
-            LOG_ERR("[Open Folder] Cannot create splits path");
-        } else {
-            LOG_ERR("[Open Folder] Splits folder path is too long");
+    if (dir == NULL || path == NULL) {
+        LOG_WARN("[Open Folder] Invalid usage dir or path are null");
+        return false;
+    }
+
+    for (size_t i = 0; i < G_N_ELEMENTS(type_map); ++i) {
+        if (g_str_equal(type_map[i].dir, dir)) {
+            bool res = false;
+            switch (type_map[i].type) {
+                case Config:
+                    get_libresplit_folder_path(path);
+                    res = true;
+                    break;
+
+                case Data:
+                    get_libresplit_data_folder_path(path);
+                    res = true;
+                    break;
+            }
+
+            if (res) {
+                size_t used = strnlen(path, PATH_MAX);
+                if (used == PATH_MAX) {
+                    LOG_ERRF("[Open Folder] Can't create %s path", type_map[i].dir);
+                    return false;
+                }
+
+                size_t remaining = PATH_MAX - used;
+                int written = snprintf(path + used, remaining, "/%s", type_map[i].dir);
+                if (written < 0 || (size_t)written >= remaining) {
+                    if (written < 0) {
+                        LOG_ERRF("[Open Folder] Cannot create %s path", type_map[i].dir);
+                    } else {
+                        LOG_ERRF("[Open Folder] Folder path for %s is too long", type_map[i].dir);
+                    }
+
+                    path[0] = '\0';
+                    return false;
+                }
+            }
+
+            return res;
         }
-        path[0] = '\0';
-        return;
     }
-    GError* error = NULL;
-    gboolean result = launch_file_manager(path, &error);
-    if (!result) {
-        LOG_ERRF("[Open Folder] Error while opening folder: %s", error->message);
-        g_error_free(error);
-    }
+
+    return false;
 }
 
 /**
- * Launches the default file manager for the Auto Splitters folder
+ * Launches the default file manager for the specified directory
  *
  * @param action Unused
- * @param parameter unused
+ * @param parameter The directory specified by the action
  * @param app Unused
  */
-void launch_fm_autosplitters(GSimpleAction* action, GVariant* parameter, gpointer app)
+void launch_fm_dir(GSimpleAction* action, GVariant* parameter, gpointer app)
 {
-    LOG_INFO("Opening the default File Manager for the auto splitters folder");
-    char libresplit_path[PATH_MAX];
-    get_libresplit_folder_path(libresplit_path);
     char path[PATH_MAX];
-    int written = snprintf(path, PATH_MAX, "%s/auto-splitters", libresplit_path);
-    if (written < 0 || written >= PATH_MAX) {
-        if (written < 0) {
-            LOG_ERR("[Open Folder] Cannot create auto splitters path");
-        } else {
-            LOG_ERR("[Open Folder] Auto Splitters folder path is too long");
-        }
-        path[0] = '\0';
+    const char* dir = g_variant_get_string(parameter, NULL);
+    LOG_INFOF("Opening the default File Manager for the %s folder", dir);
+    if (!get_dir_path_for_type(dir, path)) {
         return;
     }
-    GError* error = NULL;
-    gboolean result = launch_file_manager(path, &error);
-    if (!result) {
-        LOG_ERRF("[Open Folder] Error while opening folder: %s", error->message);
-        g_error_free(error);
-    }
-}
 
-/**
- * Launches the default file manager for the Themes folder
- *
- * @param action Unused
- * @param parameter unused
- * @param app Unused
- */
-void launch_fm_themes(GSimpleAction* action, GVariant* parameter, gpointer app)
-{
-    LOG_INFO("Opening the default File Manager for the themes folder");
-    char libresplit_path[PATH_MAX];
-    get_libresplit_folder_path(libresplit_path);
-    char path[PATH_MAX];
-    int written = snprintf(path, PATH_MAX, "%s/themes", libresplit_path);
-    if (written < 0 || written >= PATH_MAX) {
-        if (written < 0) {
-            LOG_ERR("[Open Folder] Cannot create themes path");
-        } else {
-            LOG_ERR("[Open Folder] Themes folder path is too long");
-        }
-        path[0] = '\0';
-        return;
-    }
-    GError* error = NULL;
-    gboolean result = launch_file_manager(path, &error);
-    if (!result) {
-        LOG_ERRF("[Open Folder] Error while opening folder: %s", error->message);
-        g_error_free(error);
-    }
-}
-
-/**
- * Launches the default file manager for the logs folder
- *
- * @param action Unused
- * @param parameter unused
- * @param app Unused
- */
-void launch_fm_logs(GSimpleAction* action, GVariant* parameter, gpointer app)
-{
-    LOG_INFO("Opening the default File Manager for the logs folder");
-    char libresplit_path[PATH_MAX];
-    get_libresplit_data_folder_path(libresplit_path);
-    // TODO: [Penaz] [2026-09-23] Keeping this useless snprintf because
-    // ^ I want logs to be in a subfolder (and have them rotate) in the near future.
-    char path[PATH_MAX];
-    int written = snprintf(path, PATH_MAX, "%s", libresplit_path);
-    if (written < 0 || written >= PATH_MAX) {
-        if (written < 0) {
-            LOG_ERR("[Open Folder] Cannot create logs path");
-        } else {
-            LOG_ERR("[Open Folder] Logs folder path is too long");
-        }
-        path[0] = '\0';
-        return;
-    }
     GError* error = NULL;
     gboolean result = launch_file_manager(path, &error);
     if (!result) {
