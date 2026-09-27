@@ -28,7 +28,7 @@ endif
 threads = dependency('threads')
 gtk = dependency('gtk4', version: '>= 4.16', include_type: 'system')
 gtk_x11 = dependency('gtk4-x11', version: '>= 4.16', include_type: 'system')
-luajit = dependency('luajit')
+lua= dependency('lua', version: '>= 5.4')
 x11 = dependency('x11')
 jansson = dependency('jansson')
 openssl = dependency('openssl')
@@ -126,7 +126,7 @@ executable(
     'libresplit',
     libresplit_sources,
     libresplit_resources,
-    dependencies: [threads, gtk, gtk_x11, luajit, x11, jansson, openssl],
+    dependencies: [threads, gtk, gtk_x11, lua, x11, jansson, openssl],
     c_args: shared_c_flags,
     install: true,
 )
