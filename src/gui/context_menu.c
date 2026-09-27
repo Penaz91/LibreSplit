@@ -214,25 +214,25 @@ static void create_context_menu(LSAppWindow* win, gpointer app)
     g_object_unref(section);
 
     section = g_menu_new();
-    if (is_x11_display()) {
-        g_menu_append(section, "Always on Top", "win.always-on-top");
-    }
-
-    section = g_menu_new();
-
     GMenu* folder_menu = g_menu_new();
     g_menu_append(folder_menu, "Splits", "win.open-splits-folder");
     g_menu_append(folder_menu, "Auto Splitters", "win.open-autosplitters-folder");
     g_menu_append(folder_menu, "Themes", "win.open-themes-folder");
     g_menu_append(folder_menu, "Logs", "win.open-logs-folder");
 
-    g_menu_append_submenu(section, "Folders", G_MENU_MODEL(folder_menu));
+    g_menu_append_submenu(section, "Default Directories", G_MENU_MODEL(folder_menu));
     g_menu_append_section(menu, NULL, G_MENU_MODEL(section));
     g_object_unref(folder_menu);
     g_object_unref(section);
 
-    section = g_menu_new();
+    if (is_x11_display()) {
+        section = g_menu_new();
+        g_menu_append(section, "Always on Top", "win.always-on-top");
+        g_menu_append_section(menu, NULL, G_MENU_MODEL(section));
+        g_object_unref(section);
+    }
 
+    section = g_menu_new();
     g_menu_append(section, "Settings", "win.settings");
     g_menu_append(section, "About and help", "win.about-and-help");
     g_menu_append_section(menu, NULL, G_MENU_MODEL(section));

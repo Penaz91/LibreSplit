@@ -45,12 +45,12 @@ void launch_fm_splits(GSimpleAction* action, GVariant* parameter, gpointer app)
         path[0] = '\0';
         return;
     }
-    GError* error;
+    GError* error = NULL;
     gboolean result = launch_file_manager(path, &error);
     if (!result) {
         LOG_ERRF("[Open Folder] Error while opening folder: %s", error->message);
+        g_error_free(error);
     }
-    return;
 }
 
 /**
@@ -76,12 +76,12 @@ void launch_fm_autosplitters(GSimpleAction* action, GVariant* parameter, gpointe
         path[0] = '\0';
         return;
     }
-    GError* error;
+    GError* error = NULL;
     gboolean result = launch_file_manager(path, &error);
     if (!result) {
         LOG_ERRF("[Open Folder] Error while opening folder: %s", error->message);
+        g_error_free(error);
     }
-    return;
 }
 
 /**
@@ -107,12 +107,12 @@ void launch_fm_themes(GSimpleAction* action, GVariant* parameter, gpointer app)
         path[0] = '\0';
         return;
     }
-    GError* error;
+    GError* error = NULL;
     gboolean result = launch_file_manager(path, &error);
     if (!result) {
         LOG_ERRF("[Open Folder] Error while opening folder: %s", error->message);
+        g_error_free(error);
     }
-    return;
 }
 
 /**
@@ -140,10 +140,10 @@ void launch_fm_logs(GSimpleAction* action, GVariant* parameter, gpointer app)
         path[0] = '\0';
         return;
     }
-    GError* error;
+    GError* error = NULL;
     gboolean result = launch_file_manager(path, &error);
     if (!result) {
         LOG_ERRF("[Open Folder] Error while opening folder: %s", error->message);
+        g_error_free(error);
     }
-    return;
 }
