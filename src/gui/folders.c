@@ -73,7 +73,7 @@ static bool get_dir_path_for_type(const char* dir, char* path)
 
             if (res) {
                 size_t used = strnlen(path, PATH_MAX);
-                if (used == PATH_MAX) {
+                if (used == 0 || used == PATH_MAX) {
                     LOG_ERRF("[Open Folder] Can't create %s path", type_map[i].dir);
                     return false;
                 }
