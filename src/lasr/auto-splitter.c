@@ -296,7 +296,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 break;
 
             case 'i': /* int argument */
-                lua_pushnumber(L, va_arg(vl, int));
+                lua_pushinteger(L, va_arg(vl, int));
                 break;
 
             case 's': /* string argument */
@@ -356,7 +356,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                     break;
 
                 case 'i': /* int result */
-                    if (!lua_isnumber(L, nres)) {
+                    if (!lua_isinteger(L, nres)) {
                         printf("function '%s' wrong result type, expected int\n", func);
                         va_end(vl);
                         return false;
@@ -581,6 +581,7 @@ static bool has_lua_function(lua_State* L, const char* name)
  */
 void run_auto_splitter(void)
 {
+    LOG_DEBUG("Starting new Lua State")
     lua_State* L = luaL_newstate();
     sandboxed_openlibs(L);
     disable_functions(L, disabled_functions);
