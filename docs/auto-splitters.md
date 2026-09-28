@@ -338,10 +338,14 @@ end
 * In this example we are checking for the scene, of course, the address is completely arbitrary and doesnt mean anything for this example. Specifically we are checking if we are entering the MenuScene scene.
 
 # `gameTime`
+
 ### **When using `gameTime`, `isLoading` has to ALWAYS return true**
+
 Function that is used to set the current timer time when `useGameTime` is `true` (`false` by default)
+
 * The return value of this function should be the current time in milliseconds
 * Runs every 1000 / `refreshRate` milliseconds.
+
 ```lua
 process('GameBlaBlaBla.exe')
 
@@ -398,6 +402,14 @@ function gameTime()
 end
 ```
 * In this example we added `IGT`, which is the variable in which the game keeps track of how long you've played for by some way or another, later this IGT variable is used as a return value to the `gameTime` function. Also the `useGameTime` is set to true to be able to use this feature
+
+You **must** make sure that gameTime returns an integer result, or LibreSplit will throw an error. In case it does try surrounding the result with a floor function:
+
+```lua
+function gameTime()
+    return math.floor(IGT)
+end
+```
 
 
 ## readAddress
