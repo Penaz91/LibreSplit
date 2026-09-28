@@ -163,6 +163,19 @@ void push_lasr_functions(lua_State* L, const lasr_function* functions)
 }
 
 /**
+ * Updated version of the library loading routine, made for Lua 5.4
+ *
+ * @param L The Lua State
+ * @param name The library name
+ * @param openf The C function to associate to the name
+ */
+static void open_library(lua_State* L, const char* name, lua_CFunction openf)
+{
+    luaL_requiref(L, name, openf, 1);
+    lua_pop(L, 1);
+}
+
+/**
  * A sandboxed variant standard openlibs functions to open only a subset
  * of libraries in the Lua Runtime.
  *
@@ -172,9 +185,7 @@ LUALIB_API void sandboxed_openlibs(lua_State* L)
 {
     const luaL_Reg* lib;
     for (lib = lj_lib_load; lib->func; lib++) {
-        lua_pushcfunction(L, lib->func);
-        lua_pushstring(L, lib->name);
-        lua_call(L, 1, 0);
+        open_library(L, lib->name, lib->func);
     }
 }
 
