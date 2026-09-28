@@ -20,6 +20,7 @@ int b_and(lua_State* L)
         printf("[b_and] Both arguments must be integers");
         return 0;
     }
+    printf("[DEPRECATION WARNING] We are deprecating the C-based bitwise functions. Use 'a & b' instead.");
 
     lua_Integer a = lua_tointeger(L, 1);
     lua_Integer b = lua_tointeger(L, 2);
@@ -49,6 +50,7 @@ int b_or(lua_State* L)
         return 0;
     }
 
+    printf("[DEPRECATION WARNING] We are deprecating the C-based bitwise functions. Use 'a | b' instead.");
     lua_Integer a = lua_tointeger(L, 1);
     lua_Integer b = lua_tointeger(L, 2);
 
@@ -77,6 +79,7 @@ int b_xor(lua_State* L)
         return 0;
     }
 
+    printf("[DEPRECATION WARNING] We are deprecating the C-based bitwise functions. Use 'a ~ b' instead.");
     lua_Integer a = lua_tointeger(L, 1);
     lua_Integer b = lua_tointeger(L, 2);
 
@@ -105,6 +108,7 @@ int b_not(lua_State* L)
         return 0;
     }
 
+    printf("[DEPRECATION WARNING] We are deprecating the C-based bitwise functions. Use '~a' instead.");
     lua_Integer a = lua_tointeger(L, 1);
 
     lua_Integer result = ~a;
@@ -132,6 +136,7 @@ int b_lshift(lua_State* L)
         return 0;
     }
 
+    printf("[DEPRECATION WARNING] We are deprecating the C-based bitwise functions. Use 'a << b' instead.");
     lua_Integer a = lua_tointeger(L, 1);
     lua_Integer b = lua_tointeger(L, 2);
 
@@ -160,6 +165,7 @@ int b_rshift(lua_State* L)
         return 0;
     }
 
+    printf("[DEPRECATION WARNING] We are deprecating the C-based bitwise functions. Use 'a >> b' instead.");
     lua_Integer a = lua_tointeger(L, 1);
     lua_Integer b = lua_tointeger(L, 2);
 
