@@ -91,6 +91,7 @@ libresplit_sources = files(
     'src/main.c',
     'src/runs.c',
     'src/server.c',
+    'src/utils.c',
 
     # Settings
     'src/settings/definitions.c',
