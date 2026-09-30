@@ -5,6 +5,7 @@
 
 #define LOG_QUEUE_SIZE 100
 #define LOG_STR_LEN 512
+#define LOG_FILENAME_LENGTH 256
 
 extern atomic_bool exit_requested;
 

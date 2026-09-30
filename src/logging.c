@@ -10,6 +10,7 @@
  */
 #include "logging.h"
 #include "settings/utils.h"
+#include "src/utils.h"
 
 #include <linux/limits.h>
 #include <pthread.h>
@@ -26,7 +27,7 @@ static LogQueue logQueue;
 /*! Atomic bool used to keep the thread active, might be used for clean closing in future */
 static atomic_bool logging_active;
 /*! Holds the filename for the logfile */
-static char log_filename[256];
+static char log_filename[LOG_FILENAME_LENGTH];
 
 /**
  * Initializes the log queue, ready to receive messages
@@ -35,8 +36,14 @@ void initLogQueue(void)
 {
     logQueue.head = 0;
     logQueue.tail = 0;
-    // TODO: [Penaz] [2026-09-30] Initialize the filename with today's date
-    strcpy(log_filename, "libresplit.log");
+    char date[16];
+    set_date(date);
+    int written = snprintf(log_filename, LOG_FILENAME_LENGTH, "libresplit_%s.log", date);
+    if (written <= 0 || written >= PATH_MAX) {
+        perror("Path to logfile too long. Disabling logger.");
+        logging_active = 0;
+        return;
+    }
     pthread_mutex_init(&logQueue.lock, NULL);
     pthread_cond_init(&logQueue.cond, NULL);
     logging_active = 1;
@@ -70,7 +77,7 @@ void logMessage(const char* fmt, ...)
     // Put the timestamp first...
     snprintf(logQueue.message_queue[logQueue.tail], LOG_STR_LEN, "%s | ", timestamp);
     // The remaining space is for the message
-    vsnprintf(logQueue.message_queue[logQueue.tail] + strlen(timestamp), LOG_STR_LEN - strlen(timestamp) - 1, fmt, args);
+    vsnprintf(logQueue.message_queue[logQueue.tail] + strlen(timestamp) + 3, LOG_STR_LEN - strlen(timestamp) - 1, fmt, args);
     va_end(args);
     logQueue.tail = (logQueue.tail + 1) % LOG_QUEUE_SIZE;
 
