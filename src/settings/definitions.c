@@ -165,12 +165,27 @@ AppConfig cfg = {
             .desc = "Last Auto Splitter Folder Opened",
         },
     },
+    .logging = {
+        .print_to_console = {
+            .key = "print_to_console",
+            .type = CFG_BOOL,
+            .value.b = true,
+            .desc = "Print logs on console's standard output too",
+        },
+        .rotate_after_days = {
+            .key = "rotate_after_days",
+            .type = CFG_INT,
+            .value.i = 7,
+            .desc = "Delete logs older than x days",
+        },
+    }
 };
 
 const SectionInfo sections[] = {
     { "libresplit", &cfg.libresplit, sizeof(cfg.libresplit) / sizeof(ConfigEntry), true },
     { "keybinds", &cfg.keybinds, sizeof(cfg.keybinds) / sizeof(ConfigEntry), true },
     { "history", &cfg.history, sizeof(cfg.history) / sizeof(ConfigEntry), false },
+    { "logging", &cfg.logging, sizeof(cfg.logging) / sizeof(ConfigEntry), true },
 };
 
 const size_t sections_count = sizeof(sections) / sizeof(sections[0]);
