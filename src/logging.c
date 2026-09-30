@@ -10,6 +10,7 @@
  */
 #include "logging.h"
 #include "settings/utils.h"
+#include "src/timer.h"
 #include "src/utils.h"
 
 #include <linux/limits.h>
@@ -99,8 +100,9 @@ static void pop_message(FILE* logfile)
     // We don't empty the whole queue to avoid being a bottleneck for the
     // addition of new messages.
     // Log to console
-    // XXX: [Penaz] [2026-09-30] Should this be an option?
-    printf("%s", logQueue.message_queue[logQueue.head]);
+    if (cfg.logging.print_to_console.value.b) {
+        printf("%s", logQueue.message_queue[logQueue.head]);
+    }
     // Log to file
     fprintf(logfile, "%s", logQueue.message_queue[logQueue.head]);
     // Flush the file immediately to disk, in case something crashes
