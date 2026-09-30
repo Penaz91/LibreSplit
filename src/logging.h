@@ -24,7 +24,7 @@ typedef struct LogQueue {
 void initLogQueue(void);
 
 void logMessage(const char* fmt, ...);
-void close_logger();
+void close_logger(void);
 
 void* loggingThread(void* arg);
 

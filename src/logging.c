@@ -3,6 +3,10 @@
  *
  * Asynchronous Logging Library for LibreSplit based on threads, circular queues,
  * hopes and dreams.
+ *
+ * This library is not built to support more than one instance of LibreSplit running
+ * at a time. That would require the instances to be able to either have each its own
+ * logfile (maybe `libresplit_date_pid`) or inter-process communication.
  */
 #include "logging.h"
 #include "settings/utils.h"
@@ -21,6 +25,8 @@
 static LogQueue logQueue;
 /*! Atomic bool used to keep the thread active, might be used for clean closing in future */
 static atomic_bool logging_active;
+/*! Holds the filename for the logfile */
+static char log_filename[256];
 
 /**
  * Initializes the log queue, ready to receive messages
@@ -29,6 +35,8 @@ void initLogQueue(void)
 {
     logQueue.head = 0;
     logQueue.tail = 0;
+    // TODO: [Penaz] [2026-09-30] Initialize the filename with today's date
+    strcpy(log_filename, "/libresplit.log");
     pthread_mutex_init(&logQueue.lock, NULL);
     pthread_cond_init(&logQueue.cond, NULL);
     logging_active = 1;
@@ -47,6 +55,8 @@ void logMessage(const char* fmt, ...)
     pthread_mutex_lock(&logQueue.lock);
     // If the queue is full, wait (bottleneck)
     while ((logQueue.tail + 1) % LOG_QUEUE_SIZE == logQueue.head) {
+        // NOTE: [Penaz] [2026-09-30] It might be more sane to drop new logs
+        // ^ instead of blocking any other possible calling thread. (Early return)
         pthread_cond_wait(&logQueue.cond, &logQueue.lock);
     }
     // Create a timestamp for the log
@@ -60,7 +70,7 @@ void logMessage(const char* fmt, ...)
     // Put the timestamp first...
     snprintf(logQueue.message_queue[logQueue.tail], LOG_STR_LEN, "%s | ", timestamp);
     // The remaining space is for the message
-    vsnprintf(logQueue.message_queue[logQueue.tail] + strlen(timestamp) + 1, LOG_STR_LEN - sizeof(timestamp) - 1, fmt, args);
+    vsnprintf(logQueue.message_queue[logQueue.tail] + strlen(timestamp), LOG_STR_LEN - strlen(timestamp) - 1, fmt, args);
     va_end(args);
     logQueue.tail = (logQueue.tail + 1) % LOG_QUEUE_SIZE;
 
@@ -82,6 +92,7 @@ static void pop_message(FILE* logfile)
     // We don't empty the whole queue to avoid being a bottleneck for the
     // addition of new messages.
     // Log to console
+    // XXX: [Penaz] [2026-09-30] Should this be an option?
     printf("%s", logQueue.message_queue[logQueue.head]);
     // Log to file
     fprintf(logfile, "%s", logQueue.message_queue[logQueue.head]);
@@ -102,7 +113,7 @@ void* loggingThread(void* arg)
     prctl(PR_SET_NAME, "LS Logger", 0, 0, 0);
     char data_path[PATH_MAX];
     get_libresplit_data_folder_path(data_path);
-    strcat(data_path, "/libresplit.log");
+    strcat(data_path, log_filename);
     FILE* logfile = fopen(data_path, "a");
     if (!logfile) {
         perror("Failed to open log file");
@@ -139,7 +150,7 @@ void* loggingThread(void* arg)
  * the queue to fill up. If that's the case, we signal the thread to continue
  * after setting logging_active to false.
  */
-void close_logger()
+void close_logger(void)
 {
     atomic_store(&logging_active, 0);
     LOG_DEBUG("Shutting down logger thread...")
