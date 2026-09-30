@@ -36,7 +36,7 @@ void initLogQueue(void)
     logQueue.head = 0;
     logQueue.tail = 0;
     // TODO: [Penaz] [2026-09-30] Initialize the filename with today's date
-    strcpy(log_filename, "/libresplit.log");
+    strcpy(log_filename, "libresplit.log");
     pthread_mutex_init(&logQueue.lock, NULL);
     pthread_cond_init(&logQueue.cond, NULL);
     logging_active = 1;
@@ -113,6 +113,7 @@ void* loggingThread(void* arg)
     prctl(PR_SET_NAME, "LS Logger", 0, 0, 0);
     char data_path[PATH_MAX];
     get_libresplit_data_folder_path(data_path);
+    strcat(data_path, "/logs/");
     strcat(data_path, log_filename);
     FILE* logfile = fopen(data_path, "a");
     if (!logfile) {
