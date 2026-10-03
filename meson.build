@@ -32,6 +32,7 @@ luajit = dependency('luajit')
 x11 = dependency('x11')
 jansson = dependency('jansson')
 openssl = dependency('openssl')
+libpeas = dependency('libpeas-2')
 
 includes = include_directories('include')
 
@@ -73,6 +74,7 @@ libresplit_sources = files(
     # Plugins
     'src/plugins/plugin_loading.c',
     'src/plugins/plugin_utils.c',
+    'src/plugins/plugin_interfaces.c',
 
 
     # LASR
@@ -134,7 +136,7 @@ executable(
     'libresplit',
     libresplit_sources,
     libresplit_resources,
-    dependencies: [threads, gtk, gtk_x11, luajit, x11, jansson, openssl],
+    dependencies: [threads, gtk, gtk_x11, luajit, x11, jansson, openssl, libpeas],
     c_args: shared_c_flags,
     install: true,
     include_directories: includes,

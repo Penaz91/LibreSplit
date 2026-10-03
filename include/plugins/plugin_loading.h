@@ -1,14 +1,20 @@
 #pragma once
+#include "libpeas.h"
 #include "plugins/plugin_utils.h"
 #include <gtk/gtk.h>
 
 /**
- * A plugin structure, keeps tabs on the handler
- * given by dlopen() and the path
+ * A plugin structure, takes care of the optional handles
+ * for the various functionality
  */
 typedef struct _Plugin {
-    char* path; /*!< Path of the loaded plugin */
-    void* handle; /*!< Handle of the .so file, used to dlclose */
+    PeasPluginInfo* info;
+
+    GObject* base;
+    GObject* contextmenu;
+    GObject* lasr;
+    GObject* components;
+    GObject* event_listener;
 } Plugin;
 
 /**

@@ -5,8 +5,6 @@
 #include "timer.h"
 #include <stdint.h>
 
-typedef uint32_t abi_version_t;
-
 extern ExternalLASRFunctionRegistry external_lasr_functions;
 
 extern TimerHookRegistry start_hooks;
@@ -40,7 +38,6 @@ typedef int (*register_event_func)(HookableEvent event, timer_hook_func fn);
 typedef int (*register_component_func)(char* name, ls_component_new_func fn);
 
 typedef struct PlugAPI {
-    abi_version_t abi_version;
     register_lua_func register_lua_function;
     register_event_func register_event_hook;
     register_component_func register_component;
