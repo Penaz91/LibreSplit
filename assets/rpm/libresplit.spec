@@ -27,6 +27,7 @@ BuildRequires:  libX11-devel
 BuildRequires:  luajit-devel
 BuildRequires:  meson
 BuildRequires:  openssl-devel
+BuildRequires:  libpeas-2
 
 Requires:       hicolor-icon-theme
 Recommends:     glib-networking
