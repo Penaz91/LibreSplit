@@ -2,7 +2,7 @@
 #include "gui/component/components.h"
 #include "lasr/auto-splitter.h"
 #include "lua.h"
-#include "plugins/shared/plugin_api.h"
+#include "plugins/plugin_api.h"
 #include "timer.h"
 #include <stdint.h>
 

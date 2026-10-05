@@ -6,10 +6,10 @@
 #include "gui/app_window.h"
 #include "gui/game.h"
 #include "gui/widgets/dialog.h"
-#include "include/timer.h"
 #include "logging.h"
 #include "runs.h"
 #include "settings/utils.h"
+#include "timer.h"
 
 #include "lasr/auto-splitter.h"
 #include "logging.h"

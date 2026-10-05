@@ -33,7 +33,8 @@ x11 = dependency('x11')
 jansson = dependency('jansson')
 openssl = dependency('openssl')
 
-includes = include_directories('include')
+public_api = include_directories('include')
+private_headers = include_directories('src')
 
 libresplit_sources = files(
     'src/gui/actions.c',
@@ -137,7 +138,7 @@ executable(
     dependencies: [threads, gtk, gtk_x11, luajit, x11, jansson, openssl],
     c_args: shared_c_flags,
     install: true,
-    include_directories: includes,
+    include_directories: [public_api, private_headers],
 )
 
 executable(
@@ -145,7 +146,7 @@ executable(
     libresplit_ctl_sources,
     c_args: shared_c_flags,
     install: true,
-    include_directories: includes,
+    include_directories: [public_api, private_headers],
 )
 
 message('prefix: ' + get_option('prefix')) # /usr/local by default
