@@ -1,4 +1,5 @@
 #include "gtk/gtk.h"
+#include "gui/components/component.h"
 #include "plugins/plugin.h"
 #include "plugins/plugin_api.h"
 
