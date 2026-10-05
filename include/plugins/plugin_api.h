@@ -7,6 +7,7 @@ typedef uint32_t abi_version_t;
 typedef struct ls_timer ls_timer;
 typedef struct _ExternalLASRFunctionRegistry ExternalLASRFunctionRegistry;
 typedef struct LSComponent LSComponent;
+typedef struct LSComponentOps LSComponentOps;
 typedef LSComponent* (*ls_component_new_func)(void);
 typedef int (*timer_hook_func)(const ls_timer* timer);
 

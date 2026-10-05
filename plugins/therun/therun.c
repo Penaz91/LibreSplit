@@ -6,8 +6,6 @@
  * See the original implementation here: https://github.com/tepiloxtl/LibreSplit/tree/therun
  */
 #include "therun.h"
-#include "plugins/plugin.h"
-#include "plugins/plugin_utils.h"
 #include "timer.h"
 #include <curl/curl.h>
 #include <jansson.h>

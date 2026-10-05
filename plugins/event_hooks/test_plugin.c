@@ -1,6 +1,5 @@
-#include "plugins/plugin.h"
-#include "plugins/plugin_utils.h"
-#include "timer.h"
+#include "plugin.h"
+#include "plugin_api.h"
 #include <stdio.h>
 
 /* =======================================

@@ -1,7 +1,6 @@
 #include "gtk/gtk.h"
-#include "gui/component/components.h"
 #include "plugins/plugin.h"
-#include "plugins/plugin_utils.h"
+#include "plugins/plugin_api.h"
 
 /* =======================================
  * Metadata section

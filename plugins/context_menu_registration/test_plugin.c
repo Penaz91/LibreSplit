@@ -1,5 +1,5 @@
 #include "plugins/plugin.h"
-#include "plugins/plugin_utils.h"
+#include "plugins/plugin_api.h"
 #include <gio/gio.h>
 #include <gio/gmenu.h>
 #include <glib-object.h>
