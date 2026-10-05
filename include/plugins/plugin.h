@@ -1,6 +1,10 @@
 #pragma once
-#include "plugins/plugin_utils.h"
+#include "./plugin_api.h"
 #include <gtk/gtk.h>
+#include <stdint.h>
+
+typedef struct PlugAPI PlugAPI;
+typedef uint32_t abi_version_t;
 
 // Plugin metadata
 extern const char plugin_name[];
