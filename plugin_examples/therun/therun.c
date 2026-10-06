@@ -6,7 +6,7 @@
  * See the original implementation here: https://github.com/tepiloxtl/LibreSplit/tree/therun
  */
 #include "therun.h"
-#include "timer.h"
+#include "timer_structs.h"
 #include <curl/curl.h>
 #include <jansson.h>
 #include <limits.h>
@@ -54,7 +54,7 @@ json_t* time_to_ms(int64_t microseconds)
  * Undosplit should resend payload with splitTime reset to null, decrease currentSplitIndex
  * and update currentSplitName.
  */
-char* build_therun_live_payload(const ls_timer* timer, int source)
+char* build_therun_live_payload(const ls_state* timer, int source)
 {
     const char* therun_key = getenv("LIBRESPLIT_THERUN_KEY");
     if (source == 0) {
@@ -65,7 +65,7 @@ char* build_therun_live_payload(const ls_timer* timer, int source)
     json_t* metadata = json_object();
     // This is all to split split file title to game and category for API. Should be added as fields into
     // JSON at some point, alongside platform, region and emulator maybe?
-    const char* game_title = timer->game->title;
+    const char* game_title = timer->title;
     char* pipe_pos = strchr((char*)game_title, '|');
     if (pipe_pos != NULL) {
         size_t game_len = pipe_pos - game_title;
@@ -89,22 +89,32 @@ char* build_therun_live_payload(const ls_timer* timer, int source)
     json_object_set_new(root, "metadata", metadata);
 
     json_t* runData = json_array();
-    for (unsigned int i = 0; i < timer->game->split_count; i++) {
+    for (unsigned int i = 0; i < timer->split_count; i++) {
         json_t* segment = json_object();
-        json_object_set_new(segment, "name", json_string(timer->game->split_titles[i]));
-        json_object_set_new(segment, "splitTime", time_to_ms(timer->split_times[i]));
-        json_object_set_new(segment, "pbSplitTime", time_to_ms(timer->split_times[i])); // I believe these 3 are correct this way around?
-        json_object_set_new(segment, "bestPossible", time_to_ms(timer->best_splits[i]));
+        int64_t split_time, best_split, best_segment;
+        if (timer->comparison_method == LS_REAL_TIME) {
+            split_time = timer->split_times[i].real_time;
+            best_split = timer->best_splits[i].real_time;
+            best_segment = timer->best_segments[i].real_time;
+        } else {
+            split_time = timer->split_times[i].game_time;
+            best_split = timer->best_splits[i].game_time;
+            best_segment = timer->best_segments[i].game_time;
+        }
+        json_object_set_new(segment, "name", json_string(timer->split_titles[i]));
+        json_object_set_new(segment, "splitTime", time_to_ms(split_time));
+        json_object_set_new(segment, "pbSplitTime", time_to_ms(split_time)); // I believe these 3 are correct this way around?
+        json_object_set_new(segment, "bestPossible", time_to_ms(best_split));
         json_t* comparisons = json_array();
         json_t* personalbest = json_object();
         json_object_set_new(personalbest, "name", json_string("Personal Best"));
-        json_object_set_new(personalbest, "time", time_to_ms(timer->split_times[i]));
+        json_object_set_new(personalbest, "time", time_to_ms(split_time));
         json_t* besttime = json_object();
         json_object_set_new(besttime, "name", json_string("Best Time"));
-        json_object_set_new(besttime, "time", time_to_ms(timer->best_splits[i]));
+        json_object_set_new(besttime, "time", time_to_ms(best_split));
         json_t* bestsegment = json_object();
         json_object_set_new(bestsegment, "name", json_string("Best Segment"));
-        json_object_set_new(bestsegment, "time", time_to_ms(timer->best_segments[i]));
+        json_object_set_new(bestsegment, "time", time_to_ms(best_segment));
         json_array_append_new(comparisons, personalbest);
         json_array_append_new(comparisons, besttime);
         json_array_append_new(comparisons, bestsegment);
@@ -114,8 +124,8 @@ char* build_therun_live_payload(const ls_timer* timer, int source)
     }
     json_object_set_new(root, "runData", runData);
 
-    json_object_set_new(root, "timingMethod", json_integer(timer->usingGameTime)); // NYI, set in Compare Against option in RMB menu in LiveSplit, 0 for RTA, 1 for IGT
-    if (timer->usingGameTime) {
+    json_object_set_new(root, "timingMethod", json_integer(timer->comparison_method)); // NYI, set in Compare Against option in RMB menu in LiveSplit, 0 for RTA, 1 for IGT
+    if (timer->comparison_method == LS_GAME_TIME) {
         json_object_set_new(root, "currentTime", time_to_ms(timer->gameTime)); // This now changed because we have separate gameTime and realTime, redo this part
         json_object_set_new(root, "currentDuration", time_to_ms(timer->gameTime)); // NYI, Time with pauses, for now just time, also redo for gameTime/realTime
     } else {
@@ -126,7 +136,7 @@ char* build_therun_live_payload(const ls_timer* timer, int source)
         json_object_set_new(root, "currentSplitName", json_string(""));
         json_object_set_new(root, "currentSplitIndex", json_integer(-1));
     } else {
-        json_object_set_new(root, "currentSplitName", json_string(timer->game->split_titles[timer->curr_split]));
+        json_object_set_new(root, "currentSplitName", json_string(timer->split_titles[timer->curr_split]));
         json_object_set_new(root, "currentSplitIndex", json_integer(timer->curr_split));
     }
     char start_time_str[32];
@@ -202,7 +212,7 @@ void* therun_upload_thread(void* arg)
     return 0;
 }
 
-void therun_trigger_update(const ls_timer* timer, int source)
+void therun_trigger_update(const ls_state* timer, int source)
 {
     char* payload = build_therun_live_payload(timer, source);
     if (!payload)
@@ -218,31 +228,31 @@ void therun_trigger_update(const ls_timer* timer, int source)
     }
 }
 
-int therun_reset(const ls_timer* timer)
+int therun_reset(const ls_state* timer)
 {
     therun_trigger_update(timer, 2);
     return 0;
 }
 
-int therun_start(const ls_timer* timer)
+int therun_start(const ls_state* timer)
 {
     therun_trigger_update(timer, 0);
     return 0;
 }
 
-int therun_split(const ls_timer* timer)
+int therun_split(const ls_state* timer)
 {
     therun_trigger_update(timer, 1);
     return 0;
 }
 
-int therun_skip(const ls_timer* timer)
+int therun_skip(const ls_state* timer)
 {
     therun_trigger_update(timer, 7);
     return 0;
 }
 
-int therun_unsplit(const ls_timer* timer)
+int therun_unsplit(const ls_state* timer)
 {
     therun_trigger_update(timer, 6);
     return 0;

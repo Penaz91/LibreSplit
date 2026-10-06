@@ -43,6 +43,7 @@ typedef struct ls_state {
     const char* title;
     const char* name;
     const char* category;
+    ls_time_method comparison_method;
     const int* attempt_count;
     const int* finished_count;
     const long long start_delay;
@@ -57,6 +58,7 @@ typedef struct ls_state {
     const ls_time* segment_deltas;
     const ls_time sum_of_bests; /*!< Sum of best segments */
     const ls_time world_record; /*!< World record time */
+    const unsigned int curr_split; /*!< Index of the current split, 0 for first split */
 } ls_state;
 
 typedef struct PlugAPI {

@@ -1524,6 +1524,7 @@ int ls_timer_start(ls_timer* timer)
         .name = timer->game->name,
         .category = timer->game->category,
         .attempt_count = timer->attempt_count,
+        .comparison_method = timer->game->comparison_method,
         .finished_count = timer->finished_count,
         .start_delay = timer->game->start_delay,
         .split_titles = (const char** const)timer->game->split_titles,
@@ -1537,6 +1538,7 @@ int ls_timer_start(ls_timer* timer)
         .segment_deltas = timer->segment_deltas,
         .sum_of_bests = timer->sum_of_bests,
         .world_record = timer->world_record,
+        .curr_split = timer->curr_split,
     };
     if (start_hooks.active) {
         for (int i = 0; i < start_hooks.count; i++) {
@@ -1684,6 +1686,7 @@ int ls_timer_split(ls_timer* timer)
             .name = timer->game->name,
             .category = timer->game->category,
             .attempt_count = timer->attempt_count,
+            .comparison_method = timer->game->comparison_method,
             .finished_count = timer->finished_count,
             .start_delay = timer->game->start_delay,
             .split_titles = (const char** const)timer->game->split_titles,
@@ -1697,6 +1700,7 @@ int ls_timer_split(ls_timer* timer)
             .segment_deltas = timer->segment_deltas,
             .sum_of_bests = timer->sum_of_bests,
             .world_record = timer->world_record,
+            .curr_split = timer->curr_split,
         };
         for (int i = 0; i < split_hooks.count; i++) {
             split_hooks.functions[i](&current_state);
@@ -1738,6 +1742,7 @@ int ls_timer_skip(ls_timer* timer)
             .name = timer->game->name,
             .category = timer->game->category,
             .attempt_count = timer->attempt_count,
+            .comparison_method = timer->game->comparison_method,
             .finished_count = timer->finished_count,
             .start_delay = timer->game->start_delay,
             .split_titles = (const char** const)timer->game->split_titles,
@@ -1751,6 +1756,7 @@ int ls_timer_skip(ls_timer* timer)
             .segment_deltas = timer->segment_deltas,
             .sum_of_bests = timer->sum_of_bests,
             .world_record = timer->world_record,
+            .curr_split = timer->curr_split,
         };
         for (int i = 0; i < skip_hooks.count; i++) {
             skip_hooks.functions[i](&current_state);
@@ -1792,6 +1798,7 @@ int ls_timer_unsplit(ls_timer* timer)
             .name = timer->game->name,
             .category = timer->game->category,
             .attempt_count = timer->attempt_count,
+            .comparison_method = timer->game->comparison_method,
             .finished_count = timer->finished_count,
             .start_delay = timer->game->start_delay,
             .split_titles = (const char** const)timer->game->split_titles,
@@ -1805,6 +1812,7 @@ int ls_timer_unsplit(ls_timer* timer)
             .segment_deltas = timer->segment_deltas,
             .sum_of_bests = timer->sum_of_bests,
             .world_record = timer->world_record,
+            .curr_split = timer->curr_split,
         };
         for (int i = 0; i < unsplit_hooks.count; i++) {
             unsplit_hooks.functions[i](&current_state);
@@ -1829,6 +1837,7 @@ void ls_timer_pause(ls_timer* timer)
             .name = timer->game->name,
             .category = timer->game->category,
             .attempt_count = timer->attempt_count,
+            .comparison_method = timer->game->comparison_method,
             .finished_count = timer->finished_count,
             .start_delay = timer->game->start_delay,
             .split_titles = (const char** const)timer->game->split_titles,
@@ -1842,6 +1851,7 @@ void ls_timer_pause(ls_timer* timer)
             .segment_deltas = timer->segment_deltas,
             .sum_of_bests = timer->sum_of_bests,
             .world_record = timer->world_record,
+            .curr_split = timer->curr_split,
         };
         for (int i = 0; i < pause_hooks.count; i++) {
             pause_hooks.functions[i](&current_state);
@@ -1865,6 +1875,7 @@ void ls_timer_unpause(ls_timer* timer)
             .name = timer->game->name,
             .category = timer->game->category,
             .attempt_count = timer->attempt_count,
+            .comparison_method = timer->game->comparison_method,
             .finished_count = timer->finished_count,
             .start_delay = timer->game->start_delay,
             .split_titles = (const char** const)timer->game->split_titles,
@@ -1878,6 +1889,7 @@ void ls_timer_unpause(ls_timer* timer)
             .segment_deltas = timer->segment_deltas,
             .sum_of_bests = timer->sum_of_bests,
             .world_record = timer->world_record,
+            .curr_split = timer->curr_split,
         };
         for (int i = 0; i < unpause_hooks.count; i++) {
             unpause_hooks.functions[i](&current_state);
@@ -1902,6 +1914,7 @@ void ls_timer_stop(ls_timer* timer)
             .name = timer->game->name,
             .category = timer->game->category,
             .attempt_count = timer->attempt_count,
+            .comparison_method = timer->game->comparison_method,
             .finished_count = timer->finished_count,
             .start_delay = timer->game->start_delay,
             .split_titles = (const char** const)timer->game->split_titles,
@@ -1915,6 +1928,7 @@ void ls_timer_stop(ls_timer* timer)
             .segment_deltas = timer->segment_deltas,
             .sum_of_bests = timer->sum_of_bests,
             .world_record = timer->world_record,
+            .curr_split = timer->curr_split,
         };
         for (int i = 0; i < stop_hooks.count; i++) {
             stop_hooks.functions[i](&current_state);
@@ -1958,6 +1972,7 @@ int ls_timer_reset(ls_timer* timer, ls_game* game)
             .name = timer->game->name,
             .category = timer->game->category,
             .attempt_count = timer->attempt_count,
+            .comparison_method = timer->game->comparison_method,
             .finished_count = timer->finished_count,
             .start_delay = timer->game->start_delay,
             .split_titles = (const char** const)timer->game->split_titles,
@@ -1971,6 +1986,7 @@ int ls_timer_reset(ls_timer* timer, ls_game* game)
             .segment_deltas = timer->segment_deltas,
             .sum_of_bests = timer->sum_of_bests,
             .world_record = timer->world_record,
+            .curr_split = timer->curr_split,
         };
         for (int i = 0; i < reset_hooks.count; i++) {
             reset_hooks.functions[i](&current_state);
@@ -2011,6 +2027,7 @@ void ls_timer_cancel(ls_timer* timer)
             .name = timer->game->name,
             .category = timer->game->category,
             .attempt_count = timer->attempt_count,
+            .comparison_method = timer->game->comparison_method,
             .finished_count = timer->finished_count,
             .start_delay = timer->game->start_delay,
             .split_titles = (const char** const)timer->game->split_titles,
@@ -2024,6 +2041,7 @@ void ls_timer_cancel(ls_timer* timer)
             .segment_deltas = timer->segment_deltas,
             .sum_of_bests = timer->sum_of_bests,
             .world_record = timer->world_record,
+            .curr_split = timer->curr_split,
         };
         for (int i = 0; i < cancel_hooks.count; i++) {
             cancel_hooks.functions[i](&current_state);
