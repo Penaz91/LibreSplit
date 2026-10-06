@@ -1,7 +1,9 @@
 #pragma once
 
 #include "lasr/settings.h"
+#include "plugins/plugin_api.h"
 #include "settings/definitions.h"
+#include "timer_structs.h"
 #include <jansson.h>
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -14,15 +16,6 @@
 #define MAX_TIMESTAMP_LENGTH 256
 
 extern AppConfig cfg;
-
-/**
- * @brief time structure for storing both the real time and game time
- * for any time representation. (i.e. splits, segments, wr etc)
- */
-typedef struct ls_time {
-    long long real_time; /*!< Real time means the actual real world elapsed time */
-    long long game_time; /*!< Game time is the internal time controlled either by the autosplitter, or derived from real_time - load_time */
-} ls_time;
 
 /**
  * @brief enum used for selecting comparison methods. This should correspond to the ls_time struct
@@ -103,7 +96,7 @@ typedef struct ls_timer {
     char start_time[64];
 } ls_timer;
 
-typedef int (*timer_hook_func)(const ls_timer* timer);
+typedef int (*timer_hook_func)(const ls_state* timer);
 
 /**
  * A registry for hook functions for each timer action.

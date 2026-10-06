@@ -7,6 +7,8 @@
 #include "gui/game.h"
 #include "gui/widgets/dialog.h"
 #include "logging.h"
+#include "plugins/plugin_api.h"
+#include "plugins/plugin_utils.h"
 #include "runs.h"
 #include "settings/utils.h"
 #include "timer.h"
@@ -1517,9 +1519,28 @@ int ls_timer_start(ls_timer* timer)
         timer->running = true;
         atomic_store(&run_running, true);
     }
+    const ls_state current_state = {
+        .title = timer->game->title,
+        .name = timer->game->name,
+        .category = timer->game->category,
+        .attempt_count = timer->attempt_count,
+        .finished_count = timer->finished_count,
+        .start_delay = timer->game->start_delay,
+        .split_titles = (const char** const)timer->game->split_titles,
+        .split_icon_paths = (const char** const)timer->game->split_icon_paths,
+        .contains_icons = timer->game->contains_icons,
+        .split_count = timer->game->split_count,
+        .split_times = timer->split_times,
+        .segment_times = timer->segment_times,
+        .best_splits = timer->best_splits,
+        .best_segments = timer->best_segments,
+        .segment_deltas = timer->segment_deltas,
+        .sum_of_bests = timer->sum_of_bests,
+        .world_record = timer->world_record,
+    };
     if (start_hooks.active) {
         for (int i = 0; i < start_hooks.count; i++) {
-            start_hooks.functions[i](timer);
+            start_hooks.functions[i](&current_state);
         }
     }
     lasr_event_requests |= TIMER_EVT_START;
@@ -1658,8 +1679,27 @@ int ls_timer_split(ls_timer* timer)
         }
     }
     if (split_hooks.active) {
+        const ls_state current_state = {
+            .title = timer->game->title,
+            .name = timer->game->name,
+            .category = timer->game->category,
+            .attempt_count = timer->attempt_count,
+            .finished_count = timer->finished_count,
+            .start_delay = timer->game->start_delay,
+            .split_titles = (const char** const)timer->game->split_titles,
+            .split_icon_paths = (const char** const)timer->game->split_icon_paths,
+            .contains_icons = timer->game->contains_icons,
+            .split_count = timer->game->split_count,
+            .split_times = timer->split_times,
+            .segment_times = timer->segment_times,
+            .best_splits = timer->best_splits,
+            .best_segments = timer->best_segments,
+            .segment_deltas = timer->segment_deltas,
+            .sum_of_bests = timer->sum_of_bests,
+            .world_record = timer->world_record,
+        };
         for (int i = 0; i < split_hooks.count; i++) {
-            split_hooks.functions[i](timer);
+            split_hooks.functions[i](&current_state);
         }
     }
     lasr_event_requests |= TIMER_EVT_SPLIT;
@@ -1693,8 +1733,27 @@ int ls_timer_skip(ls_timer* timer)
     ls_time_clear(&timer->segment_times[timer->curr_split]);
     ls_time_clear(&timer->segment_deltas[timer->curr_split]);
     if (skip_hooks.active) {
+        const ls_state current_state = {
+            .title = timer->game->title,
+            .name = timer->game->name,
+            .category = timer->game->category,
+            .attempt_count = timer->attempt_count,
+            .finished_count = timer->finished_count,
+            .start_delay = timer->game->start_delay,
+            .split_titles = (const char** const)timer->game->split_titles,
+            .split_icon_paths = (const char** const)timer->game->split_icon_paths,
+            .contains_icons = timer->game->contains_icons,
+            .split_count = timer->game->split_count,
+            .split_times = timer->split_times,
+            .segment_times = timer->segment_times,
+            .best_splits = timer->best_splits,
+            .best_segments = timer->best_segments,
+            .segment_deltas = timer->segment_deltas,
+            .sum_of_bests = timer->sum_of_bests,
+            .world_record = timer->world_record,
+        };
         for (int i = 0; i < skip_hooks.count; i++) {
-            skip_hooks.functions[i](timer);
+            skip_hooks.functions[i](&current_state);
         }
     }
     lasr_event_requests |= TIMER_EVT_SKIP;
@@ -1728,8 +1787,27 @@ int ls_timer_unsplit(ls_timer* timer)
         atomic_store(&run_running, true);
     }
     if (unsplit_hooks.active) {
+        const ls_state current_state = {
+            .title = timer->game->title,
+            .name = timer->game->name,
+            .category = timer->game->category,
+            .attempt_count = timer->attempt_count,
+            .finished_count = timer->finished_count,
+            .start_delay = timer->game->start_delay,
+            .split_titles = (const char** const)timer->game->split_titles,
+            .split_icon_paths = (const char** const)timer->game->split_icon_paths,
+            .contains_icons = timer->game->contains_icons,
+            .split_count = timer->game->split_count,
+            .split_times = timer->split_times,
+            .segment_times = timer->segment_times,
+            .best_splits = timer->best_splits,
+            .best_segments = timer->best_segments,
+            .segment_deltas = timer->segment_deltas,
+            .sum_of_bests = timer->sum_of_bests,
+            .world_record = timer->world_record,
+        };
         for (int i = 0; i < unsplit_hooks.count; i++) {
-            unsplit_hooks.functions[i](timer);
+            unsplit_hooks.functions[i](&current_state);
         }
     }
     lasr_event_requests |= TIMER_EVT_UNSPLIT;
@@ -1746,8 +1824,27 @@ void ls_timer_pause(ls_timer* timer)
     LOG_DEBUG("Pausing timer...");
     timer->loading = 1;
     if (pause_hooks.active) {
+        const ls_state current_state = {
+            .title = timer->game->title,
+            .name = timer->game->name,
+            .category = timer->game->category,
+            .attempt_count = timer->attempt_count,
+            .finished_count = timer->finished_count,
+            .start_delay = timer->game->start_delay,
+            .split_titles = (const char** const)timer->game->split_titles,
+            .split_icon_paths = (const char** const)timer->game->split_icon_paths,
+            .contains_icons = timer->game->contains_icons,
+            .split_count = timer->game->split_count,
+            .split_times = timer->split_times,
+            .segment_times = timer->segment_times,
+            .best_splits = timer->best_splits,
+            .best_segments = timer->best_segments,
+            .segment_deltas = timer->segment_deltas,
+            .sum_of_bests = timer->sum_of_bests,
+            .world_record = timer->world_record,
+        };
         for (int i = 0; i < pause_hooks.count; i++) {
-            pause_hooks.functions[i](timer);
+            pause_hooks.functions[i](&current_state);
         }
     }
     lasr_event_requests |= TIMER_EVT_PAUSE;
@@ -1763,8 +1860,27 @@ void ls_timer_unpause(ls_timer* timer)
     LOG_DEBUG("Unpausing timer...");
     timer->loading = 0;
     if (unpause_hooks.active) {
+        const ls_state current_state = {
+            .title = timer->game->title,
+            .name = timer->game->name,
+            .category = timer->game->category,
+            .attempt_count = timer->attempt_count,
+            .finished_count = timer->finished_count,
+            .start_delay = timer->game->start_delay,
+            .split_titles = (const char** const)timer->game->split_titles,
+            .split_icon_paths = (const char** const)timer->game->split_icon_paths,
+            .contains_icons = timer->game->contains_icons,
+            .split_count = timer->game->split_count,
+            .split_times = timer->split_times,
+            .segment_times = timer->segment_times,
+            .best_splits = timer->best_splits,
+            .best_segments = timer->best_segments,
+            .segment_deltas = timer->segment_deltas,
+            .sum_of_bests = timer->sum_of_bests,
+            .world_record = timer->world_record,
+        };
         for (int i = 0; i < unpause_hooks.count; i++) {
-            unpause_hooks.functions[i](timer);
+            unpause_hooks.functions[i](&current_state);
         }
     }
     lasr_event_requests |= TIMER_EVT_UNPAUSE;
@@ -1781,8 +1897,27 @@ void ls_timer_stop(ls_timer* timer)
     timer->running = false;
     atomic_store(&run_running, false);
     if (stop_hooks.active) {
+        const ls_state current_state = {
+            .title = timer->game->title,
+            .name = timer->game->name,
+            .category = timer->game->category,
+            .attempt_count = timer->attempt_count,
+            .finished_count = timer->finished_count,
+            .start_delay = timer->game->start_delay,
+            .split_titles = (const char** const)timer->game->split_titles,
+            .split_icon_paths = (const char** const)timer->game->split_icon_paths,
+            .contains_icons = timer->game->contains_icons,
+            .split_count = timer->game->split_count,
+            .split_times = timer->split_times,
+            .segment_times = timer->segment_times,
+            .best_splits = timer->best_splits,
+            .best_segments = timer->best_segments,
+            .segment_deltas = timer->segment_deltas,
+            .sum_of_bests = timer->sum_of_bests,
+            .world_record = timer->world_record,
+        };
         for (int i = 0; i < stop_hooks.count; i++) {
-            stop_hooks.functions[i](timer);
+            stop_hooks.functions[i](&current_state);
         }
     }
     lasr_event_requests |= TIMER_EVT_STOP;
@@ -1818,8 +1953,27 @@ int ls_timer_reset(ls_timer* timer, ls_game* game)
     }
 
     if (reset_hooks.active) {
+        const ls_state current_state = {
+            .title = timer->game->title,
+            .name = timer->game->name,
+            .category = timer->game->category,
+            .attempt_count = timer->attempt_count,
+            .finished_count = timer->finished_count,
+            .start_delay = timer->game->start_delay,
+            .split_titles = (const char** const)timer->game->split_titles,
+            .split_icon_paths = (const char** const)timer->game->split_icon_paths,
+            .contains_icons = timer->game->contains_icons,
+            .split_count = timer->game->split_count,
+            .split_times = timer->split_times,
+            .segment_times = timer->segment_times,
+            .best_splits = timer->best_splits,
+            .best_segments = timer->best_segments,
+            .segment_deltas = timer->segment_deltas,
+            .sum_of_bests = timer->sum_of_bests,
+            .world_record = timer->world_record,
+        };
         for (int i = 0; i < reset_hooks.count; i++) {
-            reset_hooks.functions[i](timer);
+            reset_hooks.functions[i](&current_state);
         }
     }
 
@@ -1852,8 +2006,27 @@ void ls_timer_cancel(ls_timer* timer)
         }
     }
     if (cancel_hooks.active) {
+        const ls_state current_state = {
+            .title = timer->game->title,
+            .name = timer->game->name,
+            .category = timer->game->category,
+            .attempt_count = timer->attempt_count,
+            .finished_count = timer->finished_count,
+            .start_delay = timer->game->start_delay,
+            .split_titles = (const char** const)timer->game->split_titles,
+            .split_icon_paths = (const char** const)timer->game->split_icon_paths,
+            .contains_icons = timer->game->contains_icons,
+            .split_count = timer->game->split_count,
+            .split_times = timer->split_times,
+            .segment_times = timer->segment_times,
+            .best_splits = timer->best_splits,
+            .best_segments = timer->best_segments,
+            .segment_deltas = timer->segment_deltas,
+            .sum_of_bests = timer->sum_of_bests,
+            .world_record = timer->world_record,
+        };
         for (int i = 0; i < cancel_hooks.count; i++) {
-            cancel_hooks.functions[i](timer);
+            cancel_hooks.functions[i](&current_state);
         }
     }
     reset_timer(timer);
