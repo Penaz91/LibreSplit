@@ -158,6 +158,15 @@ void push_lasr_functions(lua_State* L, const lasr_function* functions)
     }
 }
 
+static void push_lasr_globals(lua_State* L)
+{
+    lua_pushinteger(L, POINTER_SIZE_32);
+    lua_setglobal(L, "POINTER_SIZE_32");
+
+    lua_pushinteger(L, POINTER_SIZE_64);
+    lua_setglobal(L, "POINTER_SIZE_64");
+}
+
 /**
  * Updated version of the library loading routine, made for Lua 5.4
  *
@@ -619,6 +628,7 @@ void run_auto_splitter(void)
     sandboxed_openlibs(L);
     disable_functions(L, disabled_functions);
     push_lasr_functions(L, luac_functions);
+    push_lasr_globals(L);
     lasr_settings_register(L);
 
     char current_file[PATH_MAX];

@@ -103,7 +103,29 @@ char* read_memory_string(uint64_t mem_address, int buffer_size, int32_t* err)
  */
 int readAddress(lua_State* L)
 {
+    PointerSize psize = POINTER_SIZE_UNKNOWN;
     int nargs = lua_gettop(L);
+    if (nargs > 2 && lua_istable(L, nargs)) {
+        // The last argument being a table should mean it's pointerSize info.
+        lua_pushliteral(L, "pointerSize");
+        lua_rawget(L, nargs);
+        if (!lua_isinteger(L, -1)) {
+            printf("[readAddress] pointerSize must be either POINTER_SIZE_32 or POINTER_SIZE_64.\n");
+            lua_pushnil(L);
+            return 1;
+        }
+
+        lua_Integer size = lua_tointeger(L, -1);
+        if (size != POINTER_SIZE_32 && size != POINTER_SIZE_64) {
+            printf("[readAddress] pointerSize must be either POINTER_SIZE_32 or POINTER_SIZE_64.\n");
+            lua_pushnil(L);
+            return 1;
+        }
+
+        psize = (PointerSize)size;
+        lua_pop(L, 1);
+        --nargs; // prevent the size override counting as an address argument.
+    }
     if (nargs < 2) {
         // There must be at least 2 arguments: type and address
         printf("[readAddress] Two arguments are required: type and address. Check your auto splitter code.\n");
@@ -120,6 +142,7 @@ int readAddress(lua_State* L)
 
     memory_error = false;
     uint64_t address;
+    uint64_t module_address;
     const char* value_type = lua_tostring(L, 1);
     int i;
 
@@ -156,23 +179,40 @@ int readAddress(lua_State* L)
     }
 
     if (lua_isinteger(L, 2)) {
-        address = process.base_address + lua_tointeger(L, 2);
+        module_address = process.base_address;
+        address = module_address + lua_tointeger(L, 2);
         i = 3;
     } else {
         const char* module = lua_tostring(L, 2);
-        if (strcmp(process.name, module) == 0) {
+        if (process.name && strcmp(process.name, module) == 0) {
             process.dll_address = process.base_address;
         } else {
             process.dll_address = find_base_address(module);
         }
-        address = process.dll_address + lua_tointeger(L, 3);
+
+        module_address = process.dll_address;
+        address = module_address + lua_tointeger(L, 3);
         i = 4;
     }
 
-    int error = 0;
+    int32_t error = 0;
+
+    // Direct value reads need no pointer width. Resolve it once for the entire chain.
+    if (i <= nargs && psize == POINTER_SIZE_UNKNOWN) {
+        psize = detect_pointer_size(module_address, &error);
+        if (psize == POINTER_SIZE_UNKNOWN) {
+            printf("[readAddress] Cannot determine pointer size from the selected module.\n");
+            if (error != ENOEXEC) {
+                handle_memory_error(error);
+            }
+
+            lua_pushnil(L);
+            return 1;
+        }
+    }
 
     for (; i <= nargs; i++) {
-        if (address <= UINT32_MAX) {
+        if (psize == POINTER_SIZE_32) {
             address = read_memory_uint32_t((uint64_t)address, &error);
             if (memory_error)
                 break;
