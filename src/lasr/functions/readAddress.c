@@ -37,6 +37,9 @@ bool memory_error = false;
             memory_error = true;                                                                 \
         } else if (mem_n_read != (ssize_t)mem_remote.iov_len) {                                  \
             printf("Error reading process memory: short read of %ld bytes\n", (long)mem_n_read); \
+            *err = EIO;                                                                          \
+            memory_error = true;                                                                 \
+            return 0;                                                                            \
         }                                                                                        \
                                                                                                  \
         return value;                                                                            \
@@ -176,7 +179,14 @@ int readAddress(lua_State* L)
             if (memory_error)
                 break;
         }
+
         address += lua_tointeger(L, i);
+    }
+
+    if (memory_error) {
+        lua_pushnil(L);
+        handle_memory_error(error);
+        return 1;
     }
 
     if (strcmp(value_type, "sbyte") == 0) {

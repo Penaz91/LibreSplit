@@ -633,6 +633,7 @@ void run_auto_splitter(void)
         fprintf(stderr, "Lua syntax error: %s\n", error_msg);
         lua_pop(L, 1); // Remove the error message from the stack
         lua_close(L);
+        clear_process();
         maps_clearCache();
         lasr_settings_clear();
         atomic_store(&auto_splitter_enabled, false);
@@ -650,6 +651,7 @@ void run_auto_splitter(void)
         }
         lua_pop(L, 1);
         lua_close(L);
+        clear_process();
         maps_clearCache();
         lasr_settings_clear();
         atomic_store(&auto_splitter_enabled, false);
@@ -795,6 +797,7 @@ void run_auto_splitter(void)
 
 run_auto_splitter_cleanup:
     lua_close(L);
+    clear_process();
     maps_clearCache();
     lasr_settings_clear();
 }
