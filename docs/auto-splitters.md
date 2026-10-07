@@ -439,6 +439,19 @@ end
 
         * Cheat Engine is a tool that allows you to easily find Addresses and Pointer Paths for those Addresses, so you don't need to debug the game to figure out the structure of the memory.
 
+* It is OPTIONALLY possible to also pass in a table with a `pointerSize` key as the last argument after your memory offsets/pointer paths.
+  * LibreSplit will generally try to detect the pointer sizes that your game uses and handle memory reads for your game accordingly. This should work for most games.
+    However, if you experience any issues such as detection errors or the detection itself being incorrect, you may specify the correct pointer size yourself to solve for this.
+    See this example to force 32-bit memory reads:
+
+```lua
+function state()
+    isLoading = readAddress("bool", "UnityPlayer.dll", 0x019B4878, 0xD0, 0x8, 0x60, 0xA0, 0x18, 0xA0, { pointerSize = POINTER_SIZE_32 });
+end
+```
+
+  * You may use the global constants `POINTER_SIZE_32` or `POINTER_SIZE_64` to specify the `pointerSize` optional argument of `readAddress`
+  * Setting this override does not affect other reads so if you need to use the override on each call you must specify it for each call.
 ## sig_scan
 
 `sig_scan` performs a signature/pattern scan using the provided IDA-style byte array and an integer offset, It returns a numeric representation of the found address.
