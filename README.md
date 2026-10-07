@@ -115,14 +115,14 @@ Install the required dependencies:
 
   ```sh
   sudo apt update
-  sudo apt install build-essential libgtk-4-dev libjansson-dev meson liblua-5.4-dev libssl-dev
+  sudo apt install build-essential libgtk-4-dev libjansson-dev meson liblua5.4-dev libssl-dev
   ```
 
 - Arch-based systems
 
   ```sh
   sudo pacman -Sy
-  sudo pacman -S gtk4 jansson lua git meson openssl
+  sudo pacman -S gtk4 jansson lua54 git meson openssl
   ```
 
 Clone the project:

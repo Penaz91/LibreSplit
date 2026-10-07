@@ -28,10 +28,20 @@ endif
 threads = dependency('threads')
 gtk = dependency('gtk4', version: '>= 4.16', include_type: 'system')
 gtk_x11 = dependency('gtk4-x11', version: '>= 4.16', include_type: 'system')
-lua= dependency('lua', version: '>= 5.4')
+lua = dependency('lua54', 'lua', version: ['>= 5.4', '< 5.5'])
 x11 = dependency('x11')
 jansson = dependency('jansson')
 openssl = dependency('openssl')
+
+# Lua can be compiled in 32-bit integer mode
+lua_header_prefix = '#include <limits.h>\n#include <lua.h>'
+if cc.compute_int(
+    'sizeof(lua_Integer) * CHAR_BIT',
+    prefix: lua_header_prefix,
+    dependencies: lua,
+) != 64
+    error('LibreSplit requires 64-bit lua_Integer')
+endif
 
 libresplit_sources = files(
     'src/gui/actions.c',
@@ -50,12 +60,12 @@ libresplit_sources = files(
     'src/gui/component/wr.c',
     'src/gui/context_menu.c',
     'src/gui/dialogs.c',
-    'src/gui/game.c',
-    'src/gui/theming.c',
-    'src/gui/timer.c',
 
     # GUI
     'src/gui/folders.c',
+    'src/gui/game.c',
+    'src/gui/theming.c',
+    'src/gui/timer.c',
     'src/gui/utils.c',
     'src/gui/welcome_box.c',
     'src/gui/widgets/alert.c',
@@ -70,7 +80,6 @@ libresplit_sources = files(
 
     # LASR
     'src/lasr/auto-splitter.c',
-    'src/lasr/functions/bitwise.c',
     'src/lasr/functions/getBaseAddress.c',
     'src/lasr/functions/getMaps.c',
     'src/lasr/functions/getModuleSize.c',

@@ -114,7 +114,9 @@ static int process_exists(void)
  * Lua libraries to enable in LASR
  */
 static const luaL_Reg lj_lib_load[] = {
-    { "", luaopen_base },
+    { LUA_GNAME, luaopen_base },
+    { LUA_COLIBNAME, luaopen_coroutine },
+    { LUA_TABLIBNAME, luaopen_table },
     { LUA_STRLIBNAME, luaopen_string },
     { LUA_MATHLIBNAME, luaopen_math },
     { NULL, NULL }
@@ -136,12 +138,6 @@ static const lasr_function luac_functions[] = {
     { "getModuleSize", getModuleSize },
     { "shallow_copy_tbl", shallow_copy_tbl },
     { "print_tbl", print_tbl },
-    { "b_and", b_and },
-    { "b_or", b_or },
-    { "b_xor", b_xor },
-    { "b_not", b_not },
-    { "b_lshift", b_lshift },
-    { "b_rshift", b_rshift },
     { "getMaps", getMaps },
     { "str2ida", str2ida },
     { "md5sum", md5sum },
@@ -286,12 +282,17 @@ static void pcall_fix_traceback(lua_State* L, const char* func)
 
     Example: `call_va(L, "functionName", "dd>d", x, y, &z);`
     Calls "functionName" with two doubles as parameters (x and y), returning a double in z
+
+    Restores the entry stack height on success and failure; callers must not pop results.
+    String results are borrowed from Lua and must be copied before further Lua calls.
 */
 bool call_va(lua_State* L, const char* func, const char* sig, ...)
 {
     va_list vl;
     int narg, nres; /* number of arguments and results */
     int status, base;
+    int entry_top = lua_gettop(L);
+    bool success = false;
 
     va_start(vl, sig);
     lua_pushcfunction(L, traceback);
@@ -307,7 +308,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 break;
 
             case 'i': /* int argument */
-                lua_pushinteger(L, va_arg(vl, int));
+                lua_pushinteger(L, va_arg(vl, lua_Integer));
                 break;
 
             case 's': /* string argument */
@@ -323,8 +324,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
 
             default:
                 printf("invalid option (%c)\n", *(sig - 1));
-                va_end(vl);
-                return false;
+                goto call_va_cleanup;
         }
         if (*(sig - 1) == '>')
             break;
@@ -346,9 +346,12 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 err = "(error object is not a string)";
             fprintf(stderr, "%s\n", err);
         }
-        lua_pop(L, 1);
-        va_end(vl);
-        return false;
+        goto call_va_cleanup;
+    }
+
+    if (nres == 0) {
+        success = true;
+        goto call_va_cleanup;
     }
 
     /* retrieve results */
@@ -360,8 +363,7 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 case 'd': /* double result */
                     if (!lua_isnumber(L, nres)) {
                         printf("function '%s' wrong result type, expected double\n", func);
-                        va_end(vl);
-                        return false;
+                        goto call_va_cleanup;
                     }
                     *va_arg(vl, double*) = lua_tonumber(L, nres);
                     break;
@@ -369,17 +371,15 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 case 'i': /* int result */
                     if (!lua_isinteger(L, nres)) {
                         printf("function '%s' wrong result type, expected int\n", func);
-                        va_end(vl);
-                        return false;
+                        goto call_va_cleanup;
                     }
-                    *va_arg(vl, int*) = lua_tointeger(L, nres);
+                    *va_arg(vl, lua_Integer*) = lua_tointeger(L, nres);
                     break;
 
                 case 's': /* string result */
                     if (!lua_isstring(L, nres)) {
                         printf("function '%s' wrong result type, expected string\n", func);
-                        va_end(vl);
-                        return false;
+                        goto call_va_cleanup;
                     }
                     *va_arg(vl, const char**) = lua_tostring(L, nres);
                     break;
@@ -387,25 +387,27 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
                 case 'b':
                     if (!lua_isboolean(L, nres)) {
                         printf("function '%s' wrong result type, expected boolean\n", func);
-                        va_end(vl);
-                        return false;
+                        goto call_va_cleanup;
                     }
                     *va_arg(vl, bool*) = lua_toboolean(L, nres);
                     break;
 
                 default:
                     printf("invalid option (%c)\n", *(sig - 1));
-                    va_end(vl);
-                    return false;
+                    goto call_va_cleanup;
             }
             nres++;
         }
     } else {
-        va_end(vl);
-        return false;
+        goto call_va_cleanup;
     }
+
+    success = true;
+
+call_va_cleanup:
+    lua_settop(L, entry_top);
     va_end(vl);
-    return true;
+    return success;
 }
 
 /**
@@ -416,24 +418,40 @@ bool call_va(lua_State* L, const char* func, const char* sig, ...)
  *
  * @param L The Lua State
  */
-void startup(lua_State* L)
+bool startup(lua_State* L)
 {
-    call_va(L, "startup", "");
-
-    if (!atomic_load(&auto_splitter_enabled)) {
-        return;
+    if (!atomic_load(&auto_splitter_enabled) || !call_va(L, "startup", "")) {
+        return false;
     }
 
     lua_getglobal(L, "refreshRate");
-    if (lua_isnumber(L, -1)) {
-        refresh_rate = lua_tointeger(L, -1);
+    if (lua_isinteger(L, -1)) {
+        lua_Integer val = lua_tointeger(L, -1);
+        if (val < 1 || val > INT32_MAX) {
+            fprintf(stderr, "Lua startup error: 'refreshRate' can not be less than 1 or greater than %i\n", INT32_MAX);
+            return false;
+        }
+
+        refresh_rate = val;
+    } else if (!lua_isnil(L, -1)) {
+        fprintf(stderr, "Lua startup error: 'refreshRate' must be an integer\n");
+        return false;
     }
     lua_pop(L, 1); // Remove 'refreshRate' from the stack
 
     lua_getglobal(L, "mapsCacheCycles");
-    if (lua_isnumber(L, -1)) {
-        maps_cache_cycles = lua_tointeger(L, -1);
+    if (lua_isinteger(L, -1)) {
+        lua_Integer val = lua_tointeger(L, -1);
+        if (val < 0 || val > INT32_MAX) {
+            fprintf(stderr, "Lua startup error: 'mapsCacheCycles' can not be less than 0 or greater than %i\n", INT32_MAX);
+            return false;
+        }
+
+        maps_cache_cycles = val;
         maps_cache_cycles_value = maps_cache_cycles;
+    } else if (!lua_isnil(L, -1)) {
+        fprintf(stderr, "Lua startup error: 'mapsCacheCycle' must be an integer\n");
+        return false;
     }
     lua_pop(L, 1); // Remove 'mapsCacheCycles' from the stack
 
@@ -442,11 +460,15 @@ void startup(lua_State* L)
         use_game_time = lua_toboolean(L, -1);
         atomic_store(&run_using_game_time, use_game_time);
         atomic_store(&run_using_game_time_call, true);
+    } else if (!lua_isnil(L, -1)) {
+        fprintf(stderr, "Lua startup error: 'useGameTime' must be a boolean\n");
+        return false;
     } else {
         atomic_store(&run_using_game_time, false); // Default to real time if not specified
         atomic_store(&run_using_game_time_call, true);
     }
     lua_pop(L, 1); // Remove 'useGameTime' from the stack
+    return true;
 }
 
 /**
@@ -490,7 +512,6 @@ void start(lua_State* L)
             atomic_store(&call_start, true);
         }
     }
-    lua_pop(L, 1); // Remove the return value from the stack
 }
 
 /**
@@ -506,7 +527,6 @@ void split(lua_State* L)
     if (call_va(L, "split", ">b", &ret)) {
         atomic_store(&call_split, ret);
     }
-    lua_pop(L, 1); // Remove the return value from the stack
 }
 
 /**
@@ -526,7 +546,6 @@ void is_loading(lua_State* L)
             prev_is_loading = !prev_is_loading;
         }
     }
-    lua_pop(L, 1); // Remove the return value from the stack
 }
 
 /**
@@ -549,7 +568,6 @@ void reset(lua_State* L)
             atomic_store(&run_running, false);
         }
     }
-    lua_pop(L, 1); // Remove the return value from the stack
 }
 
 /**
@@ -562,13 +580,17 @@ void reset(lua_State* L)
  */
 void gameTime(lua_State* L)
 {
-    int gameTime;
+    lua_Integer gameTime;
     if (call_va(L, "gameTime", ">i", &gameTime)) {
+        if (gameTime < INT64_MIN / 1000 || gameTime > INT64_MAX / 1000) {
+            fprintf(stderr, "Lua gameTime eror: result is outside the supported millisecond range\n");
+            return;
+        }
+
         // Convert gameTime from milliseconds to the expected time format and update the timer
-        atomic_store(&game_time_value, (long long)gameTime * 1000);
+        atomic_store(&game_time_value, (long long)gameTime * 1000LL);
         atomic_store(&update_game_time, true);
     }
-    lua_pop(L, 1); // Remove the return value from the stack
 }
 
 /**
@@ -655,8 +677,8 @@ void run_auto_splitter(void)
     bool onPause_exists = has_lua_function(L, "onPause");
     bool onUnpause_exists = has_lua_function(L, "onUnpause");
 
-    if (startup_exists) {
-        startup(L);
+    if (startup_exists && !startup(L)) {
+        goto run_auto_splitter_cleanup;
     }
 
     printf("Refresh rate: %d\n", refresh_rate);
@@ -771,6 +793,7 @@ void run_auto_splitter(void)
         }
     }
 
+run_auto_splitter_cleanup:
     lua_close(L);
     maps_clearCache();
     lasr_settings_clear();

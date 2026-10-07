@@ -422,7 +422,7 @@ end
     5. `int`: signed 32 bit integer
     6. `uint`: unsigned 32 bit integer
     7. `long`: signed 64 bit integer
-    8. `ulong`: unsigned 64 bit integer
+    8. `ulong`: unsupported - lua does not have unsigned 64 bit integer support
     9. `float`: 32 bit floating point number
     10. `double`: 64 bit floating point number
     11. `bool`: Boolean (true or false)
