@@ -234,7 +234,6 @@ static void create_context_menu(LSAppWindow* win, gpointer app)
         g_menu_append_section(menu, NULL, G_MENU_MODEL(section));
         g_object_unref(section);
     }
-    g_object_unref(section);
 
     section = g_menu_new();
     create_plugin_context_menus(section, GTK_WIDGET(win));
