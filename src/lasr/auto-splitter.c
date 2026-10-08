@@ -425,7 +425,8 @@ call_va_cleanup:
  * Executes the code in the startup() function of the auto splitter,
  * setting the internal parameters for the execution of the autosplitter.
  *
- * @param L The Lua State
+ * @param L The Lua State.
+ * @return bool Whether or not the startup operation was successful.
  */
 bool startup(lua_State* L)
 {
@@ -446,6 +447,7 @@ bool startup(lua_State* L)
         fprintf(stderr, "Lua startup error: 'refreshRate' must be an integer\n");
         return false;
     }
+
     lua_pop(L, 1); // Remove 'refreshRate' from the stack
 
     lua_getglobal(L, "mapsCacheCycles");
@@ -462,6 +464,7 @@ bool startup(lua_State* L)
         fprintf(stderr, "Lua startup error: 'mapsCacheCycle' must be an integer\n");
         return false;
     }
+
     lua_pop(L, 1); // Remove 'mapsCacheCycles' from the stack
 
     lua_getglobal(L, "useGameTime");
@@ -476,6 +479,7 @@ bool startup(lua_State* L)
         atomic_store(&run_using_game_time, false); // Default to real time if not specified
         atomic_store(&run_using_game_time_call, true);
     }
+
     lua_pop(L, 1); // Remove 'useGameTime' from the stack
     return true;
 }
