@@ -690,6 +690,7 @@ void run_auto_splitter(void)
     bool onUnpause_exists = has_lua_function(L, "onUnpause");
 
     if (startup_exists && !startup(L)) {
+        atomic_store(&auto_splitter_enabled, false);
         goto run_auto_splitter_cleanup;
     }
 
