@@ -523,30 +523,10 @@ int perform_sig_scan(lua_State* L)
             size_t found_index = 0;
             if (find_signature_in_buffer(
                     &matcher, mem_iter->buffer, mem_iter->buffer_size, &found_index)) {
-                uintptr_t address;
-                lua_Integer result;
-
-                // keep the addresses unsigned until offset is applied and handle overflows
-                bool overflow = __builtin_add_overflow(mem_iter->last_cursor, found_index, &address);
-                if (!overflow) {
-                    if (address >= process.base_address) {
-                        // effectively: (mem_iter->last_cursor + found_index - process.base_address) + offset
-                        overflow = __builtin_add_overflow(address - process.base_address, offset, &result);
-                    } else {
-                        // reverse operation to: (offset - (process.base_address - (mem_iter->last_cursor + found_index)))
-                        // since these values are currently unsigned, if address < process.base_address we would underflow.
-                        // this reversal is mathematically equivalent while preventing negative values.
-                        overflow = __builtin_sub_overflow(offset, process.base_address - address, &result);
-                    }
-                }
-
-                if (overflow) {
-                    log_error("result caused an integer overflow");
-                    lua_pushnil(L);
-                } else {
-                    lua_pushinteger(L, result);
-                }
-
+                uintptr_t result = (mem_iter->last_cursor + (uintptr_t)found_index
+                                       - process.base_address)
+                    + (uintptr_t)offset;
+                lua_pushinteger(L, (lua_Integer)result);
                 goto cleanup;
             }
         }

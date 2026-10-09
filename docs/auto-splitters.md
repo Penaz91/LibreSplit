@@ -422,7 +422,7 @@ end
     5. `int`: signed 32 bit integer
     6. `uint`: unsigned 32 bit integer
     7. `long`: signed 64 bit integer
-    8. `ulong`: unsupported - lua does not have unsigned 64 bit integer support
+    8. `ulong`: unsigned 64 bit integer* (check ulong note below)
     9. `float`: 32 bit floating point number
     10. `double`: 64 bit floating point number
     11. `bool`: Boolean (true or false)
@@ -452,6 +452,48 @@ end
 
   * You may use the global constants `POINTER_SIZE_32` or `POINTER_SIZE_64` to specify the `pointerSize` optional argument of `readAddress`
   * Setting this override does not affect other reads so if you need to use the override on each call you must specify it for each call.
+
+### Unsigned 64 bit integers
+Lua stores its integers as *signed* 64-bit integers. This means that unsigned 32-bit integers can be properly stored and represented.
+However, *unsigned* 64-bit integers may overflow. Although the values overflow, the underlying bits are still correct. This means
+if you need to perform operations on really large addresses (for example) you can get back the address and continue working with them
+so long as they remain integers throughout. The following operations should all also work correctly, preserving the bits meaning the values
+can be properly represented when LibreSplit works with them internally:
+
+- + (addition)
+- - (subtraction)
+- * (multiplication)
+- -x (negative value)
+- & (bitwise AND)
+- | (bitwise OR)
+- ~ (bitwise XOR)
+- ~x (bitwise NOT)
+- << (left shift)
+- >> (right shift)
+- == (equality compares bits)
+- -= (not equals compares bits)
+
+The following will not work:
+- / (division)
+  - converts to a float from the signed value
+- // (floor division)
+  - see above
+- % (modulo operation)
+  - see above
+- ^ (power of / exponentiation)
+  - uses floating point arithmetic from signed value
+- <, <=, >, >=
+  - uses the signed values for comparison
+
+Unsigned comparisons can be performed using Lua's built-in `math.ult` function:
+
+```lua
+math.ult(a, b)       -- unsigned a < b
+math.ult(b, a)       -- unsigned a > b
+not math.ult(b, a)   -- unsigned a <= b
+not math.ult(a, b)   -- unsigned a >= b
+```
+
 ## sig_scan
 
 `sig_scan` performs a signature/pattern scan using the provided IDA-style byte array and an integer offset, It returns a numeric representation of the found address.

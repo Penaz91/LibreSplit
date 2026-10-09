@@ -126,6 +126,7 @@ int readAddress(lua_State* L)
         lua_pop(L, 1);
         --nargs; // prevent the size override counting as an address argument.
     }
+
     if (nargs < 2) {
         // There must be at least 2 arguments: type and address
         printf("[readAddress] Two arguments are required: type and address. Check your auto splitter code.\n");
@@ -145,10 +146,6 @@ int readAddress(lua_State* L)
     uint64_t module_address;
     const char* value_type = lua_tostring(L, 1);
     int i;
-
-    if (strcmp(value_type, "ulong") == 0) {
-        return luaL_error(L, "[readAddress] ulong is not supported.");
-    }
 
     if (lua_isnil(L, 2)) {
         // The address is NULL, this will bring a segfault if left alone
@@ -179,8 +176,9 @@ int readAddress(lua_State* L)
     }
 
     if (lua_isinteger(L, 2)) {
+        uint64_t pointer = (uint64_t)lua_tointeger(L, 2);
         module_address = process.base_address;
-        address = module_address + lua_tointeger(L, 2);
+        address = module_address + pointer;
         i = 3;
     } else {
         const char* module = lua_tostring(L, 2);
@@ -190,8 +188,9 @@ int readAddress(lua_State* L)
             process.dll_address = find_base_address(module);
         }
 
+        uint64_t pointer = (uint64_t)lua_tointeger(L, 3);
         module_address = process.dll_address;
-        address = module_address + lua_tointeger(L, 3);
+        address = module_address + pointer;
         i = 4;
     }
 
@@ -222,7 +221,7 @@ int readAddress(lua_State* L)
                 break;
         }
 
-        address += lua_tointeger(L, i);
+        address += (uint64_t)lua_tointeger(L, i);
     }
 
     if (memory_error) {
@@ -250,9 +249,12 @@ int readAddress(lua_State* L)
         uint32_t value = read_memory_uint32_t(address, &error);
         lua_pushinteger(L, value);
     } else if (strcmp(value_type, "long") == 0) {
-        // TODO: Check if 64 bit numbers work well now that we switched to Lua 5.4
         int64_t value = read_memory_int64_t(address, &error);
         lua_pushinteger(L, value);
+    } else if (strcmp(value_type, "ulong") == 0) {
+        uint64_t value = read_memory_uint64_t(address, &error);
+        // This can overflow but the bytes should remain correct
+        lua_pushinteger(L, (lua_Integer)value);
     } else if (strcmp(value_type, "float") == 0) {
         float value = read_memory_float(address, &error);
         lua_pushnumber(L, value);
