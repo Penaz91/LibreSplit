@@ -422,7 +422,7 @@ end
     5. `int`: signed 32 bit integer
     6. `uint`: unsigned 32 bit integer
     7. `long`: signed 64 bit integer
-    8. `ulong`: unsigned 64 bit integer* (check ulong note below)
+    8. `ulong`: unsigned 64 bit integer* (see [**Unsigned 64 bit integers**](#unsigned-64-bit-integers) below)
     9. `float`: 32 bit floating point number
     10. `double`: 64 bit floating point number
     11. `bool`: Boolean (true or false)
