@@ -2,6 +2,7 @@
 #include "../utils.h"
 
 #include <errno.h>
+#include <lauxlib.h>
 #include <lua.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -36,6 +37,9 @@ bool memory_error = false;
             memory_error = true;                                                                 \
         } else if (mem_n_read != (ssize_t)mem_remote.iov_len) {                                  \
             printf("Error reading process memory: short read of %ld bytes\n", (long)mem_n_read); \
+            *err = EIO;                                                                          \
+            memory_error = true;                                                                 \
+            return 0;                                                                            \
         }                                                                                        \
                                                                                                  \
         return value;                                                                            \
@@ -85,7 +89,8 @@ char* read_memory_string(uint64_t mem_address, int buffer_size, int32_t* err)
         memory_error = true;
     } else if (mem_n_read != (ssize_t)mem_remote.iov_len) {
         printf("Error reading process memory: short read of %ld bytes\n", (long)mem_n_read);
-        exit(1);
+        memory_error = true;
+        *err = EIO;
     }
 
     return buffer;
@@ -98,22 +103,52 @@ char* read_memory_string(uint64_t mem_address, int buffer_size, int32_t* err)
  */
 int readAddress(lua_State* L)
 {
-    if (lua_gettop(L) == 0) {
+    PointerSize psize = POINTER_SIZE_UNKNOWN;
+    int nargs = lua_gettop(L);
+    if (nargs > 2 && lua_istable(L, nargs)) {
+        // The last argument being a table should mean it's pointerSize info.
+        lua_pushliteral(L, "pointerSize");
+        lua_rawget(L, nargs);
+        if (!lua_isinteger(L, -1)) {
+            printf("[readAddress] pointerSize must be either POINTER_SIZE_32 or POINTER_SIZE_64.\n");
+            lua_pushnil(L);
+            return 1;
+        }
+
+        lua_Integer size = lua_tointeger(L, -1);
+        if (size != POINTER_SIZE_32 && size != POINTER_SIZE_64) {
+            printf("[readAddress] pointerSize must be either POINTER_SIZE_32 or POINTER_SIZE_64.\n");
+            lua_pushnil(L);
+            return 1;
+        }
+
+        psize = (PointerSize)size;
+        lua_pop(L, 1);
+        --nargs; // prevent the size override counting as an address argument.
+    }
+    if (nargs < 2) {
         // There must be at least 2 arguments: type and address
         printf("[readAddress] Two arguments are required: type and address. Check your auto splitter code.\n");
         lua_pushnil(L);
         return 1;
     }
-    if (!lua_isstring(L, 1)) {
+
+    if (lua_type(L, 1) != LUA_TSTRING) {
         // The "type" argument is not a string. This will bring a segfault if left alone.
         printf("[readAddress] The type to be read must be a string. Check your auto splitter code.\n");
         lua_pushnil(L);
         return 1;
     }
+
     memory_error = false;
     uint64_t address;
+    uint64_t module_address;
     const char* value_type = lua_tostring(L, 1);
     int i;
+
+    if (strcmp(value_type, "ulong") == 0) {
+        return luaL_error(L, "[readAddress] ulong is not supported.");
+    }
 
     if (lua_isnil(L, 2)) {
         // The address is NULL, this will bring a segfault if left alone
@@ -122,22 +157,62 @@ int readAddress(lua_State* L)
         return 1;
     }
 
-    if (lua_isnumber(L, 2)) {
-        address = process.base_address + lua_tointeger(L, 2);
+    if (!lua_isinteger(L, 2) && lua_type(L, 2) != LUA_TSTRING) {
+        printf("[readAddress] The address must be an integer or a module name.\n");
+        lua_pushnil(L);
+        return 1;
+    }
+
+    int offset = lua_type(L, 2) == LUA_TSTRING ? 3 : 2;
+    if (nargs < offset) {
+        printf("[readAddress] A module name requires an integer offset.\n");
+        lua_pushnil(L);
+        return 1;
+    }
+
+    for (int arg = offset; arg <= nargs; ++arg) {
+        if (!lua_isinteger(L, arg)) {
+            printf("[readAddress] The offset argument %d must be an integer.\n", arg);
+            lua_pushnil(L);
+            return 1;
+        }
+    }
+
+    if (lua_isinteger(L, 2)) {
+        module_address = process.base_address;
+        address = module_address + lua_tointeger(L, 2);
         i = 3;
     } else {
         const char* module = lua_tostring(L, 2);
-        if (strcmp(process.name, module) != 0) {
+        if (process.name && strcmp(process.name, module) == 0) {
+            process.dll_address = process.base_address;
+        } else {
             process.dll_address = find_base_address(module);
         }
-        address = process.dll_address + lua_tointeger(L, 3);
+
+        module_address = process.dll_address;
+        address = module_address + lua_tointeger(L, 3);
         i = 4;
     }
 
-    int error = 0;
+    int32_t error = 0;
 
-    for (; i <= lua_gettop(L); i++) {
-        if (address <= UINT32_MAX) {
+    // Direct value reads need no pointer width. Resolve it once for the entire chain.
+    if (i <= nargs && psize == POINTER_SIZE_UNKNOWN) {
+        psize = detect_pointer_size(module_address, &error);
+        if (psize == POINTER_SIZE_UNKNOWN) {
+            printf("[readAddress] Cannot determine pointer size from the selected module.\n");
+            if (error != ENOEXEC) {
+                handle_memory_error(error);
+            }
+
+            lua_pushnil(L);
+            return 1;
+        }
+    }
+
+    for (; i <= nargs; i++) {
+        if (psize == POINTER_SIZE_32) {
             address = read_memory_uint32_t((uint64_t)address, &error);
             if (memory_error)
                 break;
@@ -146,7 +221,14 @@ int readAddress(lua_State* L)
             if (memory_error)
                 break;
         }
+
         address += lua_tointeger(L, i);
+    }
+
+    if (memory_error) {
+        lua_pushnil(L);
+        handle_memory_error(error);
+        return 1;
     }
 
     if (strcmp(value_type, "sbyte") == 0) {
@@ -171,10 +253,6 @@ int readAddress(lua_State* L)
         // TODO: Check if 64 bit numbers work well now that we switched to Lua 5.4
         int64_t value = read_memory_int64_t(address, &error);
         lua_pushinteger(L, value);
-    } else if (strcmp(value_type, "ulong") == 0) {
-        // TODO: Check if 64 bit numbers work well now that we switched to Lua 5.4
-        uint64_t value = read_memory_uint64_t(address, &error);
-        lua_pushinteger(L, value);
     } else if (strcmp(value_type, "float") == 0) {
         float value = read_memory_float(address, &error);
         lua_pushnumber(L, value);
@@ -187,23 +265,26 @@ int readAddress(lua_State* L)
     } else if (strstr(value_type, "string") != NULL) {
         int buffer_size = atoi(value_type + 6);
         if (buffer_size < 2 || buffer_size > 10000) {
-            printf("[readAddress] Invalid string size, please read documentation.\n");
-            exit(1);
+            return luaL_error(L, "[readAddress] Invalid string size, please read documentation.");
         }
+
         char* value = read_memory_string(address, buffer_size, &error);
-        lua_pushstring(L, value != NULL ? value : "");
+        if (!memory_error) {
+            lua_pushstring(L, value != NULL ? value : "");
+        }
+
         free(value);
     } else if (strstr(value_type, "byte")) {
         int array_size = atoi(value_type + 4);
         if (array_size < 1) {
-            printf("[readAddress] Invalid byte array size, please read documentation.\n");
-            exit(1);
+            return luaL_error(L, "[readAddress] Invalid byte array size, please read documentation.");
         }
+
         uint8_t* results = malloc(array_size * sizeof(uint8_t));
         if (!results) {
-            printf("[readAddress] Memory allocation failed for byte array.\n");
-            exit(1);
+            return luaL_error(L, "[readAddress] Memory allocation failed for byte array.");
         }
+
         for (int j = 0; j < array_size; j++) {
             uint8_t value = read_memory_uint8_t(address + j, &error);
             if (memory_error)
@@ -222,10 +303,10 @@ int readAddress(lua_State* L)
                 lua_rawseti(L, -2, j + 1);
             }
         }
+
         free(results);
     } else {
-        printf("[readAddress] Invalid value type: %s\n", value_type);
-        exit(1);
+        return luaL_error(L, "[readAddress] Invalid value type: %s", value_type);
     }
 
     if (memory_error) {

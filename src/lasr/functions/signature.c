@@ -454,15 +454,15 @@ int perform_sig_scan(lua_State* L)
         goto cleanup;
     }
 
-    if (!lua_isstring(L, 1) || !lua_isnumber(L, 2)) {
-        log_error("Invalid argument types: expected (string, number)");
+    if (lua_type(L, 1) != LUA_TSTRING || !lua_isinteger(L, 2)) {
+        log_error("Invalid argument types: expected (string, integer)");
         lua_pushnil(L);
         goto cleanup;
     }
 
     pid_t p_pid = process.pid;
     const char* signature = lua_tostring(L, 1);
-    intptr_t offset = lua_tointeger(L, 2);
+    lua_Integer offset = lua_tointeger(L, 2);
 
     // Validate signature string
     if (strlen(signature) == 0) {
@@ -523,10 +523,30 @@ int perform_sig_scan(lua_State* L)
             size_t found_index = 0;
             if (find_signature_in_buffer(
                     &matcher, mem_iter->buffer, mem_iter->buffer_size, &found_index)) {
-                intptr_t result = (intptr_t)(mem_iter->last_cursor + found_index
-                                      - process.base_address)
-                    + offset;
-                lua_pushnumber(L, result);
+                uintptr_t address;
+                lua_Integer result;
+
+                // keep the addresses unsigned until offset is applied and handle overflows
+                bool overflow = __builtin_add_overflow(mem_iter->last_cursor, found_index, &address);
+                if (!overflow) {
+                    if (address >= process.base_address) {
+                        // effectively: (mem_iter->last_cursor + found_index - process.base_address) + offset
+                        overflow = __builtin_add_overflow(address - process.base_address, offset, &result);
+                    } else {
+                        // reverse operation to: (offset - (process.base_address - (mem_iter->last_cursor + found_index)))
+                        // since these values are currently unsigned, if address < process.base_address we would underflow.
+                        // this reversal is mathematically equivalent while preventing negative values.
+                        overflow = __builtin_sub_overflow(offset, process.base_address - address, &result);
+                    }
+                }
+
+                if (overflow) {
+                    log_error("result caused an integer overflow");
+                    lua_pushnil(L);
+                } else {
+                    lua_pushinteger(L, result);
+                }
+
                 goto cleanup;
             }
         }
