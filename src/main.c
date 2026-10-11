@@ -146,6 +146,7 @@ int main(int argc, char* argv[])
 
     int status = g_application_run(G_APPLICATION(g_app), argc, argv);
 
+	atomic_store(&exit_requested, 1);
     pthread_join(t1, NULL);
     pthread_join(t2, NULL);
 
