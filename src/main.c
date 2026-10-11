@@ -129,6 +129,9 @@ int main(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
 
+    // Set the initial values to the logging thread's cfg copy.
+    update_logging_config();
+
     LOG_INFO("Creating Auto-Splitter Thread");
     pthread_t t1; // Auto-splitter thread
     pthread_create(&t1, NULL, &ls_auto_splitter, NULL);

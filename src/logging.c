@@ -29,6 +29,8 @@
 static LogQueue logQueue;
 /*! Atomic bool used to keep the thread active, might be used for clean closing in future */
 static atomic_bool logging_active;
+/*! Logging settings copied from the main thread to avoid race conditions */
+static LoggingConfig config;
 /*! Holds the filename for the logfile */
 static const char log_filename[] = "libresplit.log";
 
@@ -53,7 +55,7 @@ static FILE* rotate_logs(FILE* logfile, const char* logpath)
     }
 
     char archive_file[PATH_MAX + 2];
-    int max_files = cfg.logging.max_log_files.value.i;
+    int max_files = config.max_log_files.value.i;
     if (max_files > 9) {
         max_files = 9;
     } else if (max_files < 0) {
@@ -121,6 +123,18 @@ void initLogQueue(void)
 }
 
 /**
+ * @brief Update the config settings in the logging thread.
+ * To be called by settings save and on init.
+ */
+void update_logging_config(void)
+{
+    pthread_mutex_lock(&logQueue.lock);
+    config.write_to_file.value = cfg.logging.write_to_file.value;
+    config.max_log_files.value = cfg.logging.max_log_files.value;
+    pthread_mutex_unlock(&logQueue.lock);
+}
+
+/**
  * Underlying function to all the LOG_* macros
  *
  * Works as a producer.
@@ -179,7 +193,7 @@ static FILE* pop_message(FILE* logfile, const char* logpath)
     // addition of new messages.
     // Log to console
     printf("%s", logQueue.message_queue[logQueue.head]);
-    if (cfg.logging.write_to_file.value.b) {
+    if (config.write_to_file.value.b) {
         if (!logfile) {
             logfile = fopen(logpath, "a");
             if (!logfile) {
@@ -219,12 +233,16 @@ void* loggingThread(void* arg)
     strcat(data_path, "/logs/");
     strcat(data_path, log_filename);
     FILE* logfile = NULL;
-    if (cfg.logging.write_to_file.value.b) {
+
+    pthread_mutex_lock(&logQueue.lock);
+    if (config.write_to_file.value.b) {
         logfile = fopen(data_path, "a");
         if (!logfile) {
             perror("Failed to open log file");
         }
     }
+
+    pthread_mutex_unlock(&logQueue.lock);
 
     while (atomic_load(&logging_active)) {
         // Lock the mutex for reading

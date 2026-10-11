@@ -23,6 +23,7 @@ typedef struct LogQueue {
 } LogQueue;
 
 void initLogQueue(void);
+void update_logging_config(void);
 
 void logMessage(const char* fmt, ...);
 void close_logger(void);
