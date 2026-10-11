@@ -56,11 +56,6 @@ static FILE* rotate_logs(FILE* logfile, const char* logpath)
 
     char archive_file[PATH_MAX + 2];
     int max_files = config.max_log_files.value.i;
-    if (max_files > 9) {
-        max_files = 9;
-    } else if (max_files < 0) {
-        max_files = 0;
-    }
 
     // iterate from 9 regardless of max_files to cleanup old archives if the user lowers the setting.
     for (int i = 9; i >= 1; --i) {
@@ -129,6 +124,14 @@ void initLogQueue(void)
 void update_logging_config(void)
 {
     pthread_mutex_lock(&logQueue.lock);
+
+    // clamp values
+    if (cfg.logging.max_log_files.value.i > 9) {
+        cfg.logging.max_log_files.value.i = 9;
+    } else if (cfg.logging.max_log_files.value.i < 0) {
+        cfg.logging.max_log_files.value.i = 0;
+    }
+
     config.write_to_file.value = cfg.logging.write_to_file.value;
     config.max_log_files.value = cfg.logging.max_log_files.value;
     pthread_mutex_unlock(&logQueue.lock);
