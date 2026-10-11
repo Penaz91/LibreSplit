@@ -171,8 +171,8 @@ void logMessage(const char* fmt, ...)
     // The remaining space is for the message
     size_t prefix_len = strlen(timestamp) + 3;
     int written = vsnprintf(logQueue.message_queue[logQueue.tail] + prefix_len, LOG_STR_LEN - prefix_len, fmt, args);
-	if (written >= (int)(LOG_STR_LEN - prefix_len)) {
-		// ensure truncated log messages preserve the new line character.
+    if (written >= (int)(LOG_STR_LEN - prefix_len)) {
+        // ensure truncated log messages preserve the new line character.
         logQueue.message_queue[logQueue.tail][LOG_STR_LEN - 2] = '\n';
     }
 
@@ -212,13 +212,13 @@ static FILE* pop_message(FILE* logfile, const char* logpath)
 
         // Log to file
         if (fprintf(logfile, "%s", logQueue.message_queue[logQueue.head]) < 0) {
-			perror("Failed to write to log file");
-		}
+            perror("Failed to write to log file");
+        }
 
         // Flush the file immediately to disk, in case something crashes
         if (fflush(logfile) != 0) {
-			perror("Failed to flush the log file");
-		}
+            perror("Failed to flush the log file");
+        }
 
         logfile = rotate_logs(logfile, logpath);
     } else if (logfile) {
