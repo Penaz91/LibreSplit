@@ -145,6 +145,9 @@ int main(int argc, char* argv[])
 
     pthread_join(t1, NULL);
     pthread_join(t2, NULL);
+
+    // After the other logging consumers join it's safe to close the logger.
+    close_logger();
     pthread_join(t3, NULL);
 
     g_clear_object(&g_app);

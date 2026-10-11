@@ -43,7 +43,7 @@ static const char log_filename[] = "libresplit.log";
 static FILE* rotate_logs(FILE* logfile, const char* logpath)
 {
     struct stat st;
-    if (fstat(fileno(logfile), &st) != 0) {
+    if (!logfile || fstat(fileno(logfile), &st) != 0) {
         fprintf(stderr, "cannot get log file size\n");
         return logfile;
     }
@@ -132,9 +132,15 @@ void logMessage(const char* fmt, ...)
     // Lock the mutex for writing
     pthread_mutex_lock(&logQueue.lock);
     // If the queue is full, wait (bottleneck)
-    while ((logQueue.tail + 1) % LOG_QUEUE_SIZE == logQueue.head) {
+    while ((logQueue.tail + 1) % LOG_QUEUE_SIZE == logQueue.head && atomic_load(&logging_active)) {
         pthread_cond_wait(&logQueue.cond, &logQueue.lock);
     }
+
+    if (!atomic_load(&logging_active)) {
+        pthread_mutex_unlock(&logQueue.lock);
+        return;
+    }
+
     // Create a timestamp for the log
     char timestamp[64];
     time_t current_time = time(NULL);
@@ -160,6 +166,7 @@ void logMessage(const char* fmt, ...)
 /**
  * Pops a message from the log queue, writing it into console
  * and the log file. Just a utility.
+ * The caller must hold the logQueue.lock mutex.
  *
  * @param logfile The File pointer to write into
  * @param logpath The current log file path, used for rotating files
@@ -173,14 +180,27 @@ static FILE* pop_message(FILE* logfile, const char* logpath)
     // Log to console
     printf("%s", logQueue.message_queue[logQueue.head]);
     if (cfg.logging.write_to_file.value.b) {
+		if (!logfile) {
+			logfile = fopen(logpath, "a");
+			if (!logfile) {
+				perror("Failed to open log file");
+				goto pop_message_cleanup;
+			}
+		}
+
         // Log to file
         fprintf(logfile, "%s", logQueue.message_queue[logQueue.head]);
         // Flush the file immediately to disk, in case something crashes
         fflush(logfile);
         logfile = rotate_logs(logfile, logpath);
-    }
+    } else if (logfile) {
+		fclose(logfile);
+		logfile = NULL;
+	}
 
+pop_message_cleanup:
     logQueue.head = (logQueue.head + 1) % LOG_QUEUE_SIZE;
+    pthread_cond_broadcast(&logQueue.cond);
     return logfile;
 }
 
@@ -198,32 +218,47 @@ void* loggingThread(void* arg)
     get_libresplit_data_folder_path(data_path);
     strcat(data_path, "/logs/");
     strcat(data_path, log_filename);
-    FILE* logfile = fopen(data_path, "a");
-    if (!logfile) {
-        perror("Failed to open log file");
-        return NULL;
+    FILE* logfile = NULL;
+    if (cfg.logging.write_to_file.value.b) {
+        logfile = fopen(data_path, "a");
+        if (!logfile) {
+            perror("Failed to open log file");
+        }
     }
+
     while (atomic_load(&logging_active)) {
         // Lock the mutex for reading
         pthread_mutex_lock(&logQueue.lock);
         // If the queue is empty, wait
-        while (logQueue.head == logQueue.tail) {
+        while (logQueue.head == logQueue.tail && atomic_load(&logging_active)) {
             pthread_cond_wait(&logQueue.cond, &logQueue.lock);
-            // We got signalled by the main thread to close up
-            if (!atomic_load(&logging_active)) {
-                break;
-            }
         }
+
+        // We got signalled by the main thread to close up
+        if (!atomic_load(&logging_active)) {
+            pthread_mutex_unlock(&logQueue.lock);
+            break;
+        }
+
         logfile = pop_message(logfile, data_path);
         // Unlock the mutex
         pthread_mutex_unlock(&logQueue.lock);
     }
+
     // We're closing the logger, empty the remaining logs...
+    pthread_mutex_lock(&logQueue.lock);
     while (logQueue.head != logQueue.tail) {
         logfile = pop_message(logfile, data_path);
     }
-    // ... and close the logfile
-    fclose(logfile);
+
+    pthread_mutex_unlock(&logQueue.lock);
+
+    if (logfile) {
+        // ... and close the logfile
+        fclose(logfile);
+		logfile = NULL;
+    }
+
     return 0;
 }
 
@@ -236,10 +271,10 @@ void* loggingThread(void* arg)
  */
 void close_logger(void)
 {
+    LOG_DEBUG("Shutting down logger thread...");
+    pthread_mutex_lock(&logQueue.lock);
     atomic_store(&logging_active, 0);
-    LOG_DEBUG("Shutting down logger thread...")
-    // Signal the logging thread to continue, so to hit the closing condition,
-    // in case it is waiting for the log queue to fill. If it isn't, the signal
-    // should be ignored.
-    pthread_cond_signal(&logQueue.cond);
+    // Wakeup the logging thread and anything waiting for queue space.
+    pthread_cond_broadcast(&logQueue.cond);
+    pthread_mutex_unlock(&logQueue.lock);
 }
