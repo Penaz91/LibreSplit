@@ -180,13 +180,13 @@ static FILE* pop_message(FILE* logfile, const char* logpath)
     // Log to console
     printf("%s", logQueue.message_queue[logQueue.head]);
     if (cfg.logging.write_to_file.value.b) {
-		if (!logfile) {
-			logfile = fopen(logpath, "a");
-			if (!logfile) {
-				perror("Failed to open log file");
-				goto pop_message_cleanup;
-			}
-		}
+        if (!logfile) {
+            logfile = fopen(logpath, "a");
+            if (!logfile) {
+                perror("Failed to open log file");
+                goto pop_message_cleanup;
+            }
+        }
 
         // Log to file
         fprintf(logfile, "%s", logQueue.message_queue[logQueue.head]);
@@ -194,9 +194,9 @@ static FILE* pop_message(FILE* logfile, const char* logpath)
         fflush(logfile);
         logfile = rotate_logs(logfile, logpath);
     } else if (logfile) {
-		fclose(logfile);
-		logfile = NULL;
-	}
+        fclose(logfile);
+        logfile = NULL;
+    }
 
 pop_message_cleanup:
     logQueue.head = (logQueue.head + 1) % LOG_QUEUE_SIZE;
@@ -256,7 +256,7 @@ void* loggingThread(void* arg)
     if (logfile) {
         // ... and close the logfile
         fclose(logfile);
-		logfile = NULL;
+        logfile = NULL;
     }
 
     return 0;
